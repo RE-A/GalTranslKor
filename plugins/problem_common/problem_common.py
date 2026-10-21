@@ -209,11 +209,11 @@ class CProblemType(Enum):
     残留日文 = 3, "번역문에 일본어 히라가나·가타카나가 남음. 원문과 최종 번역문이 완전히 같으면 原文输出(원문 출력)으로 기록.", True
     丢失换行 = 4, "번역문에 원문의 문장 내 줄바꿈이 없음.", False
     多加换行 = 5, "번역문 줄바꿈이 원문보다 많아 화면을 넘칠 수 있음.", True
-    比日文长 = 6, "번역문 길이가 원문의 1.3배를 넘음(일반적인 느슨한 기준).", True
+    比日文长 = 6, "번역문 길이가 원문의 1.3배를 넘음(한국어는 띄어쓰기를 빼고 1.5배 기준).", True
     字典使用 = 7, "GPT 사전대로 번역하지 않음.", True
     引入英文 = 8, "원문에 없는 영어 단어가 번역문에 들어감.", False
     比日文长严格 = 9, "번역문 길이가 원문보다 김(엄격한 기준).", False
-    语言不通 = 10, "번역문에 GBK 밖의 문자가 많음(대상 언어가 중국어일 때만 적용).", True
+    语言不通 = 10, "대상 언어가 중국어면 GBK 밖의 문자가 많을 때, 한국어면 중국어 출력이 의심될 때.", True
     缺控制符 = 11, "번역문에 원문의 제어 문자(\\n, 변수 표기 등)가 없음.", True
     独白男他 = 12, "독백(name 없음) 번역문에 '他'가 나옴(중국어 출력 전용).", True
     单句过长 = 13, "번역문 문장이 너무 김. 평균 구간 길이가 기준값(avgSentenceLengthThreshold)을 넘음.", False
@@ -265,6 +265,11 @@ def _check_problems(
     if projectConfig.getlbSymbol() != "auto" and projectConfig.getlbSymbol() != "":
         n_symbol = projectConfig.getlbSymbol()
 
+    # Korean target: Hangul is expected, half-width punctuation is normal and
+    # spacing makes Korean longer than Japanese, so those checks are adapted.
+    korean = str(getattr(projectConfig, "target_lang", "")).lower() in ("ko", "korean")
+    half_width = {"（": "(", "：": ":", "；": ";"} if korean else {}
+
     problem_list = []
     if CProblemType.词频过高 in find_type:
         most_word, word_count = get_most_common_char(pre_dst)
@@ -283,6 +288,9 @@ def _check_problems(
         }
 
         for chars, error in char_to_error.items():
+            if korean:
+                chars = tuple(chars) if isinstance(chars, tuple) else (chars,)
+                chars = chars + tuple(half_width[c] for c in chars if c in half_width)
             if isinstance(chars, tuple):
                 if not any(char in pre_src for char in chars):
                     if any(char in post_dst for char in chars):
@@ -298,7 +306,7 @@ def _check_problems(
                     if chars not in post_dst:
                         problem_list.append(f"本有{error}")
 
-        if contains_korean(pre_dst) and not contains_korean(pre_src):
+        if not korean and contains_korean(pre_dst) and not contains_korean(pre_src):
             problem_list.append("本无韩文")
     if CProblemType.残留日文 in find_type:
         pre_dst_jp_chars = contains_japanese(pre_dst)
@@ -327,9 +335,14 @@ def _check_problems(
         if CProblemType.比日文长严格 in find_type:
             len_beta = 1.0
             min_diff=0
-        if len(post_dst) > len(pre_src) * len_beta and len(post_dst) - len(pre_src) >= min_diff:
+        dst_len = len(post_dst)
+        if korean:
+            dst_len = len("".join(post_dst.split()))
+            if CProblemType.比日文长 in find_type and CProblemType.比日文长严格 not in find_type:
+                len_beta = 1.5
+        if dst_len > len(pre_src) * len_beta and dst_len - len(pre_src) >= min_diff:
             problem_list.append(
-                f"比日文长：{round(len(post_dst)/max(len(pre_src),0.1),1)}倍({len(post_dst)-len(pre_src)}字符)"
+                f"比日文长：{round(dst_len/max(len(pre_src),0.1),1)}倍({dst_len-len(pre_src)}字符)"
 
             )
     if CProblemType.字典使用 in find_type and gpt_dict is not None:
@@ -341,7 +354,12 @@ def _check_problems(
             if len(eng_chars)>4:
                 problem_list.append(f"引入英文：{eng_chars}")
     if CProblemType.语言不通 in find_type:
-        if "zh" in projectConfig.target_lang:
+        if korean:
+            new_han = [c for c in post_dst if "\u4e00" <= c <= "\u9fff" and c not in pre_src]
+            hangul = [c for c in post_dst if "\uac00" <= c <= "\ud7a3"]
+            if new_han and len(new_han) > len(hangul):
+                problem_list.append(f"语言不通-疑似中文：{''.join(dict.fromkeys(new_han))[:20]}")
+        elif "zh" in projectConfig.target_lang:
             if not is_all_gbk(pre_dst):
                 non_gbk_whites=["♪","♥"]
                 non_gbk_chars = is_all_gbk(post_dst)

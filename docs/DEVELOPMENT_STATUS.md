@@ -4,6 +4,9 @@
 
 ## 저장소와 환경
 
+- **작업 방식(사용자 지정, 2026-10-21):** 사용자 혼자 쓰는 Fork이므로 PR 없이 Fork `main`에 바로 커밋·Push한다.
+  강제 Push와 이력 재작성은 하지 않으며, Push 전에 `origin/main`이 로컬 커밋의 조상인지(fast-forward 가능) 확인한다.
+  `AGENTS.md`의 "기능 브랜치 → main PR" 기본값보다 이 지정이 우선한다.
 - 개발 Fork: `RE-A/GalTranslKor`; 원본: `GalTransl/GalTransl` (Push 대상 아님)
 - 현재 통합 브랜치: `main`; 완료된 기능 브랜치: `feature/ollama-ko-translation` (보존)
 - 2차 확장 브랜치: `claude/repo-commit-access-check-p1n66r` (Claude Cloud 세션이 지정한 개발 브랜치,
@@ -188,6 +191,8 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 사용자 요청으로 작업 방식을 "PR 없이 main에 바로 커밋·Push"로 기록(문서만 변경).
 
 - 2026-10-21 / Claude Cloud: 한국어 대상 큰따옴표 삭제 수정(②). Fork `main`에 fast-forward 반영.
 

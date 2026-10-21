@@ -5,6 +5,8 @@
 이 문서를 수정해도 실행 프롬프트가 자동으로 바뀌지는 않는다. 모델에 전달되는 번역 지침은
 `translation_guidelines/JapaneseToKorean.md`(프로젝트별 사본 가능)이고, JSON 입출력 계약은
 `GalTransl/Backend/OllamaPrompts.py`, 자동 검증 규칙은 `GalTransl/Backend/OllamaQuality.py`에 있다.
+GenDic의 한국어 용어집 생성 지침은 `GalTransl/Backend/GenDicPrompts.py`에 있으며,
+용어집은 기존 호환 형식인 일본어 원문·한국어 번역·비고의 TSV로 저장한다.
 동작을 바꾸면 관련 테스트를 함께 갱신한다.
 
 ## 의미와 문체

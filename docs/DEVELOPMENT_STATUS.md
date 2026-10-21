@@ -5,9 +5,10 @@
 ## 저장소와 환경
 
 - 개발 Fork: `RE-A/GalTranslKor`; 원본: `GalTransl/GalTransl` (Push 대상 아님)
-- 현재 브랜치: `feature/ollama-ko-translation`
+- 현재 통합 브랜치: `main`; 완료된 기능 브랜치: `feature/ollama-ko-translation` (보존)
 - PR: [RE-A/GalTranslKor #1](https://github.com/RE-A/GalTranslKor/pull/1)
-  (`feature/ollama-ko-translation` → Fork의 `main`), 생성 완료·미병합.
+  (`feature/ollama-ko-translation` → Fork의 `main`), 사용자 명시 요청으로 병합 완료.
+- 병합 커밋: `a3106718d81ae0f95a76d0fe3b1efc03aa552530` (2026-10-21 15:33 KST).
 - 구현 기준 커밋: `64a2f846511d73cf283d95ce6156a0ca7c04b2ab`
 - 주요 구현 커밋: `a406021` (백엔드), `8e4715b` (Windows 실행/샘플),
   `afde31c` (리뷰 수정 및 검증 기록)
@@ -55,8 +56,8 @@
 
 ## 미검증 / 남은 작업
 
-Cloud 구현·Mock 검증·커밋/Push·Fork 내부 PR 생성은 완료했다. PR은 검토 대기이며
-자동 병합하지 않는다. 이 문서의 테스트 결과는 Cloud에서 직접 실행한 결과로,
+Cloud 구현·Mock 검증·커밋/Push·Fork 내부 PR 생성과 사용자 요청에 따른 병합을 완료했다.
+향후 PR도 사용자 요청 없이 병합하지 않는다. 이 문서의 테스트 결과는 Cloud에서 직접 실행한 결과로,
 GitHub Actions의 별도 결과를 의미하지 않는다.
 
 다음은 **로컬 Windows에서만** 수행한다. Cloud 작업을 막는 선행 조건은 아니다.
@@ -91,3 +92,7 @@ Mock 검증을 실제 모델의 품질/성능이나 Windows 네이티브 실행 
   위 구현 테스트 결과를 유지한다. 실제 모델 연결은 수행하지 않음.
 - 2026-10-21 / Codex Cloud: `9b5362d`까지 Fork에 Push하고 Fork 내부 PR #1 생성.
   마지막 상태/계획 갱신도 같은 브랜치에 반영. 원본 저장소 Push 및 PR 자동 병합 없음.
+- 2026-10-21 / Codex Cloud: 사용자의 "병합해줘" 요청에 따라 PR #1을 Fork `main`에
+  merge commit 방식으로 병합. GitHub API로 merged=true와 대상 저장소/커밋 확인.
+  병합 트리는 검증된 PR 최종 커밋과 동일하며, 이번 후속 변경은 병합 상태 문서뿐이다.
+  상태 문서를 `main`에 반영하고 기능 브랜치는 보존. 실제 모델/Windows 검증은 여전히 미수행.

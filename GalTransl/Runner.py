@@ -96,6 +96,17 @@ File_FORMAT = logging.Formatter(
 )
 
 
+def chinese_only_model_warning(translator: str, language) -> str | None:
+    """Sakura/GalTransl 모델은 중국어로만 출력한다. 한국어 대상이면 경고 문구를 돌려준다."""
+    target = str(language or "").split("2")[-1].strip().lower()
+    if target in ("ko", "korean") and ("sakura" in translator or "galtransl" in translator):
+        return (
+            f"번역기 {translator}는 중국어 전용 모델이라 한국어 대상(language: {language})에서도 "
+            "중국어로 번역합니다. 한국어 번역은 ForGal-json 등 OpenAI 호환(Ollama) 번역기를 쓰세요."
+        )
+    return None
+
+
 async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
     PROJECT_DIR = cfg.getProjectDir()
     cfg.select_translator = translator
@@ -142,6 +153,8 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
 
     if translator not in TRANSLATOR_SUPPORTED.keys():
         raise Exception(f"지원하지 않는 번역기: {translator}")
+    if warning := chinese_only_model_warning(translator, cfg.getKey("language")):
+        LOGGER.warning(warning)
 
     # 日志初始化 — 添加当前 job 的 handler（不再全局 clear，避免并发 job 互相干扰）
     _job_handlers: list[logging.Handler] = []

@@ -95,8 +95,22 @@
 한글이 있으면 띄어쓰기 단위로 분절하도록 수정. 재현 테스트 `tests/test_linebreakfix_korean.py`(수정 전 3개 실패 확인),
 전체 Python 1551 passed, 7 skipped.
 
-남은 한국어 관련 작업(검토 결과, 우선순위순): ④ GenDic 프롬프트가 중국어 용어집 생성 ⑤ 에이전트 프롬프트·요약·사전 형식이 중국어 전제 ⑥ 문제 이름이 화면에 중국어로 표시
-⑦ 한국어 대상에서 Sakura/GalTransl(중국어 전용 모델) 선택 시 경고 없음.
+④(완료) GenDic: 대상 언어가 한국어면 `GENDIC_*_KO` 프롬프트(Prompts.py)·한국어 힌트를 쓰고, 비고 유형(인명/호칭/지명…)을
+내부 분류에 매핑하며 사전 파일 구역 제목·머리말을 한국어로 씀. 중국어 대상 동작은 그대로. 테스트 `tests/test_gendic_korean.py`.
+
+⑤(완료) 에이전트: 프로젝트 `common.language`가 ko면 시스템 프롬프트에 "번역 대상 언어: 한국어" 지침(번역문·사전·인명은 한글,
+사전 형식 日文<Tab>韩文, 중국어 혼입은 오역)을 덧붙임. 대화 요약은 "사용자와 같은 언어"로 쓰게 변경, 사전 쓰기 도구 설명의
+"中文" 열을 "목표 언어 번역문"으로 수정. 기본 시스템 프롬프트 본문(중국어)은 그대로. 테스트 `tests/test_agent_korean_target.py`.
+
+⑥(완료) 데스크톱: 문제 검사 이름(残留日文 등)을 UI 언어가 중국어가 아니면 한국어로 표시(`desktop/src/i18n/problemLabels.ts`).
+캐시·설정·필터 저장값은 중국어 그대로 유지(호환). 캐시 카드·검색 결과·문제 검사 설정에 적용, 원래 이름은 title로 표시.
+테스트 `desktop/tests/problem-labels.test.mjs`.
+
+⑦(완료) `Runner.run_galtransl`이 한국어 대상에서 sakura/galtransl 번역기를 고르면 중국어 전용 모델이라는 경고 로그를 남김
+(실행은 막지 않음). 테스트 `tests/test_chinese_only_model_warning.py`(구현과 같은 단계에서 작성, 수정 전 실패는 미확인).
+
+검증(④~⑦): 전체 Python 1562 passed, 7 skipped. 프런트엔드 test 150 pass, build OK, i18n:check 0 errors.
+실제 모델로 한국어 GenDic/에이전트 출력 품질은 미검증(Cloud, Mock 범위).
 
 ## 중국어 잔여분 정리 (2026-10-21, Claude Cloud)
 
@@ -194,6 +208,8 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 한국어 대상 보정 ④~⑦(GenDic 한국어 프롬프트, 에이전트 한국어 지침, 문제 이름 한국어 표시, 중국어 전용 모델 경고). Fork `main`에 fast-forward 반영.
 
 - 2026-10-21 / Claude Cloud: 한국어 줄바꿈 수정 분절 수정(③). Fork `main`에 fast-forward 반영.
 

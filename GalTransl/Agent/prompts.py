@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from typing import TYPE_CHECKING
 
@@ -141,7 +142,7 @@ COMPACT_SUMMARY_PROMPT = """你在为一个 Galgame 翻译项目的 AI 助手压
    ## 待办与注意事项
    还没做的事、已知问题、下次继续时要注意的点。
 3. 必须原样保留这些硬信息，不要概括掉：文件路径、字典文件名、翻译引擎名（如 ForGal-json / rebuilda）、任务 id、问题条目 index 或 index 区间、具体的译名修正。
-4. 用中文写。简洁但不要丢信息。
+4. 用与用户对话相同的语言写（用户用韩语就写韩语）。简洁但不要丢信息。
 
 <conversation>
 {conversation}
@@ -178,7 +179,7 @@ COMPACT_INSTRUCTION_PROMPT = """════════════════
 ## 待办与注意事项
 
 必须原样保留、不要概括掉：文件路径、字典文件名、翻译引擎名（如 ForGal-json）、任务 id、问题条目 index 或区间、具体的译名修正。
-用中文写，简洁但不丢信息。现在开始，直接输出 <topics> 与 <summary>。"""
+用与用户对话相同的语言写（用户用韩语就写韩语），简洁但不丢信息。现在开始，直接输出 <topics> 与 <summary>。"""
 
 
 def _parse_compact_summary(content: str) -> str:
@@ -244,6 +245,30 @@ def _cache_fields_section() -> str:
     return "\n".join(lines)
 
 
+KOREAN_TARGET_SECTION = """
+
+# 번역 대상 언어: 한국어
+- 이 프로젝트는 일본어 원문을 **한국어**로 번역한다. 위 설명의"中文/译文"은 모두 한국어 번역문으로 읽는다.
+- 번역 캐시의 번역문 필드(pre_dst/proofread_dst 등), 인명표 번역명, GPT 사전 두 번째 열, 번역 후 사전의 바꿀 값은 반드시 한국어(한글)로 쓴다. 중국어로 쓰지 않는다.
+- GPT 사전 형식은 日文<Tab>韩文[<Tab>설명]이다. 인명·지명은 일본어 발음대로 한글로 적는다(한자 이름도 일본어 읽기).
+- 번역문에 중국어 문장(간체·번체 한자)이 섞이면 오역으로 보고 고친다. 한국어 대사는 큰따옴표("…")를 써도 된다.
+- 사용자와는 한국어로 대화한다."""
+
+
+def _project_target_lang(state: "AgentState") -> str:
+    """프로젝트 설정의 common.language(예: ja2ko)에서 대상 언어를 읽는다. 못 읽으면 빈 문자열."""
+    path = os.path.join(state.project_dir or "", state.config_file_name or DEFAULT_CONFIG_FILE)
+    try:
+        import yaml
+
+        with open(path, encoding="utf-8") as f:
+            common = (yaml.safe_load(f) or {}).get("common") or {}
+    except Exception:
+        return ""
+    language = str(common.get("language") or common.get("targetLanguage") or "")
+    return language.split("2")[-1].strip().lower()
+
+
 def _build_system_prompt(state: "AgentState") -> str:
     """构造 system prompt：基础约束 + 当前项目环境。
 
@@ -261,6 +286,8 @@ def _build_system_prompt(state: "AgentState") -> str:
         f"- 项目目录：{state.project_dir}\n"
         f"- 配置文件：{state.config_file_name or DEFAULT_CONFIG_FILE}"
     )
+    if _project_target_lang(state) in ("ko", "korean"):
+        parts.append(KOREAN_TARGET_SECTION)
     # 档位一律不写进 system prompt：permission_mode 是动态的，写进去会让前缀随档位切换
     # 失效，也不符合"system 建立后字节冻结"的约定。「全自动-零打断」的"不打断"由后端
     # 直接代答 ask_user 实现（见 _tool_ask_user），跟提示词无关。

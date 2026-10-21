@@ -246,7 +246,7 @@ AGENT_TOOLS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "save_dict",
-            "description": "写入/维护某个项目字典文件。file_key 必须来自 list_dict_files；content 为 tab 分隔文本（格式：日文<Tab>中文[<Tab>解释]）。action 决定操作：overwrite（显式整文件覆盖）、patch（默认，按 key 更新已有词条的译名与备注，不存在则追加到末尾）、delete（按 key 删除词条）。新增或修正词条用 patch，只发要改的行，避免重发整份字典；同批重复 key 以最后一行为准。GPT 字典兼容 src->dst#note；译前/译后条件词条按类型、条件、查找词匹配，场景词条按场景和查找词匹配；删除这些规则时传完整行或完整匹配键。delete 的 content 可整行粘贴，也可只写 key。新建字典文件也用它：带上 category（pre=译前 / gpt=GPT / post=译后），file_key 写新文件名（如 项目GPT字典2.txt），文件不存在时会先新建并登记到对应的字典清单再写入（新建时 action 用 overwrite 或 patch；content 可为空，只建空文件）。",
+            "description": "写入/维护某个项目字典文件。file_key 必须来自 list_dict_files；content 为 tab 分隔文本（格式：日文<Tab>译文（项目目标语言，韩语项目写韩语）[<Tab>解释]）。action 决定操作：overwrite（显式整文件覆盖）、patch（默认，按 key 更新已有词条的译名与备注，不存在则追加到末尾）、delete（按 key 删除词条）。新增或修正词条用 patch，只发要改的行，避免重发整份字典；同批重复 key 以最后一行为准。GPT 字典兼容 src->dst#note；译前/译后条件词条按类型、条件、查找词匹配，场景词条按场景和查找词匹配；删除这些规则时传完整行或完整匹配键。delete 的 content 可整行粘贴，也可只写 key。新建字典文件也用它：带上 category（pre=译前 / gpt=GPT / post=译后），file_key 写新文件名（如 项目GPT字典2.txt），文件不存在时会先新建并登记到对应的字典清单再写入（新建时 action 用 overwrite 或 patch；content 可为空，只建空文件）。",
             "parameters": {
                 "type": "object",
                 "properties": {

@@ -863,7 +863,7 @@ SUBAGENT_COMPACT_INSTRUCTION_PROMPT = """[记忆压缩模式] 上面的工作**�
 ## 待办
 （还没读的区间、需要复查或拿不准的点）
 </summary>
-3. 用中文，简洁但不丢信息。"""
+3. 用与用户对话相同的语言（用户用韩语就写韩语），简洁但不丢信息。"""
 
 
 class SubAgentRunner:

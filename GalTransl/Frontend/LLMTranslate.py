@@ -598,28 +598,24 @@ async def doLLMTranslate(
 
         try:
             await asyncio.gather(*worker_tasks)
-        except Exception:
-            for worker_task in worker_tasks:
-                if not worker_task.done():
-                    worker_task.cancel()
-            await asyncio.gather(*worker_tasks, return_exceptions=True)
-            raise
         finally:
             for worker_task in worker_tasks:
                 if not worker_task.done():
                     worker_task.cancel()
-
-        try:
+            # Drain workers before closing the shared engine, on success,
+            # failure and cancellation alike.
             await asyncio.gather(*worker_tasks, return_exceptions=True)
-        finally:
             if auto_tune_task:
                 auto_tune_task.cancel()
                 try:
                     await auto_tune_task
                 except asyncio.CancelledError:
                     pass
-            if reserved_permits > 0:
-                await set_effective_workers(adaptive_state.max_workers)
+            # Teardown must not re-check the stop event: it is expected to be
+            # set on cancellation and must not prevent client cleanup below.
+            while reserved_permits > 0:
+                semaphore.release()
+                reserved_permits -= 1
 
             # 确保无论 gather 成功还是失败，都取消标题更新任务
             if title_update_task:

@@ -152,13 +152,14 @@ class OllamaTranslate(BaseTranslate):
         return [{"role": "system", "content": KOREAN_SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(body, ensure_ascii=False)}]
 
-    def _prepare(self, candidates, previous, glossary):
+    def _prepare(self, candidates, previous, gpt_dic):
         context = [{"speaker": r.get_speaker_name(), "source": r.post_src,
                     "translation": r.proofread_zh or r.pre_dst}
                    for r in previous if r.pre_dst][-self.context_lines:] if self.context_lines else []
         selected = []
         messages = None
         for row in candidates:
+            glossary = gpt_dic.gen_prompt(selected + [row], type="gpt") if gpt_dic is not None else ""
             trial = self._messages(selected + [row], context, glossary)
             if not selected:
                 while sum(len(m["content"]) for m in trial) > self.max_chars and context:
@@ -212,6 +213,8 @@ class OllamaTranslate(BaseTranslate):
                     content = data["message"]["content"]
                 else:
                     choice = data["choices"][0]
+                    if not isinstance(choice, dict):
+                        raise ValueError("model choice must be an object")
                     if choice.get("finish_reason") != "stop":
                         raise ValueError("incomplete model response")
                     content = choice["message"]["content"]
@@ -260,8 +263,7 @@ class OllamaTranslate(BaseTranslate):
                 if id(row) not in pending:
                     break
                 candidates.append(row)
-            glossary = gpt_dic.gen_prompt(candidates, type="gpt") if gpt_dic is not None else ""
-            selected, messages = self._prepare(candidates, trans_list[:position], glossary)
+            selected, messages = self._prepare(candidates, trans_list[:position], gpt_dic)
             texts = await self._translate(selected, messages)
             self._check_stop_requested()
             for row, text in zip(selected, texts):

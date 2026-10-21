@@ -46,19 +46,20 @@ def test_engine_is_registered():
     assert "Ollama-ko" in TRANSLATOR_SUPPORTED
 
 
-def test_mixed_scene_job_and_cache_only_rerun(tmp_path):
+@pytest.mark.parametrize("count", [12, 120])
+def test_mixed_scene_job_and_cache_only_rerun(tmp_path, count):
     with mock_ollama() as (url, calls):
-        _, original = project(tmp_path, url)
+        _, original = project(tmp_path, url, count)
         state = run(tmp_path)
         assert state.success, state.error
-        assert len(calls) == 4
+        assert len(calls) == count // 3
         output = json.loads((tmp_path / "gt_output" / "scene.json").read_text())
         assert len(output) == len(original)
         assert [r.get("name") for r in output] == [r.get("name") for r in original]
         assert all("한국어" in r["message"] for r in output)
         second = run(tmp_path)
         assert second.success, second.error
-        assert len(calls) == 4  # zero additional model calls
+        assert len(calls) == count // 3  # zero additional model calls
 
 
 def test_partial_failure_resumes_from_cache_with_context(tmp_path):
@@ -128,3 +129,38 @@ def test_parallel_file_chunking_fails_with_actionable_configuration_error(tmp_pa
         assert not state.success
         assert "splitFile: no" in state.error
         assert calls == []
+
+
+@pytest.mark.parametrize("outcome", ["failed", "cancelled"])
+def test_job_closes_http_client_after_failure_or_cancellation(tmp_path, monkeypatch, outcome):
+    import threading
+    from GalTransl.Frontend import LLMTranslate
+    original_factory = LLMTranslate.init_gptapi
+    engines = []
+
+    async def tracking_factory(cfg):
+        instance = await original_factory(cfg)
+        engines.append(instance)
+        return instance
+
+    monkeypatch.setattr(LLMTranslate, "init_gptapi", tracking_factory)
+    stop = threading.Event()
+    def cancelled(payload):
+        stop.set()
+        return translated(payload)
+
+    actions = [(404, {"error": "missing model"})] if outcome == "failed" else [cancelled]
+    with mock_ollama(actions) as (url, calls):
+        project(tmp_path, url, 3)
+        async def run_and_inspect():
+            state = await run_job_async(JobSpec(str(tmp_path), "Ollama-ko"), stop_event=stop)
+            background = [task for task in asyncio.all_tasks()
+                          if task is not asyncio.current_task() and not task.done()
+                          and any(name in task.get_coro().__qualname__
+                                  for name in ("update_progress_title", "auto_tune_workers"))]
+            assert background == []
+            return state
+        state = asyncio.run(run_and_inspect())
+        assert state.status == outcome
+        assert len(engines) == 1
+        assert engines[0].client.is_closed

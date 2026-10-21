@@ -25,13 +25,13 @@ and revalidate cache hits. Preserve already translated batches on failure.
 
 ## Tasks (native execution with TDD)
 
-- [ ] 1. Add failing HTTP Mock tests, then implement prompt, settings, API
+- [x] 1. Add failing HTTP Mock tests, then implement prompt, settings, API
   transport, bounded batching/context and response validation in
   `GalTransl/Backend/OllamaTranslate.py` and `OllamaPrompts.py`.
-- [ ] 2. Add failing integration tests, register `Ollama-ko` in
+- [x] 2. Add failing integration tests, register `Ollama-ko` in
   `GalTransl/__init__.py` and `Frontend/LLMTranslate.py`, and exercise real
   `Service.run_job_async` / file plugin / cache reruns and failure recovery.
-- [ ] 3. Add synthetic mixed dialogue/narration sample, Korean configuration,
+- [x] 3. Add synthetic mixed dialogue/narration sample, Korean configuration,
   noninteractive `run_ollama_ko.py`, Windows setup/run scripts, README and
   recorded feature-level test results. Test CLI against the Mock server.
 - [ ] 4. Run Python and frontend suites/build; review full branch, fix important
@@ -63,3 +63,27 @@ GitHub API initially blocked by proxy (403); api.github.com added to environment
 configuration draft. Independent development continues while access is pending.
 The current conversation supplies the binding requirements; no earlier detailed
 feature spec was found in the checkout. No additional speculative UI redesign.
+
+### Implementation and review record
+
+- First backend contract run: 27 failures before implementation, then 27 passed.
+- First full-job run: 10 failures before engine registration; then integration
+  exercised cache resume, cache identity and concurrent files. Glossary tests
+  isolated app data with the existing `GALTRANSL_DATA_DIR` override and revealed
+  that upstream dictionary entries use slots; fingerprinting now uses their
+  explicit source, target and note fields.
+- First CLI/sample run: 3 failures before files existed, then 3 passed.
+- First full suite revealed that the registered default must remain
+  `auto-translate`; existing default-order regression now passes.
+- Independent whole-branch review identified three important issues. Regression
+  tests reproduced all three before fixes: failed/cancelled jobs bypassed shared
+  engine cleanup, glossary sizing included unselected rows, and a null OpenAI
+  choice escaped validation retries. The cleanup now drains workers and closes
+  clients in one finally block; glossary is selected per candidate batch; choice
+  objects are validated before access. Failure/cancellation tests also assert no
+  progress/adaptive-worker task remains in a persistent event loop.
+- Added 120-entry scene and malformed-response recovery coverage. No live Ollama
+  or user PC connections were made. Windows native execution remains unverified.
+- GitHub API access succeeded using the approved execution route; the API
+  confirmed fork parent, default branch main and push permission. No token values
+  were requested or printed.

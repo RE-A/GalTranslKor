@@ -195,6 +195,7 @@ def test_invalid_configuration_rejected_before_io(tmp_path, option, value):
     ("native", []), ("native", {"done": False, "message": {"content": "{}"}}),
     ("native", {"done": True, "done_reason": "length", "message": {"content": "{}"}}),
     ("openai", {"choices": [{"finish_reason": "length", "message": {"content": "{}"}}]}),
+    ("openai", {"choices": [None]}),
 ])
 def test_malformed_or_truncated_envelope_has_bounded_retries(tmp_path, api, body):
     with mock_ollama([(200, body)] * 3, raw=True) as (url, calls):
@@ -266,3 +267,42 @@ def test_cancel_during_inflight_request(tmp_path):
                 await e.shutdown()
         asyncio.run(run())
         assert len(calls) == 1
+
+
+def test_large_glossary_is_budgeted_only_for_selected_batch(tmp_path):
+    from GalTransl.Dictionary import CGptDict
+    dictionary = tmp_path / "glossary.txt"
+    dictionary.write_text("猫\t고양이\t" + "설명" * 190 + "\n犬\t개\t" + "설명" * 190 + "\n", encoding="utf-8")
+    with mock_ollama() as (url, calls):
+        async def run():
+            cfg = config(tmp_path, url, maxPromptChars=1400)
+            cfg.gpt_dic = CGptDict([str(dictionary)])
+            e = engine(cfg)
+            source = load_transList([{"message": "猫です。"}, {"message": "犬です。"}])[0]
+            try:
+                await e.batch_translate("scene", str(tmp_path / "scene"), source, 2,
+                                        gpt_dic=cfg.gpt_dic, translist_unhit=source)
+                assert all(r.pre_dst for r in source)
+            finally:
+                await e.shutdown()
+        asyncio.run(run())
+        assert len(calls) == 2
+        first = json.loads(calls[0][1]["messages"][-1]["content"])
+        assert "고양이" in first["glossary"] and "개" not in first["glossary"]
+        assert all(sum(len(m["content"]) for m in p["messages"]) <= 1400 for _, p in calls)
+
+
+def test_malformed_openai_choice_recovers_on_next_response(tmp_path):
+    good = {"choices": [{"finish_reason": "stop", "message": {"content": json.dumps(
+        {"translations": [{"id": 1, "text": "한국어 번역"}]}, ensure_ascii=False)}}]}
+    with mock_ollama([(200, {"choices": [None]}), (200, good)], raw=True) as (url, calls):
+        async def run():
+            e = engine(config(tmp_path, url, api="openai"))
+            source = rows(1)
+            try:
+                await batch(e, source, tmp_path)
+                assert source[0].pre_dst == "한국어 번역"
+            finally:
+                await e.shutdown()
+        asyncio.run(run())
+        assert len(calls) == 2

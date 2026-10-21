@@ -34,7 +34,7 @@ and revalidate cache hits. Preserve already translated batches on failure.
 - [x] 3. Add synthetic mixed dialogue/narration sample, Korean configuration,
   noninteractive `run_ollama_ko.py`, Windows setup/run scripts, README and
   recorded feature-level test results. Test CLI against the Mock server.
-- [ ] 4. Run Python and frontend suites/build; review full branch, fix important
+- [x] 4. Run Python and frontend suites/build; review full branch, fix important
   findings with regression tests, commit and push only to origin, open fork PR.
 
 ## Review focus
@@ -87,3 +87,12 @@ feature spec was found in the checkout. No additional speculative UI redesign.
 - GitHub API access succeeded using the approved execution route; the API
   confirmed fork parent, default branch main and push permission. No token values
   were requested or printed.
+- Final implementation: 53 feature tests and 1515 full-suite tests passed,
+  with 7 existing skips and 370 passing subtests; frontend 147 passed, build and
+  i18n checks passed. See OLLAMA_KO_TEST_RESULTS.md for exact commands.
+- User additionally requested portable AI/environment handoff documentation:
+  AGENTS.md, CLAUDE.md, docs/TRANSLATION_POLICY.md and docs/DEVELOPMENT_STATUS.md
+  added, with private/generated-data ignore rules. Four documents/links and
+  14 excluded paths verified; synthetic sample remains trackable.
+- Branch pushed only to RE-A/GalTranslKor; fork-internal PR created:
+  https://github.com/RE-A/GalTranslKor/pull/1 (base main). Not merged.

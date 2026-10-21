@@ -6,10 +6,12 @@
 
 - 개발 Fork: `RE-A/GalTranslKor`; 원본: `GalTransl/GalTransl` (Push 대상 아님)
 - 현재 브랜치: `feature/ollama-ko-translation`
-- PR 대상: Fork의 `main`; PR 생성은 현재 인수인계 문서 반영 후 진행 예정
+- PR: [RE-A/GalTranslKor #1](https://github.com/RE-A/GalTranslKor/pull/1)
+  (`feature/ollama-ko-translation` → Fork의 `main`), 생성 완료·미병합.
 - 구현 기준 커밋: `64a2f846511d73cf283d95ce6156a0ca7c04b2ab`
 - 주요 구현 커밋: `a406021` (백엔드), `8e4715b` (Windows 실행/샘플),
   `afde31c` (리뷰 수정 및 검증 기록)
+- 공통 개발 문서 커밋: `9b5362d`; 이후 문서 갱신은 현재 브랜치의 `git log`로 확인.
 - 이번 작업 환경: Codex Cloud Linux, Python 3.11.17, Node.js 24.19.0
 - 앞으로 사용할 환경: Codex Cloud, Claude Cloud, 로컬 Windows Codex.
   각 작업 시작 시 실제 환경과 Git 상태를 다시 확인할 것.
@@ -53,6 +55,10 @@
 
 ## 미검증 / 남은 작업
 
+Cloud 구현·Mock 검증·커밋/Push·Fork 내부 PR 생성은 완료했다. PR은 검토 대기이며
+자동 병합하지 않는다. 이 문서의 테스트 결과는 Cloud에서 직접 실행한 결과로,
+GitHub Actions의 별도 결과를 의미하지 않는다.
+
 다음은 **로컬 Windows에서만** 수행한다. Cloud 작업을 막는 선행 조건은 아니다.
 
 1. Python 3.11 및 설치된 Ollama 모델로 Windows `.cmd`의 최초 설치/실행 확인.
@@ -83,3 +89,5 @@ Mock 검증을 실제 모델의 품질/성능이나 Windows 네이티브 실행 
   지침·번역 정책·상태 문서 및 Git 데이터 제외 정책을 추가. 문서 링크와 ignore 검증 통과.
   이 추가 변경은 문서/ignore만 포함하므로 Python 전체 테스트는 반복하지 않았으며,
   위 구현 테스트 결과를 유지한다. 실제 모델 연결은 수행하지 않음.
+- 2026-10-21 / Codex Cloud: `9b5362d`까지 Fork에 Push하고 Fork 내부 PR #1 생성.
+  마지막 상태/계획 갱신도 같은 브랜치에 반영. 원본 저장소 Push 및 PR 자동 병합 없음.

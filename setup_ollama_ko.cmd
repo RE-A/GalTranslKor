@@ -10,7 +10,7 @@ if errorlevel 1 goto failed
 if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -m pip check
 if errorlevel 1 goto failed
-echo Setup complete. Set backendSpecific.Ollama.model in examples\ollama_ko\config.yaml.
+echo Setup complete. Create a project with "run_ollama_ko.cmd projects\mygame --init" and set backendSpecific.Ollama.model in its config.yaml.
 exit /b 0
 :failed
 echo Setup failed. Python 3.11 with the Windows Python Launcher and Internet access are required.

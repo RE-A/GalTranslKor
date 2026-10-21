@@ -1,0 +1,41 @@
+Core:
+  Name: 비주얼 노벨 장면 TXT (줄 구조 보존)
+  Type: file
+  Module: file_vn_scene_txt
+  Extensions: [] # 일반 TXT 플러그인과 겹치지 않도록 자동 인식하지 않음. filePlugin에 명시해서 사용
+
+Documentation:
+  Author: GalTranslKor
+  Version: 1.0
+  Description: 장면별로 분할된 일본어 비주얼 노벨 TXT를 줄 단위로 읽습니다. 【화자】「대사」, 화자「대사」 형식에서 화자와 대사 괄호를 분리하고, 빈 줄·주석·명령 줄은 번역하지 않고 원문 그대로 둡니다. 줄 순서, 들여쓰기, 줄바꿈 형식(CRLF/LF)과 BOM을 보존합니다.
+
+Settings:
+  inputEncoding: auto # auto: UTF-8(BOM 포함) → UTF-16(BOM) → Shift-JIS(cp932) 순서로 판별
+  outputEncoding: auto # auto: UTF-8. 원본에 BOM이 있으면 BOM 유지, UTF-16 원본은 UTF-16
+  speakerPatterns:
+    - '^(?P<pre>\s*【)(?P<name>[^】]{1,32})(?P<mid>】\s*)(?P<text>.+)$'
+    - '^(?P<pre>\s*)(?P<name>[^\s「『（(【】]{1,16})(?P<mid>\s*)(?P<text>「[^」]*」|『[^』]*』)$'
+  skipPatterns:
+    - '^\s*$'
+    - '^\s*(;|//|#|\*|@)'
+    - '^\s*(\[[^\]]*\]\s*)+$'
+  stripQuotes: true # 화자가 있는 줄의 대사 전체를 감싼 「」『』（）는 번역 대상에서 빼고 그대로 다시 붙임
+
+SettingsSchema:
+  inputEncoding:
+    label: 원문 인코딩
+    description: auto는 UTF-8, UTF-16(BOM), Shift-JIS(cp932)를 순서대로 시도합니다. 직접 지정할 수도 있습니다(예 cp932).
+  outputEncoding:
+    label: 출력 인코딩
+    description: 한국어는 Shift-JIS로 저장할 수 없습니다. auto는 UTF-8을 쓰고 원본 BOM 여부를 유지합니다.
+  speakerPatterns:
+    label: 화자 인식 정규식
+    description: name과 text 그룹이 필요하며 pre, mid 그룹은 선택입니다. 위에서부터 처음 일치하는 패턴을 사용합니다.
+    advanced: true
+  skipPatterns:
+    label: 번역 제외 줄 정규식
+    description: 일치하는 줄은 모델에 보내지 않고 원문 그대로 출력합니다(빈 줄, 주석, 라벨, 명령만 있는 줄 등).
+    advanced: true
+  stripQuotes:
+    label: 대사 괄호 분리
+    description: 화자가 인식된 줄에서 대사 전체를 감싼 괄호를 번역 대상에서 빼고 그대로 다시 붙입니다. 화자 없는 줄은 괄호를 유지해 모델이 대사임을 알 수 있게 합니다.

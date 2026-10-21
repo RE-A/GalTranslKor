@@ -13,8 +13,14 @@ def translated(payload):
     ]}
 
 
+MODEL_LIST = {"models": [{"name": "mock-ko:latest", "model": "mock-ko:latest", "size": 4 * 2**30,
+                          "details": {"parameter_size": "1B"}}]}
+LOADED = {"models": [{"name": "mock-ko:latest", "model": "mock-ko:latest", "size": 4 * 2**30,
+                      "size_vram": 3 * 2**30, "context_length": 8192}]}
+
+
 @contextmanager
-def mock_ollama(actions=(), *, raw=False):
+def mock_ollama(actions=(), *, raw=False, headers=None):
     calls = []
     pending = list(actions)
 
@@ -22,9 +28,21 @@ def mock_ollama(actions=(), *, raw=False):
         def log_message(self, *args):
             pass
 
+        def do_GET(self):
+            content = {"/api/version": {"version": "0.0.0-mock"}, "/api/tags": MODEL_LIST,
+                       "/api/ps": LOADED, "/v1/models": {"object": "list", "data": []}}.get(self.path)
+            body = json.dumps(content if content is not None else {"error": "not found"}).encode()
+            self.send_response(200 if content is not None else 404)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
         def do_POST(self):
             payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             calls.append((self.path, payload))
+            if headers is not None:
+                headers.append(dict(self.headers))
             action = pending.pop(0) if pending else translated
             if callable(action):
                 status, content = 200, action(payload)

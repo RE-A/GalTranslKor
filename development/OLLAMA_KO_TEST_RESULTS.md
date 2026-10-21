@@ -1,10 +1,45 @@
 # Ollama 한국어 번역 검증 기록
 
+## 2차 확장 검증 (2026-10-21, Claude Cloud)
+
+환경: Claude Cloud Linux, Python 3.11 `.venv`(requirements.txt + pytest), 브랜치
+`claude/repo-commit-access-check-p1n66r`(사용자 세션 지정 브랜치, `main` `6f02a04`에서 시작).
+원본 `GalTransl/GalTransl`의 최신 `main`(`64a2f84`)이 Fork에 이미 포함되어 있음을 `git merge-base`로 확인했다.
+
+| 명령 | 결과 |
+| --- | --- |
+| `.venv/bin/python -m pytest -q tests/test_ollama_ko.py tests/test_ollama_ko_integration.py tests/test_ollama_ko_cli.py tests/test_ollama_ko_scene.py` | **76 passed** (기존 53 + 신규 23) |
+| `.venv/bin/python -m pytest -q -ra` | **1538 passed, 7 skipped, 371 subtests passed** (건너뜀은 기존 7개와 동일) |
+| PowerShell 7.4.6(Linux, 임시 설치) `Parser.ParseFile` | `scripts/check_environment.ps1`, `scripts/start_translation.ps1` 구문 오류 0 |
+| `pwsh -File scripts/check_environment.ps1 -Project <임시> -Endpoint <Mock>` | 서버 버전·모델 목록·설정 모델 일치·`/v1` 응답 OK. Linux라 `py`·`nvidia-smi` 없음(FAIL/WARN 예상대로) |
+
+프런트엔드 코드는 변경하지 않아 npm 검사는 다시 실행하지 않았다.
+
+신규 테스트(`tests/test_ollama_ko_scene.py`)가 실제로 검증하는 범위:
+
+| 기능 | 검증 |
+| --- | --- |
+| TXT 장면 플러그인 | UTF-8 BOM·CRLF·마지막 줄바꿈 없음·들여쓰기·주석/라벨/명령/빈 줄을 바이트 단위로 보존, 【화자】「」/화자「」 분리, 화자 없는 「」 유지, Shift-JIS 입력→UTF-8 출력, 잘못된 정규식 거부 |
+| 한국어 지침 | 번들 `JapaneseToKorean.md`, 프로젝트 사본 우선, `translation_guideline.md` 덧붙임, 중국어 지침 거부, 지침 변경 시 캐시 식별자 변경 |
+| 문맥 | 이후 문맥 N줄, 마지막 배치 빈 이후 문맥, 화자·언급 기준 캐릭터 선택 |
+| 품질 규칙 | 거절 문구(한/영), 중국어 출력, 과도한 축약, 괄호 손실, 화자 접두사, `(Failed)` 검출; 원문 근거가 있는 표현·허용 일본어·한자 고유명사는 통과 |
+| 배치 축소 | 반복 개수 불일치 시 4→2 축소 후 성공, Ollama `prompt_eval_count >= numCtx` 보고 시 축소 후 실패 |
+| 실패 정책 | `mark`: 실패 줄 `(Failed)`·`翻译失败` 표시, `failures-*.jsonl` 기록, 나머지 계속, 실패 줄은 문맥 제외, 재실행 시 해당 줄만 캐시 미스 |
+| 통계 | native `prompt_eval_count`/`eval_count`/`total_duration` 합산, `stats-*.json`; openai 모드 `Authorization: Bearer <apiKey>` |
+| 전체 작업 | 커밋된 59줄 합성 장면을 실행기 subprocess로 번역 → 줄 수·비번역 줄 동일, 화자 한국어 이름, 가나 잔류 없음, 리포트 치명 0, 배치 5/이전 8/이후 4, 재실행 추가 호출 0 |
+| 실패 후 재실행 | 거절 1줄 → 종료 코드 2·리포트 치명 1 → 같은 Mock에서 재실행 시 해당 1줄만 1회 요청, 직전 문맥 복원 |
+| 도구 | `--init` 템플릿 생성·중복 거부, 번역 전 `check_ollama_ko.py` 누락/출력 없음 보고, 하위 폴더 캐시 이름(`-}`), 벤치마크 A/B 케이스 실행·원 프로젝트 무변경·`/api/ps` GPU 비율 |
+
+Mock은 일본어를 "한국어"로 치환하는 합성 응답을 사용한다. 위 결과는 실제 모델의 번역 품질이나
+속도의 증거가 아니다. 실제 Ollama·Windows 실행은 수행하지 않았다.
+
+## 1차 구현 검증 (Codex Cloud)
+
 검증일: 2026-10-21. Codex Cloud Linux, Python 3.11.17, Node.js 24.19.0.
 개발 기준: `RE-A/GalTranslKor`의 `64a2f846511d73cf283d95ce6156a0ca7c04b2ab`.
 작업 브랜치: `feature/ollama-ko-translation`.
 
-## 실제 실행 결과
+### 실제 실행 결과
 
 | 명령 | 결과 |
 | --- | --- |
@@ -21,7 +56,7 @@ Python 건너뜀 7개는 기존 테스트입니다: Windows msg-tool 바이너�
 신규 Ollama 테스트는 건너뛰지 않았습니다. Vite의 기존 큰 청크(500 kB 초과)
 경고는 남아 있으며 빌드는 성공했습니다.
 
-## 기능별 검증 범위
+### 기능별 검증 범위
 
 | 기능 | 실제 검증 방법 |
 | --- | --- |
@@ -44,7 +79,7 @@ Python 건너뜀 7개는 기존 테스트입니다: Windows msg-tool 바이너�
 Mock은 정해진 한국어 문자열을 반환합니다. 위 검증은 전송·처리·보존·실패 복구
 기능의 증거이며 실제 LLM의 번역 정확도나 문학적 품질의 증거는 아닙니다.
 
-## 리뷰 및 수정
+### 리뷰 및 수정
 
 독립 코드 리뷰에서 발견한 세 가지 문제를 먼저 실패하는 테스트로 재현한 뒤
 수정했습니다: 실패/취소 시 클라이언트 정리 누락, 축소 전 전체 후보의 용어집이

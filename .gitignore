@@ -41,6 +41,10 @@ desktop/src-tauri/.tauri-macos-build.json
 /examples/ollama_ko/transl_cache/
 /examples/ollama_ko/.galtransl-data/
 /examples/ollama_ko/name替换表.*
+/examples/ollama_ko_scene/name替换表.*
+/examples/ollama_ko_scene/GalTransl.log
+# Ollama-ko failure logs, statistics, reports and benchmark excerpts (contain source text).
+**/ollama_ko_logs/
 
 # Private project inputs, model weights and generated translations (all projects).
 /projects/
@@ -49,6 +53,9 @@ desktop/src-tauri/.tauri-macos-build.json
 !/examples/ollama_ko/gt_input/
 /examples/ollama_ko/gt_input/*
 !/examples/ollama_ko/gt_input/rainy_station.json
+!/examples/ollama_ko_scene/gt_input/
+/examples/ollama_ko_scene/gt_input/*
+!/examples/ollama_ko_scene/gt_input/scene_001.txt
 **/gt_output/
 **/transl_cache/
 **/json_jp/

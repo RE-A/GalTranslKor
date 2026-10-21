@@ -16,7 +16,7 @@ def config(tmp_path, endpoint, **options):
         "common": {"language": "ja2ko", "splitFile": "no", "gpt.contextNum": 3},
         "backendSpecific": {"Ollama": {
             "endpoint": endpoint, "model": "mock-ko", "retryWait": 0,
-            "maxAttempts": 3, **options,
+            "maxAttempts": 3, "onFailure": "stop", **options,
         }},
     }
     tmp_path.mkdir(parents=True, exist_ok=True)
@@ -117,7 +117,7 @@ def test_http_errors_have_bounded_retries_and_no_cache(tmp_path, status, attempt
 def test_character_budget_shrinks_history_without_losing_lines(tmp_path):
     with mock_ollama() as (url, calls):
         async def run():
-            e = engine(config(tmp_path, url, maxPromptChars=2400))
+            e = engine(config(tmp_path, url, maxPromptChars=3300, minLengthRatio=0))
             try:
                 source = rows(8)
                 for r in source:
@@ -128,7 +128,7 @@ def test_character_budget_shrinks_history_without_losing_lines(tmp_path):
                 await e.shutdown()
         asyncio.run(run())
         assert len(calls) > 1
-        assert all(sum(len(m["content"]) for m in p["messages"]) <= 2400 for _, p in calls)
+        assert all(sum(len(m["content"]) for m in p["messages"]) <= 3300 for _, p in calls)
 
 
 def test_oversized_single_line_is_not_truncated_or_sent(tmp_path):
@@ -275,7 +275,7 @@ def test_large_glossary_is_budgeted_only_for_selected_batch(tmp_path):
     dictionary.write_text("猫\t고양이\t" + "설명" * 190 + "\n犬\t개\t" + "설명" * 190 + "\n", encoding="utf-8")
     with mock_ollama() as (url, calls):
         async def run():
-            cfg = config(tmp_path, url, maxPromptChars=1400)
+            cfg = config(tmp_path, url, maxPromptChars=2300)
             cfg.gpt_dic = CGptDict([str(dictionary)])
             e = engine(cfg)
             source = load_transList([{"message": "猫です。"}, {"message": "犬です。"}])[0]
@@ -289,7 +289,7 @@ def test_large_glossary_is_budgeted_only_for_selected_batch(tmp_path):
         assert len(calls) == 2
         first = json.loads(calls[0][1]["messages"][-1]["content"])
         assert "고양이" in first["glossary"] and "개" not in first["glossary"]
-        assert all(sum(len(m["content"]) for m in p["messages"]) <= 1400 for _, p in calls)
+        assert all(sum(len(m["content"]) for m in p["messages"]) <= 2300 for _, p in calls)
 
 
 def test_malformed_openai_choice_recovers_on_next_response(tmp_path):

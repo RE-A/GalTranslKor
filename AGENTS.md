@@ -62,7 +62,7 @@ Claude용 진입 문서는 `CLAUDE.md`에서 이 공통 지침을 참조한다. 
 - Linux Cloud에서는 기존 `.venv/bin/python`, Windows에서는 `.venv\Scripts\python.exe`를
   사용한다. 의존성이 없으면 저장소의 설치 절차/`setup_ollama_ko.cmd`를 따른다.
 - 핵심 Mock 테스트:
-  `python -m pytest -q tests/test_ollama_ko.py tests/test_ollama_ko_integration.py tests/test_ollama_ko_cli.py`
+  `python -m pytest -q tests/test_ollama_ko.py tests/test_ollama_ko_integration.py tests/test_ollama_ko_cli.py tests/test_ollama_ko_scene.py`
 - Python 동작 변경 후 `python -m pytest -q -ra`를 실행한다. 프런트엔드 변경이 있으면
   `npm --prefix desktop test`, `npm --prefix desktop run build`,
   `npm --prefix desktop run i18n:check`도 실행한다.

@@ -6,6 +6,8 @@
 
 - 개발 Fork: `RE-A/GalTranslKor`; 원본: `GalTransl/GalTransl` (Push 대상 아님)
 - 현재 통합 브랜치: `main`; 완료된 기능 브랜치: `feature/ollama-ko-translation` (보존)
+- 2차 확장 브랜치: `claude/repo-commit-access-check-p1n66r` (Claude Cloud 세션이 지정한 개발 브랜치,
+  `main` `6f02a04`에서 시작). 사용자 요청 없이 PR 생성·병합하지 않음. 커밋은 이 브랜치의 `git log` 참고.
 - PR: [RE-A/GalTranslKor #1](https://github.com/RE-A/GalTranslKor/pull/1)
   (`feature/ollama-ko-translation` → Fork의 `main`), 사용자 명시 요청으로 병합 완료.
 - 병합 커밋: `a3106718d81ae0f95a76d0fe3b1efc03aa552530` (2026-10-21 15:33 KST).
@@ -13,7 +15,8 @@
 - 주요 구현 커밋: `a406021` (백엔드), `8e4715b` (Windows 실행/샘플),
   `afde31c` (리뷰 수정 및 검증 기록)
 - 공통 개발 문서 커밋: `9b5362d`; 이후 문서 갱신은 현재 브랜치의 `git log`로 확인.
-- 이번 작업 환경: Codex Cloud Linux, Python 3.11.17, Node.js 24.19.0
+- 1차 작업 환경: Codex Cloud Linux, Python 3.11.17, Node.js 24.19.0
+- 2차 작업 환경: Claude Cloud Linux, Python 3.11 `.venv`(세션에서 새로 생성), PowerShell 7.4.6 임시 설치(구문/Mock 점검용)
 - 앞으로 사용할 환경: Codex Cloud, Claude Cloud, 로컬 Windows Codex.
   각 작업 시작 시 실제 환경과 Git 상태를 다시 확인할 것.
 
@@ -33,9 +36,38 @@
   기존 `/docs` 제외 규칙은 두 공통 문서만 추적하도록 제한적으로 조정.
 - 실제 입력·모델·캐시·출력에 대한 Git 제외 규칙 강화. 기존 추적 파일/원본 구조 보존.
 
+### 2차 확장 (2026-10-21, Claude Cloud)
+
+원본 최신 `main`(`64a2f84`)이 Fork에 포함된 것을 확인한 뒤, 사용자 요구사항(장면 TXT, 한국어 지침 파일,
+슬라이딩 윈도우, 캐릭터 사전, 안정성, 품질 검사, 성능 측정, PowerShell)에 맞춰 최소 확장했다.
+
+- `plugins/file_vn_scene_txt`: 장면 TXT 파일 플러그인. 줄 구조·BOM·CRLF 보존, 화자/「」 분리,
+  비번역 줄 통과, UTF-8/UTF-16/Shift-JIS 자동 판별. 기존 `file_plaintext_txt`는 변경하지 않음.
+- `translation_guidelines/JapaneseToKorean.md`: 대사·지문·성인 장면·공통 규칙 한국어 지침.
+  `common.gpt.translation_guideline`(원본 키)으로 선택, 프로젝트 사본 우선, 원본 프로젝트 규범 파일 덧붙임,
+  중국어 지침 지정 시 오류. JSON 계약은 `OllamaPrompts.py`에 유지.
+- `OllamaTranslate.py`: 이후 문맥(`followingContext`), 캐릭터 사전(`characterFile`, 등장 인물만 전달),
+  반복 실패/컨텍스트 초과 시 배치 절반 축소, `onFailure: mark|stop`(기본 mark: `(Failed)` 표기 +
+  `ollama_ko_logs/failures-*.jsonl`), 토큰·시간·재시도 통계 `stats-*.json`, openai 모드 `apiKey`,
+  중국어 기본 사전 지정 경고. 캐시 계약 버전 1→2(이전 캐시는 재번역됨).
+- `OllamaQuality.py`: 엔진과 리포트가 공유하는 검증. 거절 문구, 중국어 출력, 과도한 축약, 괄호 손실,
+  화자 접두사를 치명적 오류로, 한자·길이·중복을 경고로 구분. `allowJapanese` 예외.
+- `GalTransl/OllamaKoTools.py`, `check_ollama_ko.py`: 프로젝트 초기화(`run_ollama_ko.py --init`)와
+  품질 리포트(`ollama_ko_logs/quality_report.md/json`). 실행기는 번역 후 자동 검사, 치명 오류 시 종료 코드 2.
+- `benchmark_ollama_ko.py`: 발췌 N줄로 케이스(A/B/C) 실행, 시간·호출·토큰·재시도·실패·누락·GPU 비율 표.
+- `scripts/check_environment.ps1`, `scripts/start_translation.ps1`(UTF-8 BOM): 환경 점검과 실행.
+- `examples/ollama_ko_scene`: 합성 59줄 장면 TXT, 설정(배치 5/이전 8/이후 4/온도 0.2/numCtx 8192/worker 1),
+  용어집, 캐릭터 사전. 실행기 기본 프로젝트를 이 예제로 변경. `**/ollama_ko_logs/` Git 제외.
+- README_KO_OLLAMA.md 전면 갱신(설치~재개~모델 변경~설정, 기능 조사표, 한국어 확인 내용, 제약).
+
 ## 검증 결과
 
-아래 결과는 `afde31c`에 포함된 구현을 Codex Cloud에서 실행한 결과다.
+2차 확장(Claude Cloud): 신규 포함 Ollama Mock 테스트 **76 passed**, 전체 Python
+**1538 passed, 7 skipped(기존과 동일), 371 subtests passed**. PowerShell 스크립트는 Linux pwsh 7.4.6에서
+구문 오류 0, `check_environment.ps1`을 Mock 서버로 실행해 서버/모델 점검 경로 확인. 프런트엔드는 변경 없음.
+상세: [검증 기록](../development/OLLAMA_KO_TEST_RESULTS.md)의 "2차 확장 검증".
+
+아래 표는 `afde31c`에 포함된 1차 구현을 Codex Cloud에서 실행한 결과다.
 그 이후 공통 지침/상태 문서와 ignore 규칙 변경은 문서 링크·Git 추적 여부를 검증한다.
 
 | 검증 | 결과 |
@@ -62,16 +94,23 @@ GitHub Actions의 별도 결과를 의미하지 않는다.
 
 다음은 **로컬 Windows에서만** 수행한다. Cloud 작업을 막는 선행 조건은 아니다.
 
-1. Python 3.11 및 설치된 Ollama 모델로 Windows `.cmd`의 최초 설치/실행 확인.
+1. Python 3.11 및 설치된 Ollama 모델로 Windows `.cmd`·`.ps1`(Windows PowerShell 5.1 포함)의 최초 설치/실행 확인.
+   `check_environment.ps1 -TestChat`으로 실제 모델 응답·`/api/ps` GPU 비율 확인.
 2. 실제 모델명만 샘플 설정에 넣고 native API 번역 실행. 모델/버전별 JSON·think
    옵션 지원, 길이 초과/타임아웃 동작 확인. 필요하면 OpenAI 호환 모드도 확인.
 3. 한국어 번역 품질, 화자별 존대·말투·호칭·고유명사 및 긴 장면의 일관성 평가.
-4. 하드웨어·모델명/버전·컨텍스트·배치 설정을 기록하고 GPU/VRAM·처리 속도를 측정.
+4. `benchmark_ollama_ko.py`로 A(26B/5줄/8192), B(26B/10줄/8192), C(작은 모델/10줄/8192)를 50~100줄로 실행해
+   하드웨어·모델명/버전·컨텍스트·배치 설정과 GPU/VRAM·처리 속도를 측정.
    모델 파일·원문·번역 출력은 커밋하지 않고 필요한 집계 결과만 문서화.
 5. 실제 게임 엔진의 추출/재삽입·제어코드·인코딩은 별도 승인된 작업에서 검증.
+6. 실제 장면 TXT의 화자 표기·명령 줄 형식에 맞게 `speakerPatterns`/`skipPatterns` 확인, 여러 줄 대사 처리 필요성 판단.
+7. 실제 모델 출력으로 거절·중국어·누락 휴리스틱의 오탐/미탐 확인 후 `minLengthRatio` 등 기본값 조정.
+8. 품질상 필요하면 장면 요약(장기 문맥) 기능 검토. 현재는 캐릭터 사전과 프로젝트 추가 지침으로 대체.
 
 Mock 검증을 실제 모델의 품질/성능이나 Windows 네이티브 실행 성공으로 해석하지 않는다.
 현재 전체 장면 영구 요약, GUI 전용 Ollama 설정 편집 화면, 게임별 패치 보장은 범위 밖이다.
+Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 대사 결합 옵션(합성 fixture로 재현 후),
+실제 Windows 검증 결과가 들어오면 기본값 조정.
 
 ## 다음 에이전트의 시작 순서
 
@@ -83,6 +122,10 @@ Mock 검증을 실제 모델의 품질/성능이나 Windows 네이티브 실행 
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 커밋·Push 권한 확인(GitHub App 설치 후 지정 브랜치 Push 성공).
+  사용자 요구사항에 따른 2차 확장 구현(위 "2차 확장"), Mock 76개·전체 1538개 통과, pwsh 구문 검사.
+  브랜치 `claude/repo-commit-access-check-p1n66r`에 커밋/Push. PR은 사용자 요청 시 생성. 실제 모델/Windows 미검증.
 
 - 2026-10-21 / Codex Cloud: Ollama 한국어 번역 구현, Mock/전체 회귀 테스트,
   독립 리뷰 수정 완료. `afde31c`까지 Fork 개발 브랜치에 Push.

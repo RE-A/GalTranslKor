@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from GalTransl import LOGGER
 from GalTransl.CSentense import CSentense
@@ -70,6 +71,11 @@ class LineBreakFix(GTextPlugin):
         :param text: 要分词的文本
         :return: 分词后的词语列表
         """
+        if re.search(r"[\uac00-\ud7a3]", text):
+            # Korean has no budoux model; break between space-separated words.
+            words = re.findall(r"\S+\s*", text)
+            lead = text[:len(text) - len(text.lstrip())]
+            return ([lead] if lead else []) + words
         if self.tokenizer_module == "budoux":
             return self.tokenizer.parse(text)
         elif self.tokenizer_module == "jieba":

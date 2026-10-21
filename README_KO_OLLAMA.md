@@ -105,6 +105,9 @@ powershell -ExecutionPolicy Bypass -File scripts\start_translation.ps1 -Project 
 
 - 번역 결과: `gt_output\<원본과 같은 파일명>`
 - 품질 리포트: `ollama_ko_logs\quality_report.md` (표), `quality_report.json`
+  - 용어 점검: 프로젝트 용어집(`(project_dir)` GPT 사전), `characters.yaml`, `name替换表.csv`에서 같은 원문의
+    한국어 표기가 다르면 `term_conflict`, 등록된 이름이 풀네임 표기와 어긋나면 `name_part_mismatch` 경고를 냅니다
+    (띄어쓰기 차이는 허용). GenDic 생성 사전에만 있는 항목은 "확인 필요 용어" 표로 따로 보여 줍니다. 파일은 수정하지 않습니다.
 - 실패 줄 기록: `ollama_ko_logs\failures-<실행시각>.jsonl` (파일, 줄 번호, 화자, 원문, 실패 이유)
 - 실행 통계: `ollama_ko_logs\stats-<실행시각>.json` (요청·재시도·실패 수, 입력/출력 토큰, 모델 처리 시간, 줄/분)
 - GalTransl 실행 로그: 프로젝트 폴더의 `GalTransl.log` (`saveLog: true`)

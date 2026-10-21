@@ -5,6 +5,7 @@ gt_output) and never modifies them.
 """
 from __future__ import annotations
 
+import csv
 import importlib.util
 import json
 from pathlib import Path
@@ -76,6 +77,106 @@ def _issue(issues, level, file, index, code, detail="", source="", text=""):
                    "detail": detail, "source": source, "translation": text})
 
 
+_NAME_NOTE_PREFIXES = ("인명", "호칭", "人名", "称呼")
+
+
+def _norm(text: str) -> str:
+    return "".join(str(text).split())
+
+
+def _read_dictionary(path: Path) -> list[tuple[str, str, str]]:
+    rows = []
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        if line.startswith(("#", "//")) or "\t" not in line:
+            continue  # comments and ----↓section↓---- headers
+        src, dst, *rest = (part.strip() for part in line.split("\t"))
+        if src and dst:
+            rows.append((src, dst, rest[0] if rest else ""))
+    return rows
+
+
+def _read_name_table(path: Path) -> list[tuple[str, str, str]]:
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = []
+        for row in reader:
+            src = (row.get("SRC_Name") or row.get("JP_Name") or "").strip()
+            dst = (row.get("DST_Name") or row.get("CN_Name") or "").strip()
+            if src and dst:
+                rows.append((src, dst, ""))
+        return rows
+
+
+def check_terminology(project: Path, cfg: dict) -> tuple[list[dict], dict]:
+    """Compare Korean spellings across project glossaries, characters and the name table.
+
+    Read-only: conflicts become warnings, nothing is rewritten. Spacing differences
+    are tolerated. Entries that only exist in a GenDic-generated dictionary are
+    listed as "unreviewed" instead of being trusted as confirmed spellings.
+    """
+    project = Path(project)
+    sources: list[tuple[str, list[tuple[str, str, str]]]] = []
+    skipped = []
+    for name in ((cfg.get("dictionary") or {}).get("gpt.dict") or []):
+        if not isinstance(name, str):
+            continue
+        if not name.startswith("(project_dir)"):
+            skipped.append(name)  # shared dictionaries live outside the project
+            continue
+        path = project / name.removeprefix("(project_dir)")
+        if path.is_file():
+            sources.append((path.name, _read_dictionary(path)))
+    ollama = (cfg.get("backendSpecific") or {}).get("Ollama") or {}
+    character_file = ollama.get("characterFile", "characters.yaml")
+    character_names = set()
+    if character_file and (project / character_file).is_file():
+        rows = []
+        for character in load_characters(project / character_file):
+            profile = character["profile"]
+            if profile["ko"]:
+                rows.append((profile["ja"], profile["ko"], "인명"))
+                character_names.add(profile["ja"])
+        sources.append((character_file, rows))
+    if (project / "name替换表.csv").is_file():
+        sources.append(("name替换表.csv", _read_name_table(project / "name替换表.csv")))
+
+    issues: list[dict] = []
+    spellings: dict[str, dict[str, list[str]]] = {}
+    notes: dict[str, str] = {}
+    for file, rows in sources:
+        for src, dst, note in rows:
+            for variant in dst.split("/"):
+                spellings.setdefault(src, {}).setdefault(_norm(variant), []).append(f"{file}: {variant}")
+            notes.setdefault(src, note)
+    for src, found in spellings.items():
+        if len(found) > 1:
+            detail = " / ".join(dict.fromkeys(item for items in found.values() for item in items))
+            _issue(issues, "warning", "(용어)", None, "term_conflict", detail, src)
+
+    # A full name should reuse the confirmed spelling of each registered name inside it.
+    names = {src for src in spellings
+             if src in character_names or notes.get(src, "").startswith(_NAME_NOTE_PREFIXES)}
+    for long in spellings:
+        for short in names:
+            if short == long or short not in long or (len(short) < 2 and short not in character_names):
+                continue
+            short_ko = set(spellings[short])
+            for long_ko, where in spellings[long].items():
+                if not any(k in long_ko for k in short_ko):
+                    _issue(issues, "warning", "(용어)", None, "name_part_mismatch",
+                           f"{short}={'/'.join(sorted(short_ko))}; {where[0]}", long)
+
+    generated = {file for file, _ in sources if "生成" in file}
+    unreviewed = []
+    for file, rows in sources:
+        if file not in generated:
+            continue
+        for src, dst, note in rows:
+            if all(w.split(":", 1)[0] in generated for items in spellings[src].values() for w in items):
+                unreviewed.append({"source": src, "target": dst, "note": note, "file": file})
+    return issues, {"sources": [file for file, _ in sources], "skipped": skipped, "unreviewed": unreviewed}
+
+
 def build_report(project: Path, config_name: str = "config.yaml") -> dict:
     project = Path(project)
     cfg = yaml.safe_load((project / config_name).read_text(encoding="utf-8")) or {}
@@ -132,8 +233,11 @@ def build_report(project: Path, config_name: str = "config.yaml") -> dict:
                 _issue(issues, "warning", rel, index, "duplicate_translation", "same as previous line", source, text)
             previous = (source, text)
         _check_output(issues, rel, entries, output_dir / rel, scene)
+    term_issues, terminology = check_terminology(project, cfg)
+    issues += term_issues
     counts = {level: sum(i["level"] == level for i in issues) for level in ("fatal", "warning")}
-    return {"project": str(project), "files": files, **summary, **counts, "issues": issues}
+    return {"project": str(project), "files": files, **summary, **counts, "issues": issues,
+            "terminology": terminology}
 
 
 def _check_output(issues, rel, entries, output, scene):
@@ -179,6 +283,12 @@ def write_report(project: Path, report: dict) -> Path:
         code = issue["code"] + (f" ({issue['detail']})" if issue["detail"] else "")
         lines.append(f"| {issue['level']} | {cell(issue['file'])} | {cell(issue['index'])} | {cell(code)} "
                      f"| {cell(issue['source'])} | {cell(issue['translation'])} |")
+    unreviewed = (report.get("terminology") or {}).get("unreviewed") or []
+    if unreviewed:
+        lines += ["", f"## 확인 필요 용어 ({len(unreviewed)}개)", "",
+                  "GenDic이 생성한 사전에만 있는 항목입니다. 독음과 표기를 확인한 뒤 직접 관리하는 용어집으로 옮기세요.", "",
+                  "| 원문 | 한국어 | 비고 |", "| --- | --- | --- |"]
+        lines += [f"| {cell(u['source'])} | {cell(u['target'])} | {cell(u['note'])} |" for u in unreviewed[:200]]
     path = folder / f"{REPORT_NAME}.md"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path

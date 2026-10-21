@@ -16,17 +16,28 @@ function storage(value) {
   return { values, getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
 }
 
-test('first launch is Chinese regardless of browser language; persisted invalid preferences fall back', () => {
+test('first launch is Korean regardless of browser language; persisted invalid preferences fall back', () => {
   const { core } = setup({ navigator: { language: 'en-US' } });
-  for (const preference of [undefined, 'fr', 'en-US', '', 'zh-CN']) {
+  for (const preference of [undefined, 'fr', 'en-US', '', 'ko']) {
     const document = { documentElement: { lang: '' } };
     const client = core.createUiI18n({ storage: storage(preference), document });
-    assert.equal(client.language(), 'zh-CN');
-    assert.equal(document.documentElement.lang, 'zh-CN');
+    assert.equal(client.language(), 'ko');
+    assert.equal(document.documentElement.lang, 'ko');
+    assert.equal(client.translate('common:actions.save'), '저장');
   }
   const client = core.createUiI18n({ storage: storage('en') });
   assert.equal(client.language(), 'en');
   assert.equal(client.translate('common:actions.save'), 'Save');
+  assert.equal(core.createUiI18n({ storage: storage('zh-CN') }).language(), 'zh-CN');
+});
+
+test('missing Korean resources fall back to English before Chinese', async () => {
+  const { core } = setup();
+  const client = core.createUiI18n();
+  client.instance.removeResourceBundle('ko', 'common');
+  assert.equal(client.translate('common:actions.save'), 'Save');
+  client.instance.removeResourceBundle('en', 'common');
+  assert.equal(client.translate('common:actions.save'), '保存');
 });
 
 test('switching persists an independent UI preference, updates document language and subscriptions', async () => {
@@ -55,7 +66,7 @@ test('blocked storage can still switch language for the current session', async 
   const { core } = setup();
   const blocked = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('quota'); } };
   const client = core.createUiI18n({ storage: blocked });
-  assert.equal(client.language(), 'zh-CN');
+  assert.equal(client.language(), 'ko');
   await client.changeLanguage('en');
   assert.equal(client.language(), 'en');
 });
@@ -80,7 +91,7 @@ test('missing and empty English resources fall back; interpolation and plurals u
 
 test('saved message references resolve in the new language while raw backend text is preserved', async () => {
   const { core } = setup();
-  const client = core.createUiI18n();
+  const client = core.createUiI18n({ storage: storage('zh-CN') });
   const saved = core.message('errors:profiles.notFound', { name: 'test' });
   assert.equal(client.resolve(saved), '未找到后端配置：test');
   client.instance.addResource('en', 'errors', 'profiles.notFound', 'Missing profile: {{name}}');
@@ -182,10 +193,12 @@ test('resource checks reject unknown keys, invalid types, parameter and rich tex
   assert.equal(validateCatalog({ missing: '中文' }, {}).missing.length, 1);
 });
 
-test('production English catalogs are complete and all resource references pass audit', () => {
-  const directory = new URL('../src/i18n/locales/en/', import.meta.url);
+test('production English and Korean catalogs are complete and all resource references pass audit', () => {
   const filled = (object) => Object.values(object).every((value) => typeof value === 'string' ? value.trim() !== '' : filled(value));
-  for (const file of readdirSync(directory)) assert.ok(filled(JSON.parse(readFileSync(new URL(file, directory), 'utf8'))), file);
+  for (const locale of ['en', 'ko']) {
+    const directory = new URL(`../src/i18n/locales/${locale}/`, import.meta.url);
+    for (const file of readdirSync(directory)) assert.ok(filled(JSON.parse(readFileSync(new URL(file, directory), 'utf8'))), `${locale}/${file}`);
+  }
   const { errors, report } = checkResources();
   assert.deepEqual(errors, []);
   assert.deepEqual(report.filter((item) => item.pending.length || item.missing.length), []);

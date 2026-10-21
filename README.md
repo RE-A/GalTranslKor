@@ -1,137 +1,143 @@
-
 <div align=center><img width="150" height="150" src="./img/logo.png"/></div>
 
 <h1><p align='center' >GalTransl</p></h1>
 
-[한국어 · Ollama 번역 설정 및 Windows 실행](README_KO_OLLAMA.md)
 <div align=center><img src="https://img.shields.io/github/v/release/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/license/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/stars/XD2333/GalTransl"/></div>
-<p align='center' >支持GPT/Claude/Deepseek/Sakura等大语言模型的Galgame自动化翻译解决方案</p>
+<p align='center' >GPT/Claude/Deepseek/Sakura 등 대규모 언어 모델을 지원하는 갈게임 자동 번역 솔루션</p>
 
-  [English](https://github.com/XD2333/GalTransl/blob/main/README_EN.md)
-  
-  GalTransl是一套将数个基础功能上的改进与对GPT提示工程（Prompt Engineering）的深度利用相结合的Galgame自动化翻译工具，用于制作内嵌式翻译补丁。现在提供**桌面端图形界面**，无需命令行操作即可完成翻译全流程。
+  한국어 · [中文](README_ZH.md) · [English](README_EN.md)
+
+> [!NOTE]
+> 이 저장소는 [GalTransl](https://github.com/GalTransl/GalTransl)을 한국어 사용자용으로 고친 Fork입니다.
+> 데스크톱 화면과 백엔드 메시지는 기본으로 한국어로 표시되며(설정에서 中文/English로 바꿀 수 있음),
+> **로컬 Ollama 모델로 일본어 장면 TXT를 한국어로 번역하는 방법**은
+> [한국어 · Ollama 번역 설정 및 Windows 실행](README_KO_OLLAMA.md)에 정리되어 있습니다.
+> 아래 내용은 원본 README를 옮긴 것으로, 원본 기능 설명은 중국어 번역(汉化) 작업을 기준으로 합니다.
+
+  GalTransl은 몇 가지 기본 기능의 개선과 GPT 프롬프트 엔지니어링(Prompt Engineering)의 적극적인 활용을 결합한 갈게임 자동 번역 도구로, 게임에 넣는 번역 패치를 만드는 데 씁니다. 이제 **데스크톱 그래픽 인터페이스**를 제공해 명령줄 없이도 번역 전 과정을 진행할 수 있습니다.
 
 > [!TIP]
-> **想翻译 Galgame，却不知道怎么提取台词、把译文放回游戏？**
+> **갈게임을 번역하고 싶은데 대사를 추출하고 번역문을 게임에 다시 넣는 방법을 모르겠다면?**
 >
-> 试试配套的 **[GalTransl-GalGameReverse-Skill](https://github.com/GalTransl/GalTransl-GalGameReverse-Skill)**：把工具包和游戏目录交给能操作本地文件的 AI 助手，让它帮你识别引擎、提取台词，再将 GalTransl 的翻译结果回写为游戏补丁。项目内附新手教程，建议先测试几句中文，再翻译整部游戏；具体支持范围以引擎和游戏版本为准。
+> 함께 쓰는 **[GalTransl-GalGameReverse-Skill](https://github.com/GalTransl/GalTransl-GalGameReverse-Skill)** 을 써 보세요. 도구 모음과 게임 폴더를 로컬 파일을 다룰 수 있는 AI 도우미에게 맡기면 엔진을 식별하고 대사를 추출한 뒤, GalTransl의 번역 결과를 게임 패치로 다시 써 넣어 줍니다. 프로젝트에 입문 안내가 있으니 먼저 몇 문장으로 시험한 다음 게임 전체를 번역하세요. 지원 범위는 엔진과 게임 버전에 따라 다릅니다.
 
-## 🤖 现已支持 Agent 模式
+## 🤖 에이전트 모드 지원
 
 > [!IMPORTANT]
-> **现在 GalTransl 支持 Agent 模式，可以自主完成整个翻译流程。**
+> **이제 GalTransl은 에이전트 모드를 지원해 번역 과정 전체를 스스로 진행할 수 있습니다.**
 >
-> 在桌面端进入 **Agent 模式**，用自然语言告诉它你的翻译需求，即可让 Agent 自主推进翻译任务。
+> 데스크톱 앱에서 **에이전트 모드**로 들어가 자연어로 번역 요구사항을 말하면 에이전트가 알아서 번역 작업을 진행합니다.
 
-![GalTransl Agent 模式：自主进行翻译前准备并启动试译](./img/agent-mode.png)
+![GalTransl 에이전트 모드: 번역 전 준비를 스스로 하고 시험 번역을 시작](./img/agent-mode.png)
 
-译后校对子 Agent 默认可以直接修复分配范围内的译文；拿不准、修改后仍需确认的句子会留下 `proofread_comment`，交主 Agent 二次审查。主 Agent 默认接收修改统计和待审查摘要，完整修改记录与待审查清单可分页查询，修改也可按记录撤销。句子已被后续编辑时会拒绝覆盖；校对完成后仍需重建输出文件。
+번역 후 교정 서브에이전트는 기본으로 맡은 범위의 번역문을 바로 고칠 수 있습니다. 확신이 없거나 고친 뒤에도 확인이 필요한 문장에는 `proofread_comment`를 남겨 메인 에이전트가 다시 검토합니다. 메인 에이전트는 기본으로 수정 통계와 검토 대기 요약을 받으며, 전체 수정 기록과 검토 대기 목록은 페이지 단위로 조회할 수 있고 수정은 기록 단위로 되돌릴 수 있습니다. 이후 다른 편집이 있었던 문장은 덮어쓰지 않습니다. 교정을 마친 뒤에는 출력 파일을 다시 생성해야 합니다.
 
 
-## 前言
-&ensp;&ensp;&ensp;&ensp;GalTransl的核心是一组自动化翻译流水线，解决了使用ChatGPT自动化翻译Gal过程中已知的大部分问题，并提高了整体的翻译质量。同时，通过与其他项目的组合，打通了制作补丁的完整流程，一定程度降低了上手门槛。对此感兴趣的朋友可以通过本项目更容易的构建具有一定质量的机翻补丁，并(或许)可以尝试在此框架的基础上高效的构建更高质量的汉化补丁。  
+## 머리말
+&ensp;&ensp;&ensp;&ensp;GalTransl의 핵심은 자동 번역 파이프라인으로, ChatGPT로 갈게임을 자동 번역할 때 알려진 대부분의 문제를 해결하고 전체 번역 품질을 높였습니다. 또한 다른 프로젝트와 조합해 패치 제작 전 과정을 연결하여 시작 장벽을 어느 정도 낮췄습니다. 관심 있는 분은 이 프로젝트로 일정 품질의 기계 번역 패치를 더 쉽게 만들 수 있고, (어쩌면) 이 틀을 바탕으로 더 높은 품질의 번역 패치를 효율적으로 만들어 볼 수 있습니다.
 
-  * 特性：   
-  1. 🖥️ **桌面端图形界面**——基于Tauri + React构建的现代桌面应用，无需命令行操作，支持深色模式、自定义背景、多项目管理等
-     
+  * 특징:
+  1. 🖥️ **데스크톱 그래픽 인터페이스** —— Tauri + React로 만든 최신 데스크톱 앱. 명령줄이 필요 없고 다크 모드, 사용자 지정 배경, 여러 프로젝트 관리 등을 지원합니다
+
 <img width="2044" height="1397" alt="QQ20261003-110410" src="https://github.com/user-attachments/assets/25185c5b-7d5a-46d5-b4d1-0f3353ea67a0" />
 
-  3. 支持**GPT/Claude/Deepseek/Sakura**等大语言模型，并通过提示工程提高了GPT的翻译质量   
-  4. 支持**GPT字典**，让GPT了解人设，准确翻译人名、人称代词与生词   
-  5. 通过译前、译后字典与条件字典实现灵活的自动化字典系统   
-  6. 实时保存缓存、自动断点续翻   
-  7. 结合其他项目支持多引擎脚本一键解包与注入，提供完整教程降低上手难度
-  8. 支持直接翻译srt、lrc、vtt字幕文件，mtool json文件，t++ excel文件，epub文件
-  9. 🤗 [Galtransl-7B-v3.5](https://huggingface.co/SakuraLLM/GalTransl-7B-v2)是为视觉小说翻译任务专项优化的本地模型，可在6G VRAM以上显卡部署，由sakuraumi和xd2333共同构建
-  10. 🤗 [GalTransl-14B-v3](https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3)是GalTransl-v3模型的14b版本，得益于更大的底模及改进的对齐训练，GalTransl-14B-v3整体质量好于GalTransl-7B-v3   
+  3. **GPT/Claude/Deepseek/Sakura** 등 대규모 언어 모델을 지원하며 프롬프트 엔지니어링으로 GPT의 번역 품질을 높였습니다
+  4. **GPT 사전**을 지원해 GPT가 인물 설정을 이해하고 인명, 인칭 대명사, 낯선 단어를 정확하게 번역하게 합니다
+  5. 번역 전·번역 후 사전과 조건 사전으로 유연한 자동 사전 시스템을 구성합니다
+  6. 캐시를 실시간으로 저장하고 중단된 곳부터 자동으로 이어서 번역합니다
+  7. 다른 프로젝트와 함께 여러 엔진의 스크립트를 한 번에 풀고 넣을 수 있으며, 시작을 돕는 전체 안내를 제공합니다
+  8. srt, lrc, vtt 자막 파일, mtool json 파일, t++ excel 파일, epub 파일을 바로 번역할 수 있습니다
+  9. 🤗 [Galtransl-7B-v3.5](https://huggingface.co/SakuraLLM/GalTransl-7B-v2)는 비주얼 노벨 번역에 맞춰 최적화한 로컬 모델로, VRAM 6GB 이상 그래픽카드에서 쓸 수 있습니다. sakuraumi와 xd2333이 함께 만들었습니다(중국어 출력용)
+  10. 🤗 [GalTransl-14B-v3](https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3)는 GalTransl-v3 모델의 14B 버전입니다. 더 큰 기반 모델과 개선된 정렬 학습 덕분에 GalTransl-7B-v3보다 전반적인 품질이 좋습니다(중국어 출력용)
 
-<b>❗❗使用本工具翻译并在未做全文校对/润色的前提下发布时，请在显眼的位置标注"xx模型AI翻译补丁"，而不应是"个人汉化"补丁。</b>
+<b>❗❗ 이 도구로 번역한 결과를 전체 교정·윤문 없이 배포할 때는 눈에 잘 띄는 곳에 "xx 모델 AI 번역 패치"라고 표시해 주세요. "개인 번역" 패치라고 표시해서는 안 됩니다.</b>
 
-## 近期更新
-* 2026.8: 更新v8，新增Agent模式，由AI自主完成翻译流程
-* 2026.4: 更新v7，新增**桌面端图形界面**（Tauri + React），支持深色模式、自定义背景、多项目管理、可视化翻译流程等
-* 2025.5: 更新v6，新增翻译模板ForGal、新增GalTransl-14B-v3模型
-* 2024.5：更新v5，新增GalTransl-7B模型，新增多种文件类型支持   
-* 2024.2：更新v4版，主要支持了插件系统  
-* 2023.12：更新v3版，支持基于文件的多线程 by @ryank231231
-* 2023.7：更新v2版，主要重构了代码 by @ryank231231
-* 2023.6：v1初版发布
+## 최근 업데이트
+* 2026.8: v8 업데이트. 에이전트 모드 추가, AI가 번역 과정을 스스로 진행
+* 2026.4: v7 업데이트. **데스크톱 그래픽 인터페이스**(Tauri + React) 추가, 다크 모드, 사용자 지정 배경, 여러 프로젝트 관리, 번역 과정 시각화 등 지원
+* 2025.5: v6 업데이트. 번역 템플릿 ForGal, GalTransl-14B-v3 모델 추가
+* 2024.5: v5 업데이트. GalTransl-7B 모델 추가, 여러 파일 형식 지원
+* 2024.2: v4 업데이트. 플러그인 시스템 지원
+* 2023.12: v3 업데이트. 파일 단위 멀티스레드 지원 by @ryank231231
+* 2023.7: v2 업데이트. 코드 전면 재구성 by @ryank231231
+* 2023.6: v1 첫 버전 공개
 
-## 导航
-* [环境准备](https://github.com/XD2333/GalTransl#环境准备)：环境与软件的安装
-* [上手教程](https://github.com/XD2333/GalTransl#上手教程)：全流程介绍如何制作一个机翻补丁，**只想看怎么使用本工具的话，可以直接跳转第2章的2.2节**   
-* [配置文件与翻译引擎设置](https://github.com/XD2333/GalTransl#配置文件与翻译引擎设置)：本篇详细介绍各个翻译引擎API的调用与配置方式。   
-* [GalTransl核心功能介绍](https://github.com/XD2333/GalTransl#galtransl核心功能介绍)：介绍GPT字典、缓存、普通字典、找问题等功能。
-* 后续教程已经[转移至Wiki](https://github.com/xd2333/GalTransl/wiki)
-* [开发与构建](#开发与构建)：开发环境、源码运行、平台构建与自动发布（点击展开）
+## 목차
+* [환경 준비](#환경-준비): 환경과 소프트웨어 설치
+* [시작 안내](#시작-안내): 기계 번역 패치를 만드는 전 과정 소개. **이 도구 사용법만 보려면 2장의 2.2절로 바로 가세요**
+* [설정 파일과 번역 엔진 설정](#설정-파일과-번역-엔진-설정): 번역 엔진 API의 호출과 설정 방법을 자세히 설명합니다.
+* [GalTransl 핵심 기능 소개](#galtransl-핵심-기능-소개): GPT 사전, 캐시, 일반 사전, 문제 찾기 등의 기능을 소개합니다.
+* 이후 안내는 [Wiki로 옮겼습니다](https://github.com/xd2333/GalTransl/wiki)(중국어)
+* [개발과 빌드](#개발과-빌드): 개발 환경, 소스 실행, 플랫폼별 빌드와 자동 배포(클릭해서 펼치기)
 
-## 环境准备
-  * **桌面版（推荐）**   
-  从 [Release](https://github.com/GalTransl/GalTransl/releases/) 下载对应平台的桌面包。Windows 使用 `GalTransl_*_win.zip`，解压后双击 `GalTransl Desktop.exe`，**无需安装 Python**。Linux x86_64 使用便携 `.tar.gz`，解压后运行 `./galtransl-desktop`；系统仍需具备 WebKitGTK 4.1 等运行库。macOS 提供 Intel 和 Apple Silicon 两种 DMG，同时附带便携 `.tar.gz`。桌面端会为每个实例自动启动独立后端并分配空闲端口，关闭一个窗口只会停止它自己的后端，其他窗口继续运行。
-   
+## 환경 준비
+  * **데스크톱판 (권장)**
+  [Release](https://github.com/GalTransl/GalTransl/releases/)에서 플랫폼에 맞는 데스크톱 패키지를 내려받습니다. Windows는 `GalTransl_*_win.zip`을 받아 압축을 풀고 `GalTransl Desktop.exe`를 두 번 클릭하면 되며 **Python을 설치할 필요가 없습니다**. Linux x86_64는 휴대용 `.tar.gz`를 풀고 `./galtransl-desktop`을 실행합니다. 시스템에 WebKitGTK 4.1 등의 런타임 라이브러리가 필요합니다. macOS는 Intel과 Apple Silicon용 DMG 두 가지와 휴대용 `.tar.gz`를 제공합니다. 데스크톱 앱은 창마다 독립된 백엔드를 자동으로 시작하고 빈 포트를 할당하므로, 창 하나를 닫으면 그 창의 백엔드만 멈추고 다른 창은 계속 실행됩니다.
+  * 이 Fork의 한국어 화면과 Ollama 번역 기능은 소스에서 실행합니다. [개발과 빌드](#개발과-빌드)와 [Ollama 안내](README_KO_OLLAMA.md)를 참고하세요.
 
 
-## 实用工具
-| 名称 | 说明 |
+
+## 유용한 도구
+| 이름 | 설명 |
 | --- | --- |
-| GARbro | 引擎工具：神一样的解包工具。[下载](https://github.com/morkt/GARbro/releases/download/v1.5.44/GARbro-v1.5.44.2904.rar) |
-| [KirikiriTools](https://github.com/arcusmaximus/KirikiriTools) | 引擎工具：Krkr、krkrz 提取、注入工具 |
-| [UniversalInjectorFramework](https://github.com/AtomCrafty/UniversalInjectorFramework) | 引擎工具：sjis隧道、sjis替换模式通用注入框架 |
-| [VNTextProxy](https://github.com/arcusmaximus/VNTranslationTools) | 引擎工具：sjis隧道模式通用注入框架 |
-| GalTransl_DumpInjector | 脚本工具：[VNTextPatch](https://github.com/arcusmaximus/VNTranslationTools)的图形化界面，综合脚本文本提取导入工具 |
-| [SExtractor](https://github.com/satan53x/SExtractor) | 脚本工具：综合脚本文本提取导入工具 |
-| [msg-tool](https://github.com/lifegpc/msg-tool) | 脚本工具：综合脚本文本提取导入工具 |
-| [DBTXT2Json_jp](https://github.com/XD2333/DBTXT2Json_jp) | 脚本工具：双行文本与json_jp互转脚本 |
-| [EmEditor](https://www.ghxi.com/emeditor.html) | 文本工具：神一样的文本编辑器，主语用于修缓存文件。  |
-| [VSCode](https://code.visualstudio.com/) | 文本工具：神一样的文本编辑器，主语用于修缓存文件。  |
-| [KeywordGacha](https://github.com/neavo/KeywordGacha) | 文本工具：使用 OpenAI 兼容接口自动生词语表 |
+| GARbro | 엔진 도구: 최고의 언팩 도구. [내려받기](https://github.com/morkt/GARbro/releases/download/v1.5.44/GARbro-v1.5.44.2904.rar) |
+| [KirikiriTools](https://github.com/arcusmaximus/KirikiriTools) | 엔진 도구: Krkr, krkrz 추출·삽입 도구 |
+| [UniversalInjectorFramework](https://github.com/AtomCrafty/UniversalInjectorFramework) | 엔진 도구: sjis 터널, sjis 치환 방식 범용 삽입 프레임워크 |
+| [VNTextProxy](https://github.com/arcusmaximus/VNTranslationTools) | 엔진 도구: sjis 터널 방식 범용 삽입 프레임워크 |
+| GalTransl_DumpInjector | 스크립트 도구: [VNTextPatch](https://github.com/arcusmaximus/VNTranslationTools)의 그래픽 인터페이스, 종합 스크립트 텍스트 추출·삽입 도구 |
+| [SExtractor](https://github.com/satan53x/SExtractor) | 스크립트 도구: 종합 스크립트 텍스트 추출·삽입 도구 |
+| [msg-tool](https://github.com/lifegpc/msg-tool) | 스크립트 도구: 종합 스크립트 텍스트 추출·삽입 도구 |
+| [DBTXT2Json_jp](https://github.com/XD2333/DBTXT2Json_jp) | 스크립트 도구: 두 줄 텍스트와 json_jp 상호 변환 스크립트 |
+| [EmEditor](https://www.ghxi.com/emeditor.html) | 텍스트 도구: 강력한 텍스트 편집기. 주로 캐시 파일 수정에 씁니다. |
+| [VSCode](https://code.visualstudio.com/) | 텍스트 도구: 강력한 텍스트 편집기. 주로 캐시 파일 수정에 씁니다. |
+| [KeywordGacha](https://github.com/neavo/KeywordGacha) | 텍스트 도구: OpenAI 호환 API로 용어표를 자동 생성 |
 
-## 上手教程
-做一个gal内嵌翻译补丁的大致流程是：   
-1. 识别引擎 -> 解包资源包拿到脚本 -> 接2.   
-2. 解包脚本为日文文本 -> 翻译为中文文本 -> 构建中文脚本 -> 接3.   
-3. 封包为资源包/免封包 -> 接4.
-4. 引擎支持unicode的话，直接玩 -> 引擎是shift jis的，尝试2种路线使其支持显示中文   
+## 시작 안내
+갈게임 번역 패치를 만드는 대략적인 흐름은 다음과 같습니다.
+1. 엔진 식별 -> 리소스 패키지를 풀어 스크립트 얻기 -> 2로
+2. 스크립트를 일본어 텍스트로 풀기 -> 번역문으로 번역 -> 번역된 스크립트 만들기 -> 3으로
+3. 리소스 패키지로 묶기 / 묶지 않고 읽히기 -> 4로
+4. 엔진이 unicode를 지원하면 바로 플레이 -> 엔진이 shift jis라면 두 가지 방법으로 번역문 표시 시도
 
-我会分成以上4个模块分步讲解，这个段落为了让没做过的朋友也能有机会上手，会写的更照顾小白一些。   
+위 네 단계로 나눠 설명합니다. 처음 해 보는 분도 따라올 수 있도록 초보자 기준으로 썼습니다.
 
-* 建议先只跑开头一个文件的翻译，或先随便添加一些中文，导回游戏确认可以正常显示再全部翻译   
-   
-（点击展开详细说明）   
+* 먼저 첫 파일 하나만 번역하거나 아무 문장이나 넣어 게임에 다시 넣고, 제대로 표시되는지 확인한 다음 전체를 번역하세요
+
+(클릭해서 자세히 보기)
 <details>
 
 <summary>
 
-### 第一章 识别与解包   
+### 1장 식별과 언팩
 
 </summary>
-识别引擎其实很简单，通常来说，使用GARbro打开游戏目录内的任意资源包，在左下方的状态栏中就会显示引擎名称： 
+엔진 식별은 사실 간단합니다. 보통 GARbro로 게임 폴더 안의 아무 리소스 패키지나 열면 왼쪽 아래 상태 표시줄에 엔진 이름이 나옵니다.
 
-或者，参考[资源包后缀表](https://morkt.github.io/GARbro/supported.html)，比较资源包的后缀。   
+또는 [리소스 패키지 확장자 표](https://morkt.github.io/GARbro/supported.html)와 확장자를 비교해 보세요.
 
-剧情脚本一般在一些有明显关键字的资源包，或在资源包中明显关键字的目录内，例如：scene、scenario、message、script等字样。并且脚本通常是由许多明显分章节、分人物，有的还分出了剧情和hs(例如带_h)，通常多翻找几个资源包就能找到。   
+시나리오 스크립트는 보통 눈에 띄는 키워드가 있는 리소스 패키지나 그 안의 폴더에 있습니다. 예: scene, scenario, message, script 등. 스크립트는 대개 장이나 인물별로 나뉘어 있고, 본편과 H 장면(예: _h가 붙음)이 나뉜 경우도 있어서 리소스 패키지를 몇 개 뒤져 보면 찾을 수 있습니다.
 
-或者，参考[Dir-A佬的教程](https://space.bilibili.com/8144708/)   
+또는 [Dir-A의 강좌](https://space.bilibili.com/8144708/)(중국어)를 참고하세요.
 
-特别的，针对新的krkrz引擎，GARbro已经无法打开资源包，可以用[KrkrzExtract项目](https://github.com/xmoezzz/KrkrzExtract/releases/tag/1.0.0.0)，将游戏拖到exe上启动。然后下一个全cg存档，直接把所有剧情ctrl一遍，也可以获取到脚本文件。   
+특히 새 krkrz 엔진은 GARbro로 리소스 패키지를 열 수 없으므로 [KrkrzExtract 프로젝트](https://github.com/xmoezzz/KrkrzExtract/releases/tag/1.0.0.0)를 써서 게임을 exe에 끌어 놓아 실행합니다. 그다음 전체 CG 세이브를 받아 모든 시나리오를 Ctrl로 한 번 넘기면 스크립트 파일을 얻을 수 있습니다.
 
 </details>
 <details>
 
 <summary>
 
-### 第二章 提取与翻译   
+### 2장 추출과 번역
 
 </summary>
 
-* **【2.1. 提取脚本文本】**   
-&ensp;&ensp;&ensp;&ensp;通常情况下，本项目是结合[VNTextPatch工具](https://github.com/arcusmaximus/VNTranslationTools)来解包脚本的。 VNTextPatch是由外国大佬arcusmaximus开发的[支持许多引擎](https://github.com/arcusmaximus/VNTranslationTools#vntextpatch)脚本的提取与注入的通用工具。（但并不是这些引擎都能搞定了，实测有的游戏是会提取失败的）   
-   
-&ensp;&ensp;&ensp;&ensp;VNTextPatch是使用cmd操作的，为了降低上手难度，我搓了一个图形化的界面，你可以在项目的useful_tools/GalTransl_DumpInjector内找到，点击GalTransl_DumpInjector.exe运行。   
-&ensp;&ensp;&ensp;&ensp;现在，你只需要选择日文脚本目录，然后选择保存提取的日文json的目录，这里一般将日文脚本放到叫script_jp的文件夹，再新建一个gt_input目录，用于存储提取出的脚本：   
-![图1](./img/img_dumper.png)
-&ensp;&ensp;&ensp;&ensp;需要注意GalTransl全程是使用name-message格式的JSON输入、处理和输出的。[JSON是什么](http://c.biancheng.net/json/what-is-json.html)   
-提取出来的json文件可以用emeditor打开，一般是这个样子的：   
+* **【2.1. 스크립트 텍스트 추출】**
+&ensp;&ensp;&ensp;&ensp;보통 이 프로젝트는 [VNTextPatch 도구](https://github.com/arcusmaximus/VNTranslationTools)와 함께 스크립트를 풉니다. VNTextPatch는 arcusmaximus가 만든, [여러 엔진](https://github.com/arcusmaximus/VNTranslationTools#vntextpatch) 스크립트의 추출과 삽입을 지원하는 범용 도구입니다.(모든 엔진에서 되는 것은 아니며, 실제로 추출에 실패하는 게임도 있습니다)
+
+&ensp;&ensp;&ensp;&ensp;VNTextPatch는 cmd로 다루기 때문에 쉽게 쓸 수 있도록 그래픽 인터페이스를 만들었습니다. 프로젝트의 useful_tools/GalTransl_DumpInjector에서 GalTransl_DumpInjector.exe를 실행하세요.
+&ensp;&ensp;&ensp;&ensp;이제 일본어 스크립트 폴더와 추출한 일본어 json을 저장할 폴더만 고르면 됩니다. 보통 일본어 스크립트는 script_jp 폴더에 두고, 추출한 스크립트를 저장할 gt_input 폴더를 새로 만듭니다.
+![그림1](./img/img_dumper.png)
+&ensp;&ensp;&ensp;&ensp;GalTransl은 처음부터 끝까지 name-message 형식의 JSON으로 입력, 처리, 출력합니다. [JSON이란](http://c.biancheng.net/json/what-is-json.html)(중국어)
+추출한 json 파일은 emeditor로 열 수 있으며 보통 다음과 같습니다.
 ```json
 [
   {
@@ -140,74 +146,63 @@
   }
 ]
 ```
-&ensp;&ensp;&ensp;&ensp;其中，每个{object(对象)}是一句话，`message`是消息内容，如果object还带了`name`，说明是对话。不过可能并不是所有类型的脚本都可以带name提取，**当可以正确提取name时，GalTransl的翻译质量会更好**。   
-&ensp;&ensp;&ensp;&ensp;PS. GalTransl只支持指定格式的json文件输入，但并不是说GalTransl就与VNTextPatch工具绑定了，也可以使用SExtractor工具，现在也支持导出GalTransl需要的name-message格式JSON   
+&ensp;&ensp;&ensp;&ensp;{object(객체)} 하나가 한 문장이며 `message`는 내용입니다. object에 `name`이 있으면 대사라는 뜻입니다. 다만 모든 종류의 스크립트에서 name을 함께 추출할 수 있는 것은 아니며, **name을 올바르게 추출할 수 있으면 GalTransl의 번역 품질이 더 좋아집니다**.
+&ensp;&ensp;&ensp;&ensp;PS. GalTransl은 정해진 형식의 json 입력만 지원하지만 VNTextPatch에 묶여 있는 것은 아닙니다. SExtractor 도구도 이제 GalTransl이 요구하는 name-message 형식 JSON을 내보낼 수 있습니다.
+&ensp;&ensp;&ensp;&ensp;이 Fork는 장면별로 나뉜 일본어 TXT도 줄 구조를 보존하며 읽는 `file_vn_scene_txt` 플러그인을 제공합니다. [Ollama 안내](README_KO_OLLAMA.md)를 참고하세요.
 
-* **【2.2. 使用桌面端翻译（推荐）】**
-&ensp;&ensp;&ensp;&ensp;从 [Release](https://github.com/XD2333/GalTransl/releases/) 下载最新版，解压后双击 `GalTransl Desktop.exe` 启动桌面端。桌面端会自动启动后端服务，无需手动操作。
+* **【2.2. 데스크톱 앱으로 번역 (권장)】**
+&ensp;&ensp;&ensp;&ensp;[Release](https://github.com/XD2333/GalTransl/releases/)에서 최신 버전을 내려받아 압축을 풀고 `GalTransl Desktop.exe`를 두 번 클릭해 실행합니다. 데스크톱 앱이 백엔드 서비스를 자동으로 시작하므로 따로 할 일은 없습니다.
 
-&ensp;&ensp;&ensp;&ensp;启动后的基本流程：
-1. **新建项目**：在首页点击"新建项目"，选择项目存放位置，导入待翻译文件
-2. **配置翻译后端**：在新建项目向导中选择翻译后端（如Deepseek、OpenAI等），填入API Key和Endpoint。也可以在左侧"后端配置"页面预先配置多个后端方案
-3. **设置字典**：在项目的"项目字典"页面配置GPT字典和常规字典（建议至少配置人名字典）
-4. **开始翻译**：在"开始翻译"页启动翻译，实时查看翻译进度和结果
-5. **浏览文本**：翻译完成后在"浏览文本"页查看自动找错结果，修正缓存后重新生成
+&ensp;&ensp;&ensp;&ensp;실행 후 기본 흐름:
+1. **새 프로젝트**: 홈에서 "새 프로젝트"를 누르고 프로젝트 저장 위치를 고른 뒤 번역할 파일을 가져옵니다
+2. **번역 백엔드 설정**: 새 프로젝트 마법사에서 번역 백엔드(Deepseek, OpenAI 등)를 고르고 API Key와 Endpoint를 입력합니다. 왼쪽 "모델 설정" 페이지에서 여러 백엔드 설정을 미리 만들어 둘 수도 있습니다
+3. **사전 설정**: 프로젝트의 "프로젝트 사전" 페이지에서 GPT 사전과 일반 사전을 설정합니다(최소한 인명 사전은 권장)
+4. **번역 시작**: "번역 시작" 페이지에서 번역을 시작하고 진행률과 결과를 실시간으로 확인합니다
+5. **번역문 보기**: 번역이 끝나면 "번역문 보기" 페이지에서 자동 오류 검사 결과를 보고 캐시를 고친 뒤 다시 생성합니다
 
-&ensp;&ensp;&ensp;&ensp;桌面端支持同时打开多个项目、深色模式、自定义背景等功能，具体可在"设置"页面调整。
+&ensp;&ensp;&ensp;&ensp;데스크톱 앱은 여러 프로젝트를 동시에 열 수 있고 다크 모드, 사용자 지정 배경 등을 지원하며 "설정" 페이지에서 조정합니다. 화면 언어도 "설정"에서 한국어/中文/English 중에 고를 수 있습니다.
 
-* **【2.2b. 使用命令行翻译（高级用户）】**
-&ensp;&ensp;&ensp;&ensp;如需使用命令行版本，在项目示例文件夹`sampleProject`中，将`config.inc.yaml`重命名为`config.yaml`，将日文json文件放入`gt_input`文件夹，编辑`config.yaml`配置翻译后端：
+* **【2.2b. 명령줄로 번역 (고급 사용자)】**
+&ensp;&ensp;&ensp;&ensp;명령줄 버전을 쓰려면 예제 폴더 `sampleProject`에서 `config.inc.yaml`의 이름을 `config.yaml`로 바꾸고, 일본어 json 파일을 `gt_input` 폴더에 넣은 뒤 `config.yaml`에서 번역 백엔드를 설정합니다.
 
 ```yaml
-# 翻译后端相关设置
+# 번역 백엔드 설정
 backendSpecific:
-  OpenAI-Compatible: # (ForGal/ForNovel/GenDic)OpenAI API兼容接口通用
+  OpenAI-Compatible: # (ForGal/ForNovel/GenDic) OpenAI API 호환 인터페이스 공통
     tokens:
       - token: sk-example-key1
-        endpoint: https://api.deepseek.com # 请求地址，加不加v1都可以
+        endpoint: https://api.deepseek.com # 요청 주소. v1은 붙여도 되고 안 붙여도 됨
         modelName: deepseek-chat
       - token: sk-example-key2
-        endpoint: https://openrouter.ai/api/v1/chat/completions # /chat/completions结尾则不自动补v1
+        endpoint: https://openrouter.ai/api/v1/chat/completions # /chat/completions로 끝나면 v1을 자동으로 붙이지 않음
         modelName: deepseek/deepseek-chat-v3-0324:free
-        stream: true # 支持为单个token设置流式请求
-```   
+        stream: true # 토큰마다 스트리밍 요청 설정 가능
+```
 
-思考参数在「后端配置」中分别设置，也可在 `OpenAI-Compatible` 段或单个令牌中填写：`enableThinking: true/false`（Qwen3、DashScope、SiliconFlow 等的 `enable_thinking`）、`thinkingType: enabled/disabled`（DeepSeek 等的 `thinking.type`）、`reasoningEffort: none/minimal/low/medium/high/xhigh/max`（OpenAI o 系列、GPT-5 及兼容中转的 `reasoning_effort`）。三项独立，按服务文档选用。全局未配置时不发送，令牌未配置时跟随全局，支持的等级以服务文档为准。
+생각(thinking) 매개변수는 "모델 설정"에서 각각 설정하며, `OpenAI-Compatible` 항목이나 토큰마다 쓸 수도 있습니다: `enableThinking: true/false`(Qwen3, DashScope, SiliconFlow 등의 `enable_thinking`), `thinkingType: enabled/disabled`(DeepSeek 등의 `thinking.type`), `reasoningEffort: none/minimal/low/medium/high/xhigh/max`(OpenAI o 시리즈, GPT-5 및 호환 중계의 `reasoning_effort`). 세 항목은 서로 독립적이며 서비스 문서에 맞춰 고릅니다. 전역에서 설정하지 않으면 보내지 않고, 토큰에서 설정하지 않으면 전역을 따르며, 지원 단계는 서비스 문서를 기준으로 합니다.
 
-* 一些收费api转发项目，例如：[硅基流动](https://cloud.siliconflow.cn/i/SvDatvsk)（modelName: "deepseek-ai/DeepSeek-V3.1-Terminus"）、[oaipro](https://api.oaipro.com/register?aff=ceAU)等等，以上只是举例，更多中转可以谷歌，本项目不担保它们的稳定性及可用性。   
-   
-&ensp;&ensp;&ensp;&ensp;但要注意这里获取的key填入的同时要修改endpoint地址，一般在对应平台的说明里能找到：   
+* 유료 API 중계 서비스 예: [SiliconFlow](https://cloud.siliconflow.cn/i/SvDatvsk)(modelName: "deepseek-ai/DeepSeek-V3.1-Terminus"), [oaipro](https://api.oaipro.com/register?aff=ceAU) 등. 예시일 뿐이며 다른 중계 서비스도 찾아볼 수 있습니다. 이 프로젝트는 이들의 안정성과 사용 가능성을 보증하지 않습니다.
+
+&ensp;&ensp;&ensp;&ensp;이때 받은 key를 넣으면서 endpoint 주소도 바꿔야 합니다. 보통 해당 서비스 안내에 나와 있습니다.
 ```yaml
       - token: sk-example-key1
-        endpoint: https://api.siliconflow.cn # 请求地址，加不加v1都可以
-```   
-   
-&ensp;&ensp;&ensp;&ensp;修改好项目设置后，确保你已经安装了需要的依赖（见环境准备），然后双击`run_GalTransl_terminal.bat`，输入项目路径即可开始翻译。
+        endpoint: https://api.siliconflow.cn # 요청 주소. v1은 붙여도 되고 안 붙여도 됨
+```
 
-&ensp;&ensp;&ensp;&ensp;**但是，不建议就这样开始翻译了**，请至少要先学会[GPT字典的使用](https://github.com/XD2333/GalTransl#gpt字典)，或者选择GenDic来生成一个人名字典，为你要翻译的gal设定好各角色的人名字典，这样才能保证基本的翻译质量。   
+&ensp;&ensp;&ensp;&ensp;프로젝트 설정을 마치고 필요한 의존성을 설치했는지 확인한 뒤(환경 준비 참고) `run_GalTransl_terminal.bat`를 두 번 클릭하고 프로젝트 경로를 입력하면 번역이 시작됩니다.
+&ensp;&ensp;&ensp;&ensp;로컬 Ollama로 한국어 번역을 하려면 이 Fork의 `run_ollama_ko.cmd`와 [Ollama 안내](README_KO_OLLAMA.md)를 쓰세요.
 
-&ensp;&ensp;&ensp;&ensp;翻译完成后，**记得修修缓存**，因为大模型经常会犯错。GalTransl会自动查找一些常见问题并记录于缓存中。可以对缓存进行修正，并重新运行程序来基于缓存重新生成结果json，见[自动化找错章节和翻译缓存章节](https://github.com/GalTransl/GalTransl#%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%BE%E9%94%99)
+&ensp;&ensp;&ensp;&ensp;**하지만 바로 번역을 시작하는 것은 권장하지 않습니다.** 최소한 [GPT 사전 사용법](#gpt-사전)을 먼저 익히거나 GenDic으로 인명 사전을 만들어, 번역할 갈게임의 인물 이름 사전을 정해 두어야 기본적인 번역 품질이 나옵니다.
 
-* **【2.3. 构建中文脚本】**   
-&ensp;&ensp;&ensp;&ensp;如果你是使用GalTransl提取注入工具提取的脚本，构建同理，选择日文脚本目录、中文json目录、中文脚本保存目录，然后点'注入'，即可将文本注入回脚本。但这里面有一些坑，第四章会提到。
+&ensp;&ensp;&ensp;&ensp;번역이 끝나면 **캐시를 꼭 손보세요.** 대형 모델은 자주 실수합니다. GalTransl은 흔한 문제를 자동으로 찾아 캐시에 기록합니다. 캐시를 고친 뒤 프로그램을 다시 실행하면 캐시를 바탕으로 결과 json을 다시 만듭니다. [자동 오류 검사 절과 번역 캐시 절](#자동-오류-검사)을 참고하세요.
 
-注：   
-1. 这里一般把中文脚本保存目录叫script_cn，因为日文脚本目录叫script_jp   
-2. 一般使用什么工具导出，就用什么工具导入。所以要先尝试导入导出是否都正常再开始翻译。   
+* **【2.3. 번역된 스크립트 만들기】**
+&ensp;&ensp;&ensp;&ensp;GalTransl 추출·삽입 도구로 추출한 스크립트라면 만드는 방법도 같습니다. 일본어 스크립트 폴더, 번역 json 폴더, 번역 스크립트 저장 폴더를 고르고 '삽입'을 누르면 텍스트가 스크립트에 다시 들어갑니다. 다만 몇 가지 함정이 있으며 4장에서 다룹니다.
 
+참고:
+1. 일본어 스크립트 폴더를 script_jp라고 부르므로 번역 스크립트 저장 폴더는 보통 script_cn처럼 부릅니다
+2. 보통 내보낼 때 쓴 도구로 다시 넣습니다. 번역을 시작하기 전에 가져오기와 내보내기가 모두 정상인지 먼저 확인하세요.
 
-</details>
-
-<details>
-
-<summary> 
-
-### 第三章 封包或免封   
-
- </summary>
-
-&ensp;&ensp;&ensp;&ensp;构建好中文脚本后，下一步就是想办法让游戏读取。首先目前主流引擎基本都是支持免封包读取的，可以继续参考Dir-A佬的[教程](https://space.bilibili.com/8144708/)，看看你要搞的引擎支不支持免封包读取。   
-&ensp;&ensp;&ensp;&ensp;特别的，针对krkr/krkrz引擎，可以使用arcusmaximus大佬的[KirikiriTools工具](https://github.com/arcusmaximus/KirikiriTools)，下载里面的version.dll，丢到游戏目录里，然后在游戏目录里新建一个"unencrypted"文件夹，将脚本直接丢进去（不用新建二级目录），就可以让krkr读取   
 
 </details>
 
@@ -215,137 +210,149 @@ backendSpecific:
 
 <summary>
 
-### 第四章 引擎与编码   
+### 3장 패킹 또는 패킹 없이 읽히기
+
+ </summary>
+
+&ensp;&ensp;&ensp;&ensp;번역 스크립트를 만들었으면 다음은 게임이 그것을 읽게 하는 일입니다. 요즘 주요 엔진은 대부분 패킹하지 않은 파일을 읽을 수 있습니다. Dir-A의 [강좌](https://space.bilibili.com/8144708/)(중국어)에서 작업할 엔진이 패킹 없이 읽기를 지원하는지 확인하세요.
+&ensp;&ensp;&ensp;&ensp;특히 krkr/krkrz 엔진은 arcusmaximus의 [KirikiriTools 도구](https://github.com/arcusmaximus/KirikiriTools)에서 version.dll을 받아 게임 폴더에 넣고, 게임 폴더에 "unencrypted" 폴더를 만들어 스크립트를 바로 넣으면(하위 폴더 없이) krkr가 읽습니다.
+
+</details>
+
+<details>
+
+<summary>
+
+### 4장 엔진과 인코딩
 
 </summary>
 
-&ensp;&ensp;&ensp;&ensp;在这一章首先需要了解一下unicode、sjis(shift jis)、gbk编码的基础知识，为了偷懒在这里我还是放[Dir-A佬的文章](https://www.bilibili.com/read/cv12367744/)，如果你对这块不了解的话，先去读一下。   
+&ensp;&ensp;&ensp;&ensp;이 장을 읽기 전에 unicode, sjis(shift jis), gbk 인코딩의 기초를 알아 두세요. [Dir-A의 글](https://www.bilibili.com/read/cv12367744/)(중국어)을 참고하면 됩니다. 아래 내용은 원본 기준으로 중국어(GBK) 표시를 다룹니다. 한국어는 보통 unicode 엔진이 아니면 별도의 글꼴·인코딩 처리가 필요합니다.
 
-如果你在做的引擎支持unicode编码，例如krkr、Artemis引擎等，一般就可以直接玩了。但如果引擎是使用sjis编码的话，直接打开会是乱码，这时候需要通过2种路线尝试使其可以正常显示中文：   
+작업 중인 엔진이 unicode 인코딩을 지원한다면(예: krkr, Artemis 엔진) 보통 바로 플레이할 수 있습니다. 하지만 엔진이 sjis 인코딩을 쓰면 그대로 열었을 때 글자가 깨지므로 두 가지 방법으로 번역문이 표시되게 해야 합니다.
 
-路线1：使用GBK编码注入脚本，然后修改引擎程序使其支持GBK编码   
-路线2：仍然使用jis编码注入脚本，但通过jis隧道或jis替换（推荐）2种方式，结合通用注入dll在运行过程中通过动态替换来显示中文   
+방법 1: GBK 인코딩으로 스크립트를 넣고, 엔진 프로그램을 고쳐 GBK 인코딩을 지원하게 함
+방법 2: 그대로 jis 인코딩으로 스크립트를 넣되, jis 터널 또는 jis 치환(권장) 방식으로 범용 삽입 dll과 함께 실행 중에 동적으로 바꿔 번역문을 표시함
 
-GalTransl提取注入工具的VNTextPatch模式注入脚本时默认是以sjis或unicode(utf8)编码注入的，这取决于引擎类型。
+GalTransl 추출·삽입 도구의 VNTextPatch 모드는 엔진 종류에 따라 기본으로 sjis 또는 unicode(utf8) 인코딩으로 스크립트를 넣습니다.
 
-* **使用路线1**   
-（注：这个模式现在有bug，有的引擎会卡死）在注入前勾选"GBK编码注入"，在这个模式下所有GBK编码不支持的字符将被替换成空白，例如音符♪   
-然后需要ollydbg或windbg工具，[在这里下载](https://down.52pojie.cn/Tools/Debuggers/)，用于修改引擎。   
-最后还是去看[Dir-A佬的教程](https://space.bilibili.com/8144708/)，里面有教如何下断点、修改，完全没接触过逆向的话这可能很难，但没办法，照着视频多试试。   
+* **방법 1 사용**
+(참고: 이 방식은 지금 버그가 있어 일부 엔진이 멈춥니다) 넣기 전에 "GBK 인코딩으로 삽입"을 선택합니다. 이 방식에서는 GBK가 지원하지 않는 문자(예: 음표 ♪)가 모두 빈칸으로 바뀝니다.
+그다음 엔진을 고칠 ollydbg나 windbg 도구가 필요합니다. [여기서 내려받기](https://down.52pojie.cn/Tools/Debuggers/)
+마지막으로 [Dir-A의 강좌](https://space.bilibili.com/8144708/)(중국어)에서 중단점을 걸고 수정하는 방법을 배웁니다. 리버싱 경험이 전혀 없다면 어려울 수 있지만 영상을 따라 여러 번 시도해 보세요.
 
-* **使用路线2**   
-在注入脚本时先什么都不勾选，如果有提示"sjis_ext.bin包含文字：xxx"的话，说明程序是以sjis编码注入的，并把这些不支持显示的字符放到script_cn目录内的sjis_ext.bin里供sjis隧道模式调用了。   
+* **방법 2 사용**
+스크립트를 넣을 때 아무것도 선택하지 않습니다. "sjis_ext.bin 포함 문자: xxx"라는 안내가 나오면 프로그램이 sjis 인코딩으로 넣었고, 표시할 수 없는 문자를 script_cn 폴더의 sjis_ext.bin에 담아 sjis 터널 방식에서 쓰도록 했다는 뜻입니다.
 
-**jis隧道**：仍然来自arcusmaximus大佬的VNTranslationTools项目中的[VNTextProxy组件](https://github.com/arcusmaximus/VNTranslationTools#vntextproxy)。VNTextPatch在将文本注入回脚本时，会将sjis编码不支持的字符临时替换为sjis编码中未定义的字符，VNTextProxy通过DLL劫持技术HOOK游戏，并在遇到这些字符时再把它还原回去。   
+**jis 터널**: 역시 arcusmaximus의 VNTranslationTools 프로젝트에 있는 [VNTextProxy 구성 요소](https://github.com/arcusmaximus/VNTranslationTools#vntextproxy)입니다. VNTextPatch는 텍스트를 스크립트에 넣을 때 sjis가 지원하지 않는 문자를 sjis에서 정의되지 않은 문자로 잠시 바꿔 두고, VNTextProxy가 DLL 하이재킹으로 게임을 HOOK해 그 문자를 만나면 원래대로 되돌립니다.
 
-当使用sjis隧道模式时，将`script_cn`内的`sjis_ext.bin`文件移动到游戏目录内，然后将useful_tools\VNTextProxy内的所有dll逐个丢到游戏目录内(一般推荐先试version.dll，或使用PEID/DIE等工具查输入表)，运行游戏，看有没有哪个dll可以正确的hook游戏并让不显示的文本可以正常显示（不正常的话那些地方会是空的）。不正常的话，删掉这个DLL，换下一个。[详细设置见此](https://github.com/XD2333/GalTransl/tree/main/useful_tools/VNTextProxy)
+sjis 터널 방식을 쓸 때는 `script_cn`의 `sjis_ext.bin`을 게임 폴더로 옮기고, useful_tools\VNTextProxy의 dll을 하나씩 게임 폴더에 넣어(보통 version.dll부터 시도하거나 PEID/DIE 등으로 임포트 테이블 확인) 게임을 실행해 봅니다. 어느 dll이 게임을 제대로 hook해 표시되지 않던 텍스트가 나오는지 확인합니다(잘못되면 그 부분이 비어 있음). 안 되면 그 DLL을 지우고 다음 것을 시도합니다. [자세한 설정](https://github.com/XD2333/GalTransl/tree/main/useful_tools/VNTextProxy)
 
-**jis替换**：来自AtomCrafty大佬的[UniversalInjectorFramework(通用注入框架)](https://github.com/AtomCrafty/UniversalInjectorFramework#character-substitution)项目，也是通过DLL劫持技术HOOK游戏，并可以将某个字符根据设置替换成指定的另一个字符，不限编码。我建立了[一套替换字典](https://github.com/XD2333/GalTransl_DumpInjector/blob/main/hanzi2kanji_table.txt)，按一些规则梳理了jis编码内不支持的简中汉字与jis支持的日文汉字的映射关系，可以满足99.99%常用简体中文汉字的正常显示(见hanzi2kanji_table.txt)，并将替换功能写在了GalTransl提取注入工具内(新：现在[SExtractor](https://github.com/satan53x/SExtractor)也支持替换，并且更好用)。在替换后结合UniversalInjectorFramework的动态Hook替换功能在游戏中将这些日文汉字替换回简中文字，实现游戏的正常显示。
+**jis 치환**: AtomCrafty의 [UniversalInjectorFramework(범용 삽입 프레임워크)](https://github.com/AtomCrafty/UniversalInjectorFramework#character-substitution) 프로젝트입니다. 역시 DLL 하이재킹으로 게임을 HOOK하며, 설정에 따라 어떤 문자를 다른 문자로 바꿀 수 있고 인코딩에 제한이 없습니다. 원본 작성자는 jis가 지원하지 않는 간체 한자와 jis가 지원하는 일본 한자의 대응을 규칙에 따라 정리한 [치환 사전](https://github.com/XD2333/GalTransl_DumpInjector/blob/main/hanzi2kanji_table.txt)을 만들어 자주 쓰는 간체자의 99.99%를 표시할 수 있게 했고(hanzi2kanji_table.txt), 치환 기능을 GalTransl 추출·삽입 도구에 넣었습니다(새 소식: [SExtractor](https://github.com/satan53x/SExtractor)도 치환을 지원하며 더 쓰기 편합니다). 치환한 뒤 UniversalInjectorFramework의 동적 Hook 치환으로 게임 안에서 그 일본 한자를 다시 간체자로 바꿔 정상 표시합니다.
 
-当使用sjis替换模式时，可以先运行一遍GalTransl提取注入工具的注入文本，获取游戏不支持的文字列表（注入后会提示"sjis_ext.bin包含文字：xxx"），然后，勾选"sjis替换模式注入"，把这些文字复制到右边的文本框内，再点击注入。注入后会获得一个sjis替换模式配置。
+sjis 치환 방식을 쓸 때는 먼저 GalTransl 추출·삽입 도구로 텍스트를 한 번 넣어 게임이 지원하지 않는 문자 목록을 얻습니다(넣은 뒤 "sjis_ext.bin 포함 문자: xxx" 안내가 나옴). 그다음 "sjis 치환 방식으로 삽입"을 선택하고 그 문자들을 오른쪽 입력란에 복사해 넣은 뒤 다시 삽입합니다. 삽입하면 sjis 치환 방식 설정이 만들어집니다.
 
-打开useful_tools/UniversalInjectorFramework文件夹，里面也是很多dll，也是逐个尝试，一般推荐先试winmm.dll，把目录内的uif_config.json一并复制到游戏目录，然后编辑这个json，按GalTransl提取注入工具提供的配置填写`source_characters`和`target_characters`。   
-然后运行游戏，如果游戏可以正常运行，并且弹出了一个像这样的控制台：   
+useful_tools/UniversalInjectorFramework 폴더를 열면 여기에도 dll이 여러 개 있으니 하나씩 시도합니다. 보통 winmm.dll부터 시도하며, 폴더의 uif_config.json도 함께 게임 폴더에 복사한 뒤 이 json을 편집해 GalTransl 추출·삽입 도구가 준 설정대로 `source_characters`와 `target_characters`를 채웁니다.
+그다음 게임을 실행했을 때 게임이 정상 동작하고 아래와 같은 콘솔이 뜨면
 ![img_terminal](./img/img_terminal.png)
-那多半就搞定了。如果不正常的话，删掉这个DLL，尝试换下一个。   
-注：UniversalInjectorFramework也支持sjis隧道模式，可以设置`tunnel_decoder`为`True`然后在`mapping`里填入sjis_ext.bin包含文字。   
-注：UniversalInjectorFramework的控制台窗口可以隐藏，[详细配置文件设置见此](https://github.com/XD2333/GalTransl/tree/main/useful_tools/UniversalInjectorFramework)   
+대부분 성공입니다. 그렇지 않으면 그 DLL을 지우고 다음 것을 시도합니다.
+참고: UniversalInjectorFramework도 sjis 터널 방식을 지원합니다. `tunnel_decoder`를 `True`로 하고 `mapping`에 sjis_ext.bin 포함 문자를 넣으면 됩니다.
+참고: UniversalInjectorFramework의 콘솔 창은 숨길 수 있습니다. [자세한 설정 파일 안내](https://github.com/XD2333/GalTransl/tree/main/useful_tools/UniversalInjectorFramework)
 
 </details>
 
-## GalTransl核心功能介绍
-介绍GPT字典、缓存、普通字典、找问题等功能。    
-（点击展开详细说明）     
+## GalTransl 핵심 기능 소개
+GPT 사전, 캐시, 일반 사전, 문제 찾기 등의 기능을 소개합니다.
+(클릭해서 자세히 보기)
 <details>
 
-<summary>   
-   
-### GPT字典
-&ensp;&ensp;&ensp;&ensp;GPT字典系统是使用GalTransl翻译时想提高质量的关键功能，通过补充设定的方式大幅提高翻译质量，是GPT翻译区别于传统机翻的核心。适用于gpt35、gpt4、newbing。   
-在程序目录中，`Dict`文件夹内有"通用GPT字典.txt"，在项目文件夹内可以新建"项目GPT字典.txt"，一般人名定义写进项目字典，通用提高翻译质量的词汇写进通用字典。   
-   
-</summary>   
+<summary>
 
-* 举例来说，你可以提前在这里对每个角色名的中文翻译进行定义，并说明这个角色的设定，例如性别、大致年龄、职业等。通过自动给GPT喂这些设定，可以自动调整合适的人称代词他/她、称谓等，并固定人名为假名时的中文翻译。   
-* 再比如，可以在这里为GPT补充一些它总是翻不对的词语，如果提供一定的解释，它会理解的更好。 
-   
----   
-   
-* 通过下面这个例子认识GPT字典喂人物设定的用法，每行的格式为`日文[Tab]中文[Tab]解释(可不写)`，注意中间的连接符为**TAB**   
+### GPT 사전
+&ensp;&ensp;&ensp;&ensp;GPT 사전 시스템은 GalTransl로 번역할 때 품질을 높이는 핵심 기능입니다. 설정을 보충해 주는 방식으로 번역 품질을 크게 높이며, GPT 번역이 기존 기계 번역과 다른 핵심입니다. gpt35, gpt4, newbing에 적용됩니다.
+프로그램 폴더의 `Dict` 폴더에 "通用GPT字典.txt(공통 GPT 사전)"가 있고, 프로젝트 폴더에 "项目GPT字典.txt(프로젝트 GPT 사전)"를 새로 만들 수 있습니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다. 기본 공통 사전은 중국어 번역용이므로 한국어 번역에서는 쓰지 마세요.
+
+</summary>
+
+* 예를 들어 미리 각 인물 이름의 번역을 정하고 그 인물의 설정(성별, 대략적인 나이, 직업 등)을 적어 둘 수 있습니다. 이 설정을 GPT에 자동으로 전달하면 알맞은 인칭 대명사(그/그녀)와 호칭을 고르고, 이름이 가나일 때의 번역 표기를 고정할 수 있습니다.
+* 또 GPT가 늘 틀리게 번역하는 단어를 보충할 수 있습니다. 약간의 설명을 덧붙이면 더 잘 이해합니다.
+
+---
+
+* 아래 예로 GPT 사전에 인물 설정을 넣는 법을 익혀 봅시다. 한 줄의 형식은 `일본어[Tab]번역[Tab]설명(생략 가능)`이며, 구분자는 반드시 **TAB**입니다.
 ```
-フラン	芙兰	name, lady, teacher
-笠間	笠间	笠間 陽菜乃’s lastname, girl
-陽菜乃	阳菜乃	笠間 陽菜乃's firstname, girl
-张三	张三	player's name, boy
+フラン	프랑	name, lady, teacher
+笠間	카사마	笠間 陽菜乃’s lastname, girl
+陽菜乃	히나노	笠間 陽菜乃's firstname, girl
+张三	장산	player's name, boy
 $str20	$str20	player's codename, boy
 ```
-这几条字典都是定义角色用的：   
-* 第一条可以理解为我想告诉GPT：“假名フラン的翻译是芙兰，这是人名，是位女士，是老师”。这样GPT在翻译フラン先生的时候就会翻译成芙兰老师而不会是芙兰医生。   
-* 二三条是同一个人的日本姓和名，经测试姓名必须拆成两行写，不然GPT3.5会不认识。
-* 第四条是设定主角的推荐写法。**注意即使日文和中文相同，也要再重复一遍**   
-* 第五条是主角在脚本中使用占位符而不是名字时的推荐写法。
-* **设定不要太复杂**，否则会让GPT多很多奇怪脑补。     
+이 항목들은 모두 인물을 정의합니다.
+* 첫 줄은 GPT에게 "가나 フラン의 번역은 프랑이고, 사람 이름이며 여성이고 선생님이다"라고 알려 주는 것입니다. 그러면 GPT가 フラン先生을 번역할 때 프랑 의사가 아니라 프랑 선생님으로 번역합니다.
+* 둘째, 셋째 줄은 같은 사람의 성과 이름입니다. 시험해 보니 성과 이름을 두 줄로 나눠 써야 GPT3.5가 알아봅니다.
+* 넷째 줄은 주인공을 정하는 권장 방식입니다. **원어와 번역이 같아도 한 번 더 적어 주세요**.
+* 다섯째 줄은 주인공이 스크립트에서 이름 대신 자리표시자로 쓰일 때의 권장 방식입니다.
+* **설정은 너무 복잡하게 쓰지 마세요.** GPT가 이상한 상상을 많이 하게 됩니다.
 
----   
-   
-* 通过下面这个例子认识GPT字典喂生词的用法，每行的格式亦为`日文[Tab]中文[Tab]解释(可不写)`，注意中间的连接符为**TAB**   
+---
+
+* 아래 예로 GPT 사전에 낯선 단어를 넣는 법을 익혀 봅시다. 형식은 마찬가지로 `일본어[Tab]번역[Tab]설명(생략 가능)`이며 구분자는 **TAB**입니다.
 ```
-大家さん  房东
-あたし	我/人家	use '人家' when being cute
+大家さん  집주인
+あたし	나/나야	use '나야' when being cute
 ```
-* 当你发现GPT不太认识这个词，例如“大家さん”，并且这个词含义比较唯一，那么就可以像这样加进通用GPT字典里，解释不是必要的。   
-* 第二行的中文写了一个多义词“我/人家”，并且在解释中写了“当扮可爱时用人家”。GPT3.5没那么聪明，但GPT4基本可以灵活运用。
-* 想让GPT更瑟？自己加字典（   
+* GPT가 잘 모르는 단어(예: "大家さん")이고 뜻이 비교적 하나로 정해져 있다면 이렇게 공통 GPT 사전에 넣으면 됩니다. 설명은 꼭 필요하지 않습니다.
+* 둘째 줄은 번역에 여러 뜻 "나/나야"를 적고 설명에 "귀엽게 굴 때는 나야를 쓴다"고 적었습니다. GPT3.5는 그렇게 영리하지 않지만 GPT4는 대체로 잘 활용합니다.
 
-在程序目录中，`Dict`文件夹内有"通用GPT字典.txt"，在`sampleProject`文件夹内会有"项目GPT字典.txt"，一般人名定义写进项目字典，通用提高翻译质量的词汇写进通用字典。   
-只有当本次发送给GPT的人名和句子中有这个词，这个词的解释才会被送进本轮的对话中。   
-**但不要什么词都往里加**，~~什么都往里加只会害了你~~，推荐只写**各角色的设定**和**总是会翻错的词**。 
+프로그램 폴더의 `Dict` 폴더에 "通用GPT字典.txt"가 있고, `sampleProject` 폴더에는 "项目GPT字典.txt"가 있습니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다.
+이번에 GPT에 보내는 이름과 문장에 그 단어가 있을 때만 그 단어의 설명이 이번 대화에 들어갑니다.
+**그렇다고 아무 단어나 넣지는 마세요.** ~~다 넣으면 오히려 해가 됩니다~~. **인물 설정**과 **늘 틀리게 번역하는 단어**만 쓰는 것을 권장합니다.
 
-运行时字典会动态的展示在每一次请求里：
+실행 중에는 사전이 매 요청에 동적으로 표시됩니다.
 
 ![img_start](./img/img_start.png)
 
-</details>   
-   
+</details>
+
 <details>
 
-<summary>   
+<summary>
 
-### 常规字典
-在GalTransl中，常规字典是分为"译前字典"与"译后字典"的。译前字典是在翻译前对日文的a to b替换处理，译后字典是对译后中文的a to b替换处理。   
+### 일반 사전
+GalTransl의 일반 사전은 "번역 전 사전"과 "번역 후 사전"으로 나뉩니다. 번역 전 사전은 번역 전에 일본어를 a에서 b로 바꾸고, 번역 후 사전은 번역된 문장을 a에서 b로 바꿉니다.
 
-</summary>   
+</summary>
 
-译前字典多用于一些口齿不清的矫正情况，以及多个词代表同个意思的话，可以用译前字典先统一，减少GPT字典的输入。   
-   
-译后字典就是比较常见的字典，在译后将某个词替换成另一个词，但是此处我改进了一个叫"条件字典"的东西。条件字典实际上就是在替换前增加了一步判断，用于避免误替换、过度替换等情况。   
-每行格式为`pre_jp/post_jp[tab]判断词[tab]查找词[tab]替换词`   
-* pre_jp/post_jp代表判断词查找的位置，定义在"翻译缓存"章节讲
-* 判断词：如果在查找位置(pre_jp/post_jp)中找到判断词，才会激活后面的替换。   
-* 判断词可以在开头加"!"代表"不存在则替换"，否则一般是代表"存在则替换"。   
-* 判断词可以使用`[or]`或`[and]`关键字连接，多个`[or]`连接代表"有一个条件满足就进入替换"，多个`[and]`连接代表"条件都满足才进入替换"。   
-* 查找词、替换词，同普通字典，将a替换成b。   
+번역 전 사전은 혀 짧은 발음 등을 바로잡거나, 같은 뜻을 가진 여러 단어를 먼저 하나로 맞춰 GPT 사전 입력을 줄이는 데 주로 씁니다.
+
+번역 후 사전은 흔히 보는 사전으로, 번역 후 어떤 단어를 다른 단어로 바꿉니다. 여기에 "조건 사전"이라는 기능을 더했습니다. 조건 사전은 바꾸기 전에 판단 단계를 하나 추가해 잘못된 치환이나 과도한 치환을 막습니다.
+한 줄 형식은 `pre_jp/post_jp[tab]판단어[tab]찾을 말[tab]바꿀 말`입니다.
+* pre_jp/post_jp는 판단어를 찾을 위치이며, 정의는 "번역 캐시" 절에서 설명합니다
+* 판단어: 찾을 위치(pre_jp/post_jp)에서 판단어를 찾았을 때만 뒤의 치환이 실행됩니다.
+* 판단어 앞에 "!"를 붙이면 "없으면 바꾸기"가 되고, 그렇지 않으면 보통 "있으면 바꾸기"입니다.
+* 판단어는 `[or]`나 `[and]`로 이을 수 있습니다. `[or]`로 여럿 이으면 "하나라도 맞으면 바꾸기", `[and]`로 이으면 "모두 맞아야 바꾸기"입니다.
+* 찾을 말, 바꿀 말은 일반 사전과 같이 a를 b로 바꿉니다.
 
 </details>
 
 <details>
 
-<summary>   
+<summary>
 
-### 翻译缓存
-开始翻译后，可以在transl_cache目录内找到翻译缓存。   
-</summary>  
+### 번역 캐시
+번역을 시작하면 transl_cache 폴더에서 번역 캐시를 볼 수 있습니다.
+</summary>
 
-翻译缓存与json_jp是一一对应的，在翻译过程中，翻译结果会优先写进缓存里，当一个文件被翻译完成后，才会出现在json_cn里。   
+번역 캐시는 json_jp와 하나씩 대응합니다. 번역하는 동안 결과는 먼저 캐시에 기록되고, 파일 하나가 다 번역되어야 json_cn(결과 폴더)에 나타납니다.
 
-首先，总结一些要点：   
-1. 当你想重翻某句时，打开对应的翻译缓存文件，删掉该句的pre_zh整行(**不要留空行**)   
-2. 当你想整段重翻时，直接删对应的数个object块，重翻某文件时，直接删对应的翻译缓存文件。   
-3. 当GalTransl正在翻译时，不要修改正在翻译的文件的缓存，改了也会被覆写回去。   
-4. json_cn结果文件 = 翻译缓存内的pre_zh/proofread_zh + 译后字典替换 + 恢复对话框   
-5. 当新的post_jp与缓存内的post_jp不一致时，会触发重翻，一般发生在添加了新的译前字典时
+먼저 요점을 정리하면:
+1. 어떤 문장을 다시 번역하고 싶으면 해당 번역 캐시 파일을 열어 그 문장의 pre_zh 줄을 통째로 지웁니다(**빈 줄을 남기지 마세요**)
+2. 한 구간을 통째로 다시 번역하려면 해당 object 블록 여러 개를 지우고, 파일 하나를 다시 번역하려면 그 번역 캐시 파일을 지웁니다.
+3. GalTransl이 번역하는 동안에는 번역 중인 파일의 캐시를 고치지 마세요. 고쳐도 다시 덮어쓰입니다.
+4. json_cn 결과 파일 = 번역 캐시의 pre_zh/proofread_zh + 번역 후 사전 치환 + 대화 괄호 복원
+5. 새 post_jp가 캐시의 post_jp와 다르면 다시 번역합니다. 보통 번역 전 사전을 새로 추가했을 때 생깁니다
 
-下面是翻译缓存的典型样例：   
+다음은 번역 캐시의 전형적인 예입니다(현재 버전의 필드 이름은 pre_src/post_src/pre_dst/proofread_dst 등이며 아래는 원본 설명의 옛 이름입니다).
 ```json
     {
         "index": 4,
@@ -358,69 +365,70 @@ $str20	$str20	player's codename, boy
         "proofread_by": "NewBing",
     },
 ```
-解释一下每个字段的含义:  
-* 基本参数：   
-`index`  序号   
-`name`  人名   
-`pre_jp`  原始日文   
-`post_jp`  处理后日文。一般来讲，post_jp = pre_jp 去除对话框 + 译前字典替换。你会代码的话也可以在此处加入自己的处理   
-`pre_zh`  原始中文   
-`proofread_zh`  校对的中文   
-（没有post_zh，post_zh在结果文件夹里。）   
-`trans_by`  翻译引擎/翻译者   
-`proofread_by`  校对引擎/校对者    
-`problem`  存储问题。见下方自动化找错。   
-`post_zh_preview`  用于预览json_cn，但**对它的修改并不会应用到json_cn**，要修改`pre_jp`/`proofread_zh`
+각 필드의 뜻:
+* 기본 필드:
+`index`  번호
+`name`  인물 이름
+`pre_jp`  원래 일본어
+`post_jp`  처리한 일본어. 일반적으로 post_jp = pre_jp에서 대화 괄호 제거 + 번역 전 사전 치환. 코드를 다룰 줄 알면 여기에 직접 처리를 넣을 수도 있습니다
+`pre_zh`  원래 번역문
+`proofread_zh`  교정한 번역문
+(post_zh는 없으며 결과 폴더에 있습니다.)
+`trans_by`  번역 엔진/번역자
+`proofread_by`  교정 엔진/교정자
+`problem`  문제 기록. 아래 자동 오류 검사 참고.
+`post_zh_preview`  json_cn 미리보기용이며 **여기를 고쳐도 json_cn에는 반영되지 않습니다**. `pre_jp`/`proofread_zh`를 고치세요
 
-* 简单讲下如何用Emeditor修缓存：选中一个文件，先右键-Emeditor打开，然后把transl_cache内所有文件全选拖进去。   
-这时候标签可能会占很大位置，右键标签-自定义标签页，将"标签不合适时"改成"无"，这样标签就只会在一行了（需要使用Emeditor专业版）。   
-接着ctrl+f搜索，搜索你感兴趣的关键字（如problem、proofread_comment），勾选"搜索组群中所有文档"，即可快速在所有文件中搜索，或点提取快速预览所有的问题。
+* Emeditor로 캐시를 고치는 방법: 파일 하나를 골라 오른쪽 클릭 - Emeditor로 연 다음 transl_cache의 모든 파일을 선택해 끌어 놓습니다.
+이때 탭이 자리를 많이 차지하면 탭을 오른쪽 클릭 - 탭 사용자 지정에서 "탭이 맞지 않을 때"를 "없음"으로 바꾸면 탭이 한 줄로 표시됩니다(Emeditor 전문가판 필요).
+그다음 Ctrl+F로 관심 있는 키워드(예: problem, proofread_comment)를 검색하고 "그룹의 모든 문서 검색"을 선택하면 모든 파일에서 빠르게 찾을 수 있고, 추출을 누르면 모든 문제를 한눈에 볼 수 있습니다.
 
-* **VSCode**也是非常好的修缓存工具，只要使用VsCode打开缓存文件夹，然后全局搜索如problem，就可以快速定位所有问题   
+* **VSCode**도 캐시를 고치기에 아주 좋습니다. VSCode로 캐시 폴더를 열고 problem 등을 전체 검색하면 모든 문제를 빠르게 찾을 수 있습니다.
 
-* 在确定需要修改的内容后，直接修改对应句子的`pre_zh`，或`proofread_zh`，然后**重新跑一遍Galtransl**，很快就会生成新的json_cn
-  
+* 고칠 내용을 정했으면 해당 문장의 `pre_zh` 또는 `proofread_zh`를 바로 고친 뒤 **GalTransl을 한 번 더 실행**하면 곧 새 json_cn이 만들어집니다.
+
 </details>
 
 <details>
 
-<summary>   
+<summary>
 
-### 自动化找错
+### 자동 오류 검사
 
-GalTransl根据长期对翻译结果的观察建立了一套根据规则自动找问题的系统。
-</summary>  
-找问题系统的开启是在各个项目的`config.yaml`里，默认配置是这样的
+GalTransl은 번역 결과를 오랫동안 관찰해 만든 규칙으로 문제를 자동으로 찾는 시스템을 갖추고 있습니다.
+</summary>
+문제 찾기 기능은 각 프로젝트의 `config.yaml`에서 켜며 기본 설정은 다음과 같습니다. 문제 이름은 실제 설정값이므로 중국어 그대로 둡니다.
 
 ```yaml
-# 自动问题分析配置，在-前面加#号可以禁用
+# 자동 문제 분석 설정. - 앞에 #을 붙이면 끌 수 있음
 problemAnalyze:
-  problemList: # 要发现的问题清单
-    - 词频过高 # 重复大于20次
-    - 标点错漏 # 标点符号多加或漏加
-    - 残留日文 # 日文平假名片假名残留
-    - 丢失换行 # 缺少换行符，一般没事
-    - 多加换行 # 换行符比原句多，可能导致溢出屏幕
-    - 比日文长 # 比日文长1.3倍以上
-    - 字典使用 # 没有按GPT字典要求翻译
-    - 语言不通 # 疑似没有被翻译成目标语言，翻译为中文时检查是否包含非GBK字符
-    #- 引入英文 # 本来没有英文，译文引入了英文
-    #- 比日文长严格 # 严格查找，不能比日文长
+  problemList: # 찾을 문제 목록
+    - 词频过高 # 단어 반복이 20회 초과
+    - 标点错漏 # 문장부호를 더하거나 빠뜨림
+    - 残留日文 # 일본어 히라가나·가타카나 잔류
+    - 丢失换行 # 줄바꿈이 부족함. 보통 문제없음
+    - 多加换行 # 원문보다 줄바꿈이 많음. 화면을 넘칠 수 있음
+    - 比日文长 # 일본어보다 1.3배 이상 김
+    - 字典使用 # GPT 사전대로 번역하지 않음
+    - 语言不通 # 대상 언어로 번역되지 않은 것으로 의심. 중국어 번역 시 GBK 외 문자가 있는지 검사
+    #- 引入英文 # 원래 영어가 없는데 번역문에 영어가 들어감
+    #- 比日文长严格 # 엄격 검사. 일본어보다 길면 안 됨
 ```
 
-目前支持找以上问题，有的项目被#号注释，可以取消来开启，或手动加上#号关闭对应问题的查找。
+현재 위 문제들을 찾을 수 있습니다. #으로 주석 처리된 항목은 주석을 풀어 켜고, 반대로 #을 붙여 해당 문제 검사를 끌 수 있습니다.
+이 문제 검사는 중국어 출력을 기준으로 만들어졌습니다. 이 Fork의 `Ollama-ko` 엔진은 한국어 전용 검사와 품질 리포트를 따로 사용합니다.
 
-找到问题后会存在翻译缓存里，见翻译缓存章节，使用Emeditor批量提取problem关键字就可以看到目前所有的问题了，并通过修改缓存的pre_jp来修正问题。
-   
-（新） 现在还可以通过在config.yaml中配置retranslKey来批量重翻某个问题，例如  retranslKey: "残留日文"   
+찾은 문제는 번역 캐시에 저장됩니다(번역 캐시 절 참고). Emeditor로 problem 키워드를 한꺼번에 추출하면 현재 모든 문제를 볼 수 있으며, 캐시의 pre_jp를 고쳐 문제를 바로잡습니다.
 
-</details> 
+(새 기능) 이제 config.yaml에 retranslKey를 설정해 특정 문제를 한꺼번에 다시 번역할 수 있습니다. 예: retranslKey: "残留日文"
 
-## 配置文件与翻译引擎设置
+</details>
 
-ForGal-json、ForGal-markdown 和 ForNovel 默认使用多轮对话翻译。同一文件分块内的连续批次共享对话，首轮发送完整规则和翻译规范，后续轮次发送新文本与本轮词表。流式和非流式响应的思考内容会随历史消息回传。Sakura/GalTransl 本地模型保持原有流程。
+## 설정 파일과 번역 엔진 설정
 
-桌面端「翻译设置」可开关多轮翻译，「高级设置」可调整会话限制；也可在项目配置的 `common` 中设置：
+ForGal-json, ForGal-markdown, ForNovel은 기본으로 다중 턴 대화 번역을 사용합니다. 같은 파일 조각 안의 연속된 배치가 대화를 공유하며, 첫 턴에 전체 규칙과 번역 지침을 보내고 이후 턴에는 새 텍스트와 이번 턴의 용어표를 보냅니다. 스트리밍과 비스트리밍 응답의 생각 내용은 기록 메시지와 함께 다시 전달됩니다. Sakura/GalTransl 로컬 모델은 기존 흐름을 유지합니다.
+
+데스크톱 앱의 "번역 설정"에서 다중 턴 번역을 켜고 끌 수 있고 "고급 설정"에서 세션 제한을 조정합니다. 프로젝트 설정의 `common`에서도 설정할 수 있습니다.
 
 ```yaml
 gpt.multiTurn: true
@@ -429,35 +437,35 @@ gpt.multiTurn.maxChars: 24000
 gpt.contextNum: 8
 ```
 
-轮数或字符预算（含思考内容）达到限制后会新开会话，并补充最近 `gpt.contextNum` 句译文。字符预算用于限制历史，不会截断单批输入；模型上下文较小时也应减小单次翻译句数。缓存命中造成的跳段会从对应位置重新建立上下文。设置 `gpt.multiTurn: false` 可恢复单轮请求；`gpt.contextNum: 0` 仅关闭补充前文，不关闭多轮对话。接口每轮仍接收完整会话历史，费用取决于接口的上下文缓存策略。
+턴 수나 문자 예산(생각 내용 포함)이 한도에 이르면 새 세션을 열고 최근 `gpt.contextNum`개의 번역문을 보충합니다. 문자 예산은 기록을 제한하는 데 쓰이며 한 배치의 입력을 자르지 않습니다. 모델 컨텍스트가 작으면 요청당 문장 수도 줄이세요. 캐시 적중으로 건너뛴 구간은 해당 위치에서 문맥을 다시 만듭니다. `gpt.multiTurn: false`로 하면 단일 턴 요청으로 돌아가고, `gpt.contextNum: 0`은 앞 문맥 보충만 끄며 다중 턴 대화는 끄지 않습니다. API는 턴마다 전체 대화 기록을 받으므로 비용은 API의 컨텍스트 캐시 정책에 따라 달라집니다.
 
-桌面端通过图形界面管理翻译后端配置（左侧"后端配置"页面），无需手动编辑YAML。项目级配置可在"配置编辑"页面修改。
+데스크톱 앱은 그래픽 인터페이스(왼쪽 "모델 설정" 페이지)로 번역 백엔드 설정을 관리하므로 YAML을 직접 편집할 필요가 없습니다. 프로젝트 설정은 "설정 편집" 페이지에서 바꿉니다.
 
-命令行版本的详细设置项可以直接阅读 `config.yaml` 配置文件注释，目前已经比较详细。
+명령줄 버전의 자세한 설정 항목은 `config.yaml` 설정 파일의 주석을 읽으면 됩니다(주석은 원본 기준 중국어). 로컬 Ollama 한국어 번역 설정은 [README_KO_OLLAMA.md](README_KO_OLLAMA.md)에 있습니다.
 
 
-## 开发与构建
+## 개발과 빌드
 
 <details>
-<summary>开发环境配置（开发者/高级用户）</summary>
+<summary>개발 환경 설정 (개발자/고급 사용자)</summary>
 
-* **命令行版（开发者/高级用户）**
-  如需使用命令行版本或参与开发：
+* **명령줄판 (개발자/고급 사용자)**
+  명령줄 버전을 쓰거나 개발에 참여하려면:
 
-  1. [下载本项目](https://github.com/XD2333/GalTransl/releases/) 或 clone 仓库，解压到任意位置
-  2. 安装 Python 3.11.9。 [下载](https://www.python.org/downloads/release/python-3119/)
-  **安装时勾选下方 add Python to path**
-  3. 安装Python依赖：双击 `安装、更新依赖.bat`，或手动执行 `pip install -r requirements.txt`
+  1. [이 프로젝트를 내려받거나](https://github.com/XD2333/GalTransl/releases/) 저장소를 clone해 원하는 위치에 풉니다
+  2. Python 3.11.9를 설치합니다. [내려받기](https://www.python.org/downloads/release/python-3119/)
+  **설치할 때 아래쪽 add Python to path를 선택하세요**
+  3. Python 의존성 설치: `安装、更新依赖.bat`(의존성 설치·업데이트)를 두 번 클릭하거나 `pip install -r requirements.txt`를 직접 실행합니다
 
-### 桌面端开发模式
+### 데스크톱 앱 개발 모드
 
-以下步骤适用于 Windows。从源码运行桌面端时，请先 clone 或下载本仓库源码，并在仓库根目录（包含 `run_desktop_dev.bat` 的目录）打开终端。
+아래 단계는 Windows 기준입니다. 소스에서 데스크톱 앱을 실행하려면 먼저 이 저장소 소스를 clone하거나 내려받고, 저장소 루트(`run_desktop_dev.bat`이 있는 폴더)에서 터미널을 엽니다.
 
-**首次准备环境**
+**처음 환경 준비**
 
-1. 安装 [Python 3.11.9](https://www.python.org/downloads/release/python-3119/) 和 [Node.js LTS](https://nodejs.org/)，确保 `python`、`node`、`npm` 已加入 PATH。
-2. 若要启动原生桌面窗口，安装 [Rust](https://www.rust-lang.org/tools/install)，使用默认的 Windows MSVC 工具链；安装Rust时会提示安装VC工具链和SDK，要一并安装。
-3. 安装完成后重新打开终端，在仓库根目录执行以下命令，建立项目独立的 Python 环境并安装依赖：
+1. [Python 3.11.9](https://www.python.org/downloads/release/python-3119/)와 [Node.js LTS](https://nodejs.org/)를 설치하고 `python`, `node`, `npm`이 PATH에 있는지 확인합니다.
+2. 기본 데스크톱 창을 띄우려면 [Rust](https://www.rust-lang.org/tools/install)를 설치하고 기본 Windows MSVC 툴체인을 씁니다. Rust를 설치할 때 VC 툴체인과 SDK 설치 안내가 나오면 함께 설치합니다.
+3. 설치를 마치면 터미널을 다시 열고 저장소 루트에서 아래 명령을 실행해 프로젝트 전용 Python 환경을 만들고 의존성을 설치합니다.
 
 ```powershell
 python -m venv .venv
@@ -465,33 +473,34 @@ python -m venv .venv
 npm.cmd --prefix desktop ci
 ```
 
-**日常启动**
+**평소 실행**
 
-双击仓库根目录的 `run_desktop_dev.bat`，或在终端执行：
+저장소 루트의 `run_desktop_dev.bat`를 두 번 클릭하거나 터미널에서 실행합니다.
 
 ```powershell
 .\run_desktop_dev.bat
 ```
 
-启动脚本会自动激活仓库中的 `.venv`，并识别默认安装在 `%USERPROFILE%\.cargo\bin` 下的 Cargo。脚本会分别打开 Python 后端和前端开发控制台：
+실행 스크립트는 저장소의 `.venv`를 자동으로 활성화하고, 기본 위치 `%USERPROFILE%\.cargo\bin`에 설치된 Cargo를 인식합니다. 스크립트는 Python 백엔드와 프런트엔드 개발 콘솔을 각각 엽니다.
 
-- 后端地址为 [http://127.0.0.1:12333](http://127.0.0.1:12333)，前端开发地址为 [http://127.0.0.1:1420/](http://127.0.0.1:1420/)。
-- 检测到 Cargo 时，会编译并打开 Tauri 桌面窗口。首次启动需要下载 Rust 依赖并编译，请等待控制台完成。
-- 未检测到 Cargo 时，会启动浏览器开发模式；手动打开前端地址即可。此模式无需安装 Rust、C++ 编译工具或 WebView2。
-- 前端代码修改后支持热更新，Rust 代码修改后会自动重新编译；修改 Python 后端代码后需要重启后端。
+- 백엔드 주소는 [http://127.0.0.1:12333](http://127.0.0.1:12333), 프런트엔드 개발 주소는 [http://127.0.0.1:1420/](http://127.0.0.1:1420/)입니다.
+- Cargo가 있으면 Tauri 데스크톱 창을 빌드해 엽니다. 처음 실행할 때는 Rust 의존성을 내려받아 빌드하므로 콘솔이 끝날 때까지 기다리세요.
+- Cargo가 없으면 브라우저 개발 모드로 실행합니다. 프런트엔드 주소를 직접 열면 됩니다. 이 모드는 Rust, C++ 빌드 도구, WebView2가 필요 없습니다.
+- 프런트엔드 코드를 고치면 바로 반영되고, Rust 코드를 고치면 자동으로 다시 빌드합니다. Python 백엔드 코드를 고친 뒤에는 백엔드를 다시 시작해야 합니다.
+- 화면 언어는 기본 한국어이며 "설정 → 화면 → 인터페이스 언어"에서 바꿉니다. 백엔드 메시지 언어는 환경 변수 `GT_LANG`(`ko`/`zh-cn`/`en`)으로 바꿉니다.
 
-**使用注意**
+**주의 사항**
 
-- `.venv` 和依赖只需首次创建、安装。更新源码后，如果依赖有变化，重新执行上面的 Python 依赖安装命令和 `npm.cmd --prefix desktop ci`。
-- 如果出现 `ModuleNotFoundError`，检查是否已将依赖安装到仓库的 `.venv` 中；启动脚本不会自动安装 Python 依赖。
-- 启动前确保 `12333` 和 `1420` 端口未被其他实例占用。退出时在后端、前端两个开发控制台分别按 `Ctrl+C` 停止服务，再关闭控制台；只关闭桌面窗口不会停止单独运行的 Python 后端。
-- 后端会独占监听端口；重复启动时，新后端会提示端口占用并退出，已有后端继续运行。应用此修复后，请先停止之前启动的所有旧后端，再重新运行启动脚本。
+- `.venv`와 의존성은 처음 한 번만 만들고 설치하면 됩니다. 소스를 업데이트한 뒤 의존성이 바뀌었다면 위의 Python 의존성 설치 명령과 `npm.cmd --prefix desktop ci`를 다시 실행합니다.
+- `ModuleNotFoundError`가 나면 의존성을 저장소의 `.venv`에 설치했는지 확인하세요. 실행 스크립트는 Python 의존성을 자동으로 설치하지 않습니다.
+- 실행하기 전에 `12333`과 `1420` 포트를 다른 인스턴스가 쓰고 있지 않은지 확인하세요. 끝낼 때는 백엔드와 프런트엔드 개발 콘솔에서 각각 `Ctrl+C`로 서비스를 멈춘 뒤 콘솔을 닫습니다. 데스크톱 창만 닫으면 따로 실행 중인 Python 백엔드는 멈추지 않습니다.
+- 백엔드는 포트를 혼자 사용합니다. 중복 실행하면 새 백엔드가 포트 사용 중이라고 알리고 종료하며 기존 백엔드는 계속 실행됩니다. 이 수정을 적용한 뒤에는 예전에 실행한 백엔드를 모두 멈추고 실행 스크립트를 다시 실행하세요.
 
-### Linux x86_64 开发与构建
+### Linux x86_64 개발과 빌드
 
-当前 Linux 支持范围为 x86_64，不包含 ARM。
+현재 Linux 지원 범위는 x86_64이며 ARM은 포함하지 않습니다.
 
-Ubuntu 22.04+/Debian 12+ 可安装以下依赖：
+Ubuntu 22.04+/Debian 12+에서는 다음 의존성을 설치합니다.
 
 ```bash
 sudo apt-get update
@@ -499,14 +508,14 @@ sudo apt-get install -y build-essential curl file libssl-dev patchelf rpm \
   libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
 ```
 
-Fedora 可使用：
+Fedora에서는:
 
 ```bash
 sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
   libappindicator-gtk3-devel librsvg2-devel rpm-build dpkg
 ```
 
-首次准备和日常启动：
+처음 준비와 평소 실행:
 
 ```bash
 python3.11 -m venv .venv
@@ -516,73 +525,70 @@ npm --prefix desktop ci
 ./run_desktop_dev.sh
 ```
 
-脚本会先启动 Python 后端，再启动 Tauri 桌面端；未安装 Cargo 时会退回到浏览器开发模式。
+스크립트는 Python 백엔드를 먼저 시작한 뒤 Tauri 데스크톱 앱을 시작합니다. Cargo가 없으면 브라우저 개발 모드로 대신 실행합니다.
 
-构建 Linux 发布包：
+Linux 배포 패키지 빌드:
 
 ```bash
 python build_linux_x64.py --no-bundles
 ```
 
-Linux CI 和正式发布只生成便携包；需要本地测试安装包时，可通过 `--formats deb,appimage` 选择 Tauri 安装包格式。
+Linux CI와 정식 배포는 휴대용 패키지만 만듭니다. 로컬에서 설치 패키지를 시험하려면 `--formats deb,appimage`로 Tauri 설치 패키지 형식을 고릅니다.
 
-输出位于 `release/`：
+출력은 `release/`에 있습니다.
 
 - `GalTransl_*_linux_x86_64.tar.gz`
 - `GalTransl_*_linux_x86_64.tar.gz`
 
-正式发布包应在 Ubuntu 22.04 或同等 glibc 基线的环境中构建。应用设置写入 `$XDG_CONFIG_HOME/GalTransl`，用户通用字典写入 `$XDG_DATA_HOME/GalTransl/Dict`；通用翻译规范和 Agent 会话分别写入 `$XDG_DATA_HOME/GalTransl/translation_guidelines` 与 `$XDG_DATA_HOME/GalTransl/agent_sessions`。未设置 XDG 环境变量时使用 `~/.config` 和 `~/.local/share`；安装目录中的字典和规范只作为初始种子。Windows 继续使用程序目录中的配置与字典。
+정식 배포 패키지는 Ubuntu 22.04 또는 같은 glibc 기준의 환경에서 빌드해야 합니다. 앱 설정은 `$XDG_CONFIG_HOME/GalTransl`에, 사용자 공통 사전은 `$XDG_DATA_HOME/GalTransl/Dict`에 저장합니다. 공통 번역 지침과 에이전트 세션은 각각 `$XDG_DATA_HOME/GalTransl/translation_guidelines`와 `$XDG_DATA_HOME/GalTransl/agent_sessions`에 저장합니다. XDG 환경 변수가 없으면 `~/.config`와 `~/.local/share`를 씁니다. 설치 폴더의 사전과 지침은 처음 복사할 원본으로만 쓰입니다. Windows는 계속 프로그램 폴더의 설정과 사전을 사용합니다.
 
-Linux 支持不代表所有外部工具均已移植：例如 msg-tool 插件自带的 `res/msg_tool.exe` 是 Windows 程序，相关脚本格式的提取/回填不能直接在 Linux 上使用。
+Linux 지원은 모든 외부 도구가 이식되었다는 뜻이 아닙니다. 예를 들어 msg-tool 플러그인에 포함된 `res/msg_tool.exe`는 Windows 프로그램이므로 관련 스크립트 형식의 추출/되쓰기는 Linux에서 바로 쓸 수 없습니다.
 
 
-### macOS 开发与构建
+### macOS 개발과 빌드
 
-当前 macOS 构建覆盖 Intel（x86_64）和 Apple Silicon（arm64）。需要安装 Xcode Command Line Tools、Python 3.11、Node.js、Rust，以及项目依赖：
+현재 macOS 빌드는 Intel(x86_64)과 Apple Silicon(arm64)을 지원합니다. Xcode Command Line Tools, Python 3.11, Node.js, Rust와 프로젝트 의존성이 필요합니다.
 
 ```bash
 npm --prefix desktop ci
 python build_macos.py
 ```
 
-构建结果位于 `release/`，包括对应架构的 `.dmg` 和便携 `.tar.gz`。未签名构建可能被 macOS Gatekeeper 拦截；正式分发时应配置 Apple Developer 签名与公证。
+빌드 결과는 `release/`에 있으며 해당 아키텍처의 `.dmg`와 휴대용 `.tar.gz`가 포함됩니다. 서명하지 않은 빌드는 macOS Gatekeeper에 막힐 수 있습니다. 정식 배포할 때는 Apple Developer 서명과 공증을 설정해야 합니다.
 
 </details>
 
 <details>
-<summary>自动构建与发布（维护者）</summary>
+<summary>자동 빌드와 배포 (관리자)</summary>
 
-### 自动构建与发布
+### 자동 빌드와 배포
 
-[Build and draft release](https://github.com/GalTransl/GalTransl/actions/workflows/build-release.yml) 使用 Windows x64、Ubuntu 22.04 x86_64 和 macOS Intel/Apple Silicon 原生 runner 编译桌面包。
+[Build and draft release](https://github.com/GalTransl/GalTransl/actions/workflows/build-release.yml)는 Windows x64, Ubuntu 22.04 x86_64, macOS Intel/Apple Silicon 기본 runner에서 데스크톱 패키지를 빌드합니다.
 
-发布验收会从独立目录启动解压后的后端，使用临时配置和用户数据目录，并实际解析 TXT、JSON、EPUB 文件。macOS 还会挂载 DMG、复制其中的 `.app`，校验版本、前后端架构和资源，再启动应用包内的后端完成同样的检查。
+배포 검수는 압축을 푼 백엔드를 별도 폴더에서 시작하고, 임시 설정과 사용자 데이터 폴더를 써서 TXT, JSON, EPUB 파일을 실제로 해석합니다. macOS는 DMG를 마운트해 그 안의 `.app`을 복사하고 버전, 프런트엔드·백엔드 아키텍처, 리소스를 확인한 뒤 앱 패키지 안의 백엔드를 시작해 같은 검사를 합니다.
 
-| 触发方式 | 结果 |
+| 실행 방식 | 결과 |
 | --- | --- |
-| 更新 `main`、提交 PR | 测试、构建 Windows、Linux 和 macOS，并上传本次 Actions artifacts |
-| Actions → Build and draft release → Run workflow | 手动试打包；只生成 artifacts，不创建或修改 Release |
-| 推送版本 tag（`8.2.0` 或 `v8.2.0`） | Windows、Linux、macOS 全部测试、构建及打包后检查通过后，创建草稿 Release 并上传附件 |
+| `main` 업데이트, PR 제출 | 테스트, Windows·Linux·macOS 빌드, 이번 Actions artifacts 업로드 |
+| Actions → Build and draft release → Run workflow | 수동 시험 패키징. artifacts만 만들며 Release를 만들거나 바꾸지 않음 |
+| 버전 tag 푸시(`8.2.0` 또는 `v8.2.0`) | Windows, Linux, macOS 모두 테스트·빌드·패키지 후 검사를 통과하면 초안 Release를 만들고 첨부 파일 업로드 |
 
-**下载试构建**：打开工作流运行详情，在 **Artifacts** 中按需下载（均保留 14 天）。Linux 和 macOS 便携包直接以 `GalTransl_<版本>_linux_x86_64.tar.gz`、`GalTransl_<版本>_macos_x86_64.tar.gz` 或 `GalTransl_<版本>_macos_arm64.tar.gz` 为名提供，下载后解压一次即可使用，并保留可执行权限。Windows 的 `GalTransl-windows-x64` 和 macOS 对应架构的 `dmg` artifact 仍由 Actions 提供外层 ZIP。
+**시험 빌드 내려받기**: 워크플로 실행 상세에서 **Artifacts**를 필요한 만큼 내려받습니다(모두 14일 보관). Linux와 macOS 휴대용 패키지는 `GalTransl_<버전>_linux_x86_64.tar.gz`, `GalTransl_<버전>_macos_x86_64.tar.gz`, `GalTransl_<버전>_macos_arm64.tar.gz`라는 이름으로 제공되며 한 번만 풀면 실행 권한이 유지된 채 쓸 수 있습니다. Windows의 `GalTransl-windows-x64`와 macOS 아키텍처별 `dmg` artifact는 여전히 Actions가 바깥 ZIP으로 감싸 제공합니다.
 
-**发布新版本（维护者）**：
+**새 버전 배포 (관리자)**:
 
-1. 更新 `GalTransl/__init__.py` 中的 `GALTRANSL_VERSION`，提交并推送包含此工作流的代码。
-2. 推送与源码版本一致的新 tag。下面以尚未发布的 `8.2.0` 为例，实际使用时替换为本次版本：
+1. `GalTransl/__init__.py`의 `GALTRANSL_VERSION`을 올리고, 이 워크플로가 포함된 코드를 커밋해 푸시합니다.
+2. 소스 버전과 같은 새 tag를 푸시합니다. 아래는 아직 배포하지 않은 `8.2.0`을 예로 든 것이며 실제로는 이번 버전으로 바꿉니다.
    ```bash
    git tag 8.2.0
    git push origin 8.2.0
    ```
-3. 等待工作流成功，在 **Releases** 检查自动生成的草稿，补充发布说明，然后手动点击 **Publish release**。上传过程中不要提前发布草稿。
+3. 워크플로가 성공할 때까지 기다린 뒤 **Releases**에서 자동 생성된 초안을 확인하고, 배포 설명을 보충한 다음 **Publish release**를 직접 누릅니다. 업로드 중에 초안을 먼저 배포하지 마세요.
 
-tag 支持 `X.Y.Z` 和 `vX.Y.Z`，必须与源码版本一致；不要移动或重新使用已有 tag（例如 `8.1.0`）。正式附件包括 Windows `.zip`、Linux `.tar.gz`、macOS Intel/Apple Silicon 的 `.dmg` 和 `.tar.gz`，以及 `SHA256SUMS.txt`。下载全部附件后可用 `sha256sum -c SHA256SUMS.txt` 校验；Windows 可用 PowerShell `Get-FileHash <文件> -Algorithm SHA256` 对照清单。
+tag는 `X.Y.Z`와 `vX.Y.Z`를 지원하며 소스 버전과 같아야 합니다. 기존 tag(예: `8.1.0`)를 옮기거나 다시 쓰지 마세요. 정식 첨부 파일은 Windows `.zip`, Linux `.tar.gz`, macOS Intel/Apple Silicon의 `.dmg`와 `.tar.gz`, `SHA256SUMS.txt`입니다. 첨부 파일을 모두 내려받은 뒤 `sha256sum -c SHA256SUMS.txt`로 확인할 수 있으며, Windows에서는 PowerShell `Get-FileHash <파일> -Algorithm SHA256`으로 목록과 대조합니다.
 
-流程只使用 GitHub 内置的 `GITHUB_TOKEN`，不需要额外 PAT 或翻译 API 密钥。只有发布 job 申请 `contents: write`；如果组织策略禁止写入，需要管理员允许该仓库的 Release 写入权限。失败后可以重跑：现有草稿会更新自动构建的附件，保留手工编辑的标题和说明；已经正式发布的 Release 则拒绝覆盖。手动选择 tag 运行也只会生成 artifacts。
+이 과정은 GitHub 내장 `GITHUB_TOKEN`만 쓰며 별도의 PAT나 번역 API 키가 필요 없습니다. 배포 job만 `contents: write`를 요청합니다. 조직 정책이 쓰기를 막으면 관리자가 이 저장소의 Release 쓰기 권한을 허용해야 합니다. 실패하면 다시 실행할 수 있습니다. 기존 초안은 자동 빌드 첨부 파일을 갱신하되 직접 고친 제목과 설명은 유지하며, 이미 정식 배포된 Release는 덮어쓰기를 거부합니다. tag를 골라 수동 실행해도 artifacts만 만듭니다.
 
-构建后会解压最终便携包，在源码目录之外启动后端并检查版本和插件列表；这不替代完整桌面 GUI、各安装器及全部插件的功能测试。
+빌드 후에는 최종 휴대용 패키지를 풀어 소스 폴더 밖에서 백엔드를 시작하고 버전과 플러그인 목록을 확인합니다. 이 검사가 데스크톱 GUI 전체, 각 설치 프로그램, 모든 플러그인의 기능 테스트를 대신하지는 않습니다.
 
 </details>
-
-
-

@@ -60,7 +60,29 @@
   용어집, 캐릭터 사전. 실행기 기본 프로젝트를 이 예제로 변경. `**/ollama_ko_logs/` Git 제외.
 - README_KO_OLLAMA.md 전면 갱신(설치~재개~모델 변경~설정, 기능 조사표, 한국어 확인 내용, 제약).
 
+### 한국어화 (2026-10-21, Claude Cloud)
+
+- 데스크톱 UI: `desktop/src/i18n/locales/ko/` 한국어 언어팩 7개(1,854개 원본 키 + `settings:appearance.korean`, 전부 채움).
+  기본 UI 언어 `ko`, 대체 순서 ko → en → zh-CN. 설정 화면에 한국어 선택지 추가, 한국어 UI의 새 프로젝트 마법사는
+  대상 언어 `ko`와 `JapaneseToKorean.md`를 기본 선택. `check-i18n.mjs`가 en과 ko를 모두 검사.
+  파일 이름(`Basic.md` 등), 백엔드 문제 이름(`残留日文` 등), 설정 실제 값은 실제 값과 일치해야 하므로 번역하지 않음.
+- 백엔드: `GalTransl/i18n.py` 사용자 메시지 59개와 번역 템플릿 설명(`TRANSLATOR_SUPPORTED`) 14개에 `ko` 추가.
+  기본 `GT_LANG=ko`(환경 변수로 `zh-cn`/`en` 전환), 한국어가 없는 메시지는 en → zh-cn 대체. 서버의 템플릿 설명도 `GT_LANG`을 따름.
+- 문서: `README.md`를 한국어로 번역하고 중국어 원본은 `README_ZH.md`로 보존(영어/중국어 README에 상호 링크).
+  `desktop/README.md`, `desktop/src/i18n/README.md`, `plugins/readme.md`, `plugins/SETTINGS_SCHEMA.md` 한국어화.
+- 원본 테스트 보존: 원본 테스트는 중국어 문구를 검증하므로 pytest는 `tests/conftest.py`에서 `GT_LANG=zh-cn`,
+  프런트엔드 테스트 로더는 저장된 UI 언어 `zh-CN`을 기본 제공. 한국어 기본값·대체 순서는 별도 테스트
+  (`tests/test_korean_defaults.py`, `desktop/tests/i18n.test.mjs`)로 검증.
+- 남은 중국어: 백엔드 코드에 하드코딩된 로그 문구(LOGGER 70여 곳), 내장 플러그인 YAML의 Name/Description
+  (UI에서는 한국어 언어팩이 덮어씀, CLI·로그에는 원문 표시), 기본 중국어 사전·지침 파일(데이터/모델 입력이라 번역 대상 아님),
+  `sampleProject` 설정 주석, 코드 주석.
+
 ## 검증 결과
+
+한국어화(Claude Cloud): 전체 Python **1542 passed, 7 skipped, 371 subtests passed**, 프런트엔드 `npm test`
+**148 passed**, `npm run build` 성공(기존 큰 청크 경고), `npm run i18n:check` 1854개 키(en/ko) 오류 0.
+Vite 개발 서버 + 실제 백엔드를 띄워 Chromium으로 홈/설정 화면이 한국어로 표시되고 백엔드 템플릿 설명이 한국어로 오는 것을 확인
+(확인용 한글 글꼴은 저장소 밖에 임시 설치). Windows 데스크톱(Tauri) 빌드에서의 표시는 미검증.
 
 2차 확장(Claude Cloud): 신규 포함 Ollama Mock 테스트 **76 passed**, 전체 Python
 **1538 passed, 7 skipped(기존과 동일), 371 subtests passed**. PowerShell 스크립트는 Linux pwsh 7.4.6에서
@@ -122,6 +144,8 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 사용자 요청으로 README·UI·백엔드 메시지 한국어화(위 "한국어화"). 같은 브랜치에 커밋/Push.
 
 - 2026-10-21 / Claude Cloud: 커밋·Push 권한 확인(GitHub App 설치 후 지정 브랜치 Push 성공).
   사용자 요구사항에 따른 2차 확장 구현(위 "2차 확장"), Mock 76개·전체 1538개 통과, pwsh 구문 검사.

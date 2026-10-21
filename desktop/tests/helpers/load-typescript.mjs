@@ -7,6 +7,15 @@ import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
 
+function chineseUiStorage() {
+  const values = new Map([['galtransl.ui.language', 'zh-CN']]);
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  };
+}
+
 export function createTypeScriptLoader(globals = {}, mocks = {}) {
   const modules = new Map();
   function load(input) {
@@ -33,6 +42,9 @@ export function createTypeScriptLoader(globals = {}, mocks = {}) {
     vm.runInNewContext(outputText, {
       exports, console, Error, Intl, Date, URL, AbortController, setTimeout, clearTimeout,
       __importMeta: { env: {} },
+      // The fork defaults the UI to Korean; upstream tests assert Chinese UI text,
+      // so modules see a saved zh-CN preference unless a test supplies its own storage.
+      localStorage: chineseUiStorage(),
       ...globals,
       require(name) {
         if (Object.hasOwn(mocks, name)) return mocks[name];

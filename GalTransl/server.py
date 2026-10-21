@@ -494,12 +494,22 @@ def _write_backend_profiles(data: dict) -> None:
     _write_yaml_file(_BACKEND_PROFILES_PATH, data)
 
 
+def _translator_description(description_map: dict) -> str:
+    """Template description in the backend message language (GT_LANG), then en/zh-cn."""
+    from GalTransl.i18n import GT_LANG
+
+    for lang in (GT_LANG, "en", "zh-cn"):
+        if description_map.get(lang):
+            return description_map[lang]
+    return next(iter(description_map.values()), "")
+
+
 def _build_prompt_templates_payload() -> dict[str, Any]:
     templates: list[dict[str, Any]] = []
     for name, default_prompts in _DEFAULT_TRANSLATOR_PROMPTS.items():
         description_map = TRANSLATOR_SUPPORTED.get(name, {})
         if isinstance(description_map, dict):
-            description = description_map.get("zh-cn") or next(iter(description_map.values()), "")
+            description = _translator_description(description_map)
         else:
             description = ""
         default_system_prompt = default_prompts.get("system_prompt", "")
@@ -3346,7 +3356,7 @@ def build_handler(registry: JobRegistry):
                 translators = [
                     {
                         "name": name,
-                        "description": description.get("zh-cn") or next(iter(description.values())),
+                        "description": _translator_description(description),
                     }
                     for name, description in TRANSLATOR_SUPPORTED.items()
                     if name not in _hidden_translators

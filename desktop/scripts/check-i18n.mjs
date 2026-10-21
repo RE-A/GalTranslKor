@@ -5,6 +5,7 @@ import ts from 'typescript';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const catalogRoot = resolve(root, 'src/i18n/locales');
+export const TRANSLATION_LOCALES = ['en', 'ko'];
 export const interpolationNames = (value) => [...new Set([...value.matchAll(/{{-?\s*([\w.]+)(?:\s*,[^}]*)?\s*}}/g)].map((match) => match[1]))].sort();
 const richTags = (value) => [...value.matchAll(/<\/?\d+\s*\/?>/g)].map((match) => match[0]).sort();
 
@@ -57,18 +58,24 @@ export function checkResources() {
   const allKeys = new Set();
   const report = [];
   const namespaces = readdirSync(resolve(catalogRoot, 'zh-CN')).filter((file) => file.endsWith('.json'));
-  for (const name of readdirSync(resolve(catalogRoot, 'en')).filter((file) => file.endsWith('.json'))) {
-    if (!namespaces.includes(name)) errors.push(`${name}: unknown English namespace`);
+  for (const locale of TRANSLATION_LOCALES) {
+    for (const name of readdirSync(resolve(catalogRoot, locale)).filter((file) => file.endsWith('.json'))) {
+      if (!namespaces.includes(name)) errors.push(`${name}: unknown ${locale} namespace`);
+    }
   }
   for (const name of namespaces) {
     const ns = name.slice(0, -5);
     const zh = JSON.parse(readFileSync(resolve(catalogRoot, 'zh-CN', name), 'utf8'));
-    const englishFile = resolve(catalogRoot, 'en', name);
-    const en = existsSync(englishFile) ? JSON.parse(readFileSync(englishFile, 'utf8')) : {};
-    const result = validateCatalog(zh, en);
-    errors.push(...result.errors.map((error) => `${ns}:${error}`));
-    for (const key of result.sourceKeys.keys()) allKeys.add(`${ns}:${key}`);
-    report.push({ namespace: ns, total: result.sourceKeys.size, pending: result.pending, missing: result.missing });
+    for (const locale of TRANSLATION_LOCALES) {
+      const file = resolve(catalogRoot, locale, name);
+      const translation = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+      const result = validateCatalog(zh, translation);
+      // English keeps the original report names; other locales are prefixed.
+      const label = locale === 'en' ? ns : `${locale}/${ns}`;
+      errors.push(...result.errors.map((error) => `${label}:${error}`));
+      for (const key of result.sourceKeys.keys()) allKeys.add(`${ns}:${key}`);
+      report.push({ namespace: label, total: result.sourceKeys.size, pending: result.pending, missing: result.missing });
+    }
   }
   const exclusions = JSON.parse(readFileSync(resolve(root, 'src/i18n/audit-exclusions.json'), 'utf8'));
   const referenced = new Set();

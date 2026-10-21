@@ -3,7 +3,7 @@ import { I18nextProvider, Trans } from 'react-i18next';
 import { getUiLanguage, i18n, normalizeUiLanguage, resolveMessage, setUiLanguage, subscribeUiLanguage, UI_LANGUAGE_STORAGE_KEY, type LocalizedText, type MessageValues, type TranslationKey } from './core';
 
 export function useUiLanguage() {
-  return useSyncExternalStore(subscribeUiLanguage, getUiLanguage, () => 'zh-CN' as const);
+  return useSyncExternalStore(subscribeUiLanguage, getUiLanguage, () => 'ko' as const);
 }
 
 export function UiI18nProvider({ children }: { children: React.ReactNode }) {

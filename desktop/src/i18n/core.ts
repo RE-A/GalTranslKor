@@ -1,15 +1,16 @@
 import { createInstance, type Resource } from 'i18next';
 import { resources, type TranslationKey } from './resources';
 
-export const UI_LANGUAGES = ['zh-CN', 'en'] as const;
+export const UI_LANGUAGES = ['ko', 'zh-CN', 'en'] as const;
 export type UiLanguage = (typeof UI_LANGUAGES)[number];
 export const UI_LANGUAGE_STORAGE_KEY = 'galtransl.ui.language';
 export type MessageValues = Record<string, unknown>;
 export type UiMessage = { key: TranslationKey; values?: MessageValues };
 export type LocalizedText = string | UiMessage;
 
+// Korean is the default for this fork; Chinese and English stay selectable.
 export function normalizeUiLanguage(value: unknown): UiLanguage {
-  return value === 'en' ? 'en' : 'zh-CN';
+  return value === 'en' || value === 'zh-CN' ? value : 'ko';
 }
 
 type Environment = {
@@ -19,7 +20,7 @@ type Environment = {
 };
 
 export function createUiI18n(environment: Environment = {}) {
-  let preferred: UiLanguage = 'zh-CN';
+  let preferred: UiLanguage = 'ko';
   try {
     preferred = normalizeUiLanguage(environment.storage?.getItem(UI_LANGUAGE_STORAGE_KEY));
   } catch { /* Storage can be unavailable in private browsing. */ }
@@ -28,7 +29,8 @@ export function createUiI18n(environment: Environment = {}) {
   void instance.init({
     resources: environment.resources ?? resources,
     lng: preferred,
-    fallbackLng: 'zh-CN',
+    // Chinese is the source catalog; Korean falls back to English first.
+    fallbackLng: { ko: ['en', 'zh-CN'], default: ['zh-CN'] },
     supportedLngs: [...UI_LANGUAGES],
     load: 'currentOnly',
     defaultNS: 'common',

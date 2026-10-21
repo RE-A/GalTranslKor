@@ -85,7 +85,7 @@ test('the home-page open action navigates to the selected YAML despite a quota e
     }), h(LocationProbe)));
   });
   try {
-    const button = root.root.findAllByType('button').find(node => node.props.children === '打开项目');
+    const button = root.root.findAllByType('button').find(node => node.props.children === '프로젝트 열기');
     assert.ok(button);
     await act(async () => { await button.props.onClick(); });
     assert.deepEqual(opened, [['C:\\游戏项目', 'custom.yml']]);

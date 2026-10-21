@@ -394,6 +394,7 @@ export function SettingsPage() {
             <div className="settings-number-row__control">
               <CustomSelect aria-label={translate('settings:appearance.language')} value={uiLanguage}
                 onChange={(event) => { void setUiLanguage(event.target.value as UiLanguage); }}>
+                <option value="ko">{translate('settings:appearance.korean')}</option>
                 <option value="zh-CN">{translate('settings:appearance.simplifiedChinese')}</option>
                 <option value="en">{translate('settings:appearance.english')}</option>
               </CustomSelect>

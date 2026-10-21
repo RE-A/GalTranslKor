@@ -31,10 +31,35 @@ galtransl_backend.spec
 desktop/src-tauri/binaries/
 desktop/src-tauri/.tauri-linux-build.json
 desktop/src-tauri/.tauri-macos-build.json
-/docs
+# Keep personal docs ignored; track the shared cross-environment handoff docs.
+/docs/*
+!/docs/TRANSLATION_POLICY.md
+!/docs/DEVELOPMENT_STATUS.md
 
 # Runtime outputs from the committed Ollama Korean sample
 /examples/ollama_ko/gt_output/
 /examples/ollama_ko/transl_cache/
 /examples/ollama_ko/.galtransl-data/
 /examples/ollama_ko/name替换表.*
+
+# Private project inputs, model weights and generated translations (all projects).
+/projects/
+/local-data/
+**/gt_input/
+!/examples/ollama_ko/gt_input/
+/examples/ollama_ko/gt_input/*
+!/examples/ollama_ko/gt_input/rainy_station.json
+**/gt_output/
+**/transl_cache/
+**/json_jp/
+**/json_cn/
+**/.galtransl-data/
+**/.galtransl-cache/
+**/models/
+**/.ollama/
+*.gguf
+*.ggml
+*.safetensors
+*.onnx
+*.pt
+*.pth

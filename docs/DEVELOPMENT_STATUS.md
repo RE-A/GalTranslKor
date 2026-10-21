@@ -193,8 +193,21 @@ Vite 개발 서버 + 실제 백엔드를 띄워 Chromium으로 홈/설정 화면
 
 한국어 번역 품질 개선 후보는 [품질 개선 TODO](../development/TODO.md)에 정리했다.
 Q1 평가 기준 → Q2 상대별 말투·호칭/Q3 용어 확정 → 오류 유형별 후속 실험 순서를 추천한다.
-이 목록은 2026-10-21 사용자 요청에 따른 문서 검토 결과이며, 구현·실제 모델 실험은 시작하지 않았다.
 기존 한국어화 작업 ⑤~⑦과 별개의 후보 목록이다.
+
+2026-10-21 Claude Cloud에서 Q7·Q3·Q1·Q2의 **Cloud 범위 구현**을 마쳤다(Mock·단위 테스트만, 품질 효과는 미측정).
+- Q7 `d32ec91`: `problem_common`에 `数字不符`(원문 아라비아 숫자가 번역문에 없음, 한국어 대상, 제어코드 안 숫자 제외, 기본 켬)
+  추가. 한국어 대상이면 사전 적용 검사(`字典使用`)가 띄어쓰기 차이를 허용(`CGptDict.check_dic_use(ignore_spaces=)`).
+  부정·열거 누락, 상대별 존대 불일치 경고는 오탐 위험이 커서 미구현(실제 출력 수집 후 판단).
+- Q3 `b21a6af`: 품질 리포트(`check_ollama_ko.py`)가 프로젝트 GPT 사전·`characters.yaml`·`name替换表.csv`의 표기를 대조해
+  `term_conflict`/`name_part_mismatch` 경고, GenDic 생성 사전에만 있는 항목을 "확인 필요 용어"로 표시. 파일은 수정하지 않음.
+  `(project_dir)` 밖의 공통 사전과 xlsx name 표는 대조하지 않음.
+- Q1 `277e3dd`: 합성 평가 세트 `examples/ollama_ko_eval`(장면 8개, 97줄, dev s01~s03 / test s04~s08)과
+  `eval_ollama_ko.py validate|sheet|summarize`(블라인드 A/B 채점표, 0~4점 4개 축, 중대 오류 코드 별도 집계).
+  실제 모델 번역·사람 채점·기준 점수 확보는 로컬 Windows 작업으로 남음. 항목 수는 TODO 권장(100~200)보다 약간 적음.
+- Q2 `3357e79`: `characters.yaml`의 선택 항목 `speech_to`(상대별 말투·호칭). 요청에 등장한 상대의 규칙만 전송하고,
+  `speech_to`를 쓰는 프로젝트에서만 시스템 프롬프트에 설명을 추가(미사용 프로젝트의 캐시 식별자는 그대로).
+  효과는 Q1 세트로 로컬 비교 필요.
 
 Cloud 구현·Mock 검증·커밋/Push·Fork 내부 PR 생성과 사용자 요청에 따른 병합을 완료했다.
 향후 PR도 사용자 요청 없이 병합하지 않는다. 이 문서의 테스트 결과는 Cloud에서 직접 실행한 결과로,
@@ -230,6 +243,12 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud / 브랜치 `claude/repo-commit-access-check-p1n66r`: TODO Q7·Q3·Q1·Q2 Cloud 범위 구현
+  (커밋 d32ec91, b21a6af, 277e3dd, 3357e79). 신규 테스트: test_problem_common_korean_q7, test_ollama_ko_terminology,
+  test_ollama_ko_eval(Mock Ollama로 평가 세트 번역→채점표→집계), test_ollama_ko_speech_to. 기존 기본 문제 목록 고정 테스트에
+  `数字不符` 추가. 전체 Python 1579 passed, 7 skipped. 프런트엔드 test 150 pass·build OK·i18n:check 0 errors(Q7 시점).
+  Q7은 main에 반영. Q3·Q1·Q2는 GitHub 인증 오류(401)로 Push하지 못해 로컬 커밋 상태(다음 세션에서 Push 필요).
 
 - 2026-10-21 / Claude Cloud: 한국어 대상 보정 ⑤~⑦(에이전트 한국어 지침, 문제 이름 한국어 표시, 중국어 전용 모델 경고). ④는 Codex 커밋 f91c602와 중복되어 Claude 쪽을 revert하고 main을 병합한 뒤 Fork `main`에 반영.
 - 2026-10-21 / Codex Cloud / Fork `main`, 기준 `f91c602`: 사용자 요청으로 소스 작업 없이

@@ -2,6 +2,8 @@
 <div align=center><img width="150" height="150" src="./img/logo.png"/></div>
 
 <h1><p align='center' >GalTransl</p></h1>
+
+[한국어 · Ollama 번역 설정 및 Windows 실행](README_KO_OLLAMA.md)
 <div align=center><img src="https://img.shields.io/github/v/release/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/license/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/stars/XD2333/GalTransl"/></div>
 <p align='center' >Visual Novel Automatic Translation Solution Supporting GPT/Claude/Deepseek/Sakura and More</p>
 

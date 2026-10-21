@@ -69,6 +69,10 @@ TRANSLATOR_SUPPORTED = {
         "zh-cn": "基于文本自动选择合适的模板并在翻译报错时轮动切换。",
         "en": "Automatically selects the appropriate template based on the text and rotates templates when translation fails."
     },
+    "Ollama-ko": {
+        "zh-cn": "通过 Ollama 将日语对白和叙述翻译为韩语，保留批次上下文。",
+        "en": "Japanese-to-Korean translation with Ollama and sequential batch context.",
+    },
     "ForGal-json": {
         "zh-cn": "(openai接口)翻译Gal时使用，json格式输入，兼容性好。",
         "en": "Customized template for Gal translation, json input. "

@@ -708,6 +708,11 @@ async def doLLMTranslSingleChunk(
             problem_filter_keys=projectConfig.getKey("problemFilterKey", []),
         )
 
+        if eng_type == "Ollama-ko":
+            translist_hit, translist_unhit = gptapi.validate_cache_hits(
+                split_chunk.trans_list, translist_hit, translist_unhit
+            )
+
         if len(translist_hit) > 0:
             projectConfig.bar(len(translist_hit), skipped=True) # 更新进度条
 
@@ -845,6 +850,9 @@ async def init_gptapi(
     eng_type = projectConfig.select_translator
 
     match eng_type:
+        case "Ollama-ko":
+            from GalTransl.Backend.OllamaTranslate import OllamaTranslate
+            return OllamaTranslate(projectConfig)
         case "auto-translate":
             from GalTransl.Backend.AutoTranslate import AutoTranslate
             return AutoTranslate(projectConfig, eng_type, proxyPool, tokenPool)

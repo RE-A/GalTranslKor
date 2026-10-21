@@ -800,7 +800,9 @@ class BaseTranslate:
             line_dst = self.opencc.convert(line_dst)
 
         if "”" not in current_tran.post_src and '"' not in current_tran.post_src:
-            line_dst = line_dst.replace('"', "")
+            # Korean commonly quotes speech with ASCII quotes even when the source uses 「」.
+            if self.target_lang != "Korean":
+                line_dst = line_dst.replace('"', "")
         elif '"' not in current_tran.post_src and '"' in line_dst:
             line_dst = fix_quotes2(line_dst)
         elif '"' in current_tran.post_src and "”" in line_dst:

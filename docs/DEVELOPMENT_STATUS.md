@@ -85,8 +85,10 @@
 `语言不通`으로 중국어 출력 의심 검출. 재현 테스트 `tests/test_problem_common_korean.py`(수정 전 2개 실패 확인).
 전체 Python 1545 passed, 7 skipped. 문제 이름 저장값은 그대로.
 
-남은 한국어 관련 작업(검토 결과, 우선순위순): ② ForGal 등 후처리가 원문에 `"`가 없으면 번역문의 `"`를 지움
-(`BaseTranslate._normalize_parsed_translation_text`) ③ `text_common_lineBreakFix`가 한국어를 분절하지 못해 줄바꿈을 끝에만 붙임
+②(완료) 공통 후처리 `BaseTranslate._normalize_parsed_translation_text`가 원문에 `"`가 없으면 번역문의 `"`를 지우던 동작을
+한국어 대상에서는 하지 않도록 수정. 재현 테스트 `tests/test_korean_quote_postprocess.py`, 전체 Python 1547 passed, 7 skipped.
+
+남은 한국어 관련 작업(검토 결과, 우선순위순): ③ `text_common_lineBreakFix`가 한국어를 분절하지 못해 줄바꿈을 끝에만 붙임
 ④ GenDic 프롬프트가 중국어 용어집 생성 ⑤ 에이전트 프롬프트·요약·사전 형식이 중국어 전제 ⑥ 문제 이름이 화면에 중국어로 표시
 ⑦ 한국어 대상에서 Sakura/GalTransl(중국어 전용 모델) 선택 시 경고 없음.
 
@@ -186,6 +188,8 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 한국어 대상 큰따옴표 삭제 수정(②). Fork `main`에 fast-forward 반영.
 
 - 2026-10-21 / Claude Cloud: 한국어 대상 오류 검사 오탐 수정(위 "한국어 대상 오류 검사 보정"). Fork `main`에 fast-forward 반영.
 

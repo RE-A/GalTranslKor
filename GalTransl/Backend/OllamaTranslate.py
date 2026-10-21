@@ -105,12 +105,13 @@ class OllamaTranslate(BaseTranslate):
         if not isinstance(self.allow, list) or not all(isinstance(w, str) for w in self.allow):
             raise ValueError("Ollama.allowJapanese must be a list of strings")
         project_dir = config.getProjectDir()
-        self.system_prompt = build_system_prompt(
-            load_korean_guideline(config.getKey("gpt.translation_guideline"), project_dir))
         character_file = cfg.get("characterFile", "characters.yaml")
         if not isinstance(character_file, str):
             raise ValueError("Ollama.characterFile must be a file name")
         self.characters = load_characters(Path(project_dir, character_file)) if character_file else []
+        self.system_prompt = build_system_prompt(
+            load_korean_guideline(config.getKey("gpt.translation_guideline"), project_dir),
+            speech_to=any("speech_to" in c["profile"] for c in self.characters))
         self._warn_chinese_dictionaries(config)
         glossary = getattr(config, "gpt_dic", None)
         entries = [{"source": d.search_word, "target": d.replace_word, "note": d.note}

@@ -79,8 +79,19 @@ def load_korean_guideline(setting, project_dir: str) -> str:
     return text
 
 
-def build_system_prompt(guideline: str) -> str:
-    return f"{guideline.rstrip()}\n\n{OUTPUT_CONTRACT}"
+# Added only when a character file uses speech_to, so projects without it keep
+# the same system prompt (and therefore their translation cache).
+SPEECH_TO_CONTRACT = """- characters[].speech_to: 그 인물이 상대별로 쓰는 말투와 호칭(키는 상대의 일본어 이름).
+  대화 상대가 분명할 때 적용합니다. 원문에 격식·농담·분노 같은 일시적 태도 변화가 있으면 원문을 우선하고,
+  상대가 분명하지 않으면 관계를 지어내지 마세요.
+"""
+
+
+def build_system_prompt(guideline: str, speech_to: bool = False) -> str:
+    contract = OUTPUT_CONTRACT
+    if speech_to:
+        contract = contract.replace("- glossary:", SPEECH_TO_CONTRACT + "- glossary:", 1)
+    return f"{guideline.rstrip()}\n\n{contract}"
 
 
 _PROFILE_FIELDS = ("personality", "speech", "honorifics", "relationships", "note")
@@ -102,6 +113,12 @@ def load_characters(path: Path) -> list[dict]:
         if not isinstance(aliases, list):
             raise ValueError(f"{path.name}: aliases of {item['ja']} must be a list")
         profile = {"ja": str(item["ja"]).strip(), "ko": str(item.get("ko", "") or "").strip()}
+        speech_to = item.get("speech_to")
+        if speech_to not in (None, {}):
+            if not isinstance(speech_to, dict) or not all(
+                    str(k).strip() and isinstance(v, str) and v.strip() for k, v in speech_to.items()):
+                raise ValueError(f"{path.name}: speech_to of {item['ja']} must map addressee names to text")
+            profile["speech_to"] = {str(k).strip(): v.strip() for k, v in speech_to.items()}
         for field in _PROFILE_FIELDS:
             value = item.get(field)
             if value not in (None, "", [], {}):
@@ -115,5 +132,22 @@ def select_characters(characters: list[dict], speakers, texts) -> list[dict]:
     """Only characters who speak or are mentioned in the current request."""
     speakers = {s for s in speakers if s}
     joined = "\n".join(texts)
-    return [c["profile"] for c in characters
-            if any(n in speakers or n in joined for n in c["names"])]
+
+    def present(names):
+        return any(n in speakers or n in joined for n in names)
+
+    aliases = {c["profile"]["ja"]: c["names"] for c in characters}
+    result = []
+    for character in characters:
+        if not present(character["names"]):
+            continue
+        profile = character["profile"]
+        if "speech_to" in profile:
+            # Only the rules for people in this request; unknown keys match by themselves.
+            speech_to = {k: v for k, v in profile["speech_to"].items()
+                         if k != profile["ja"] and present(aliases.get(k, [k]))}
+            profile = {k: v for k, v in profile.items() if k != "speech_to"}
+            if speech_to:
+                profile["speech_to"] = speech_to
+        result.append(profile)
+    return result

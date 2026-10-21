@@ -1013,3 +1013,103 @@ class CategorySectionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KoreanGenDicTests(unittest.IsolatedAsyncioTestCase):
+    """직접 만든 합성 이름/지문과 Mock 응답으로 한국어 흐름을 확인한다."""
+
+    async def test_korean_prompts_cover_names_extraction_review_and_followups(self):
+        engine = _make_engine()
+        engine.target_lang = "Korean"
+        seen = []
+        replies = iter([
+            "ユイ\t유이\t인명, 여성",
+            "일본어 원문\t한국어 번역\t비고\n月影学園\t달그림자 학원\t조직, 학교",
+            "NULL\tNULL\tNULL",
+            "月影学園\t달그림자 학원\t조직, 학교",
+            "月影学園\t달그림자 학원\t조직, 학교",
+        ])
+
+        async def mock_chatbot(**kwargs):
+            seen.append(kwargs["messages"])
+            return next(replies), None
+
+        engine.ask_chatbot = mock_chatbot
+        await engine._translate_names_batch(["ユイ"], 0, {"ユイ": 1}, "ユイ：月影学園へ行こう。", [0], ["ユイ"], {})
+        session = _ChatSession()
+        await engine.llm_gen_dic("ユイ：月影学園へ行こう。", ["ユイ"], session=session)
+        await engine.llm_gen_dic("雨が降り始めた。", session=session)
+        batch = [_candidate("月影学園", 1, "달그림자 학원", "조직, 학교")]
+        review_session = _ChatSession()
+        for _ in range(2):
+            self.assertTrue(await engine._review_batch(batch, 0, "月影学園", [0], [""], {}, review_session))
+        self.assertEqual(len(seen), 5)
+        for messages in seen:
+            self.assertIn("한국어", messages[0]["content"])
+            self.assertIn("한국어", messages[-1]["content"])
+            self.assertNotIn("中文", messages[-1]["content"])
+        self.assertEqual(dict(engine.dic_votes["月影学園"]), {"달그림자 학원": 1})
+        self.assertNotIn("일본어 원문", engine.dic_votes)
+        self.assertEqual(engine.review_decisions["月影学園"], ("달그림자 학원", "조직, 학교"))
+
+    async def test_korean_categories_fallback_and_dictionary_export(self):
+        engine = _make_engine()
+        engine.target_lang = "Korean"
+        for note, expected in [("인명, 여성", "人名"), ("호칭, ユイ의 별명", "称呼"), ("지명", "地名"), ("조직, 학교", "组织"), ("종족", "种族"), ("기술", "技能"), ("물품", "物品"), ("행사", "活动")]:
+            self.assertEqual(_category_of(note), expected)
+        candidate = _candidate("ユイ", 1, "유이", "인명, 여성")
+        final = engine._build_final_list([candidate], set(), set())
+        self.assertEqual(final, [["ユイ", "유이", "인명, 여성"]])
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "dictionary.txt")
+            engine._save_generated_dictionary(final, path)
+            with open(path, encoding="utf-8") as stream:
+                content = stream.read()
+            self.assertIn("일본어[Tab]한국어", content)
+            self.assertIn("↓인명↓", content)
+            self.assertIn("ユイ\t유이\t인명, 여성", content)
+            engine._save_generated_dictionary([["レン", "렌", "인명, 남성"]], path)
+            with open(path, encoding="utf-8") as stream:
+                self.assertEqual(stream.read().count("↓인명↓"), 1)
+
+    async def test_korean_full_names_remain_editable_during_final_review(self):
+        engine = _make_engine()
+        engine.target_lang = "Korean"
+        engine._update_runtime = lambda **kwargs: None
+        references = []
+
+        async def mock_review(batch, index, text, starts, speakers, known, **kwargs):
+            references.append(known)
+            return True
+
+        engine._review_batch = mock_review
+        candidates = [
+            _candidate("ユイ", 2, "유이", "인명, 여성"),
+            _candidate("ユイ・アルト", 2, "유이 알트", "인명, ユイ의 전체 이름"),
+            _candidate("結衣", 2, "유이", "인명, ユイ의 별명"),
+        ]
+        await engine._run_final_review(candidates, set(), {}, "ユイ ユイ・アルト 結衣", [0], [""])
+        self.assertTrue(references)
+        for known in references:
+            self.assertIn("ユイ", known)
+            self.assertNotIn("ユイ・アルト", known)
+            self.assertNotIn("結衣", known)
+
+    async def test_korean_export_preserves_legacy_sections_and_loads_as_gpt_dictionary(self):
+        from GalTransl.Dictionary import CGptDict
+
+        engine = _make_engine()
+        engine.target_lang = "Korean"
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "dictionary.txt")
+            original = "# 사용자 주석\n----------↓人名↓----------\nユイ\t유이\t인명\n"
+            with open(path, "w", encoding="utf-8") as stream:
+                stream.write(original)
+            engine._save_generated_dictionary([["レン", "렌", "인명"]], path)
+            with open(path, encoding="utf-8") as stream:
+                saved = stream.read()
+            self.assertTrue(saved.startswith(original))
+            self.assertNotIn("↓인명↓", saved)
+            dictionary = CGptDict([path])
+            self.assertEqual({entry.search_word: entry.replace_word for entry in dictionary._dic_list},
+                             {"ユイ": "유이", "レン": "렌"})

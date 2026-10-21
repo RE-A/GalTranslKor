@@ -20,6 +20,7 @@ from GalTransl.Backend.Prompts import (
     GENDIC_SYSTEM,
     H_WORDS_LIST,
 )
+from GalTransl.Backend.GenDicPrompts import PROMPTS as KOREAN_PROMPTS
 from GalTransl.TerminalOutput import should_print_translation_logs, terminal_progress
 from GalTransl.RuntimePaths import get_res_dir
 
@@ -53,7 +54,7 @@ _EMPTY_RESPONSE_ATTEMPTS = 2
 # 模型常把书名号、引号一起抄进原词（『ユイ』），汇总前去掉，与不带括号的写法合并
 _WRAPPING_BRACKETS = "『』「」【】《》〈〉"
 # 审校没覆盖到（请求失败/中途停止）时，备注里有这些字样的词条直接保留
-_KEEP_NOTE_KEYWORDS = ("人名", "姓", "昵称", "地名")
+_KEEP_NOTE_KEYWORDS = ("人名", "姓", "昵称", "地名", "인명", "성씨", "별명", "애칭", "지명")
 # 生成的字典按类别分区写入，类别由备注开头的类型决定；关键词按顺序匹配，都不中归「其他」
 _DICT_CATEGORIES = (
     ("人名", ("人名", "姓", "全名", "名字", "角色", "主角")),
@@ -66,6 +67,14 @@ _DICT_CATEGORIES = (
     ("活动", ("活动", "比赛", "游戏", "节日", "仪式", "考试")),
     ("其他", ()),
 )
+_KOREAN_CATEGORIES = dict(zip(
+    (category for category, _ in _DICT_CATEGORIES),
+    ("인명", "호칭", "지명", "조직", "종족", "기술", "물품", "행사", "기타"),
+))
+_CHINESE_PROMPTS = dict(system=GENDIC_SYSTEM, extract=GENDIC_PROMPT,
+    followup=GENDIC_FOLLOWUP_PROMPT, names=GENDIC_NAME_PROMPT,
+    review=GENDIC_REVIEW_PROMPT, review_followup=GENDIC_REVIEW_FOLLOWUP_PROMPT)
+
 # 分区标题行：----------↓人名↓----------（没有 Tab，GPT 字典加载时会跳过）
 _SECTION_RE = re.compile(r"^-{3,}↓(.+?)↓-{3,}\s*$")
 
@@ -133,6 +142,9 @@ def _is_common_word(term: str, tokenizer) -> bool:
 def _category_of(note: str) -> str:
     """按备注开头的类型归类（「人名，女性」→人名，「社团/组织」→组织）。"""
     head = re.split(r"[，,、；;（(\s]", note.strip(), maxsplit=1)[0]
+    for category, label in _KOREAN_CATEGORIES.items():
+        if head == label:
+            return category
     for category, _ in _DICT_CATEGORIES:
         if head == category:
             return category
@@ -147,7 +159,7 @@ def _section_line(category: str) -> str:
     return f"----------↓{category}↓----------"
 
 
-def _merge_into_sections(existing_lines: List[str], final_list: List[List[str]]) -> List[str]:
+def _merge_into_sections(existing_lines: List[str], final_list: List[List[str]], korean: bool = False) -> List[str]:
     """把新词条按类别并进字典文件：已有同名分区的接在该分区末尾，没有的在文件末尾新建分区。
     文件里原有的内容（包括用户手改的、没有分区的旧格式词条）原样保留。"""
     groups: Dict[str, List[str]] = collections.OrderedDict((c, []) for c, _ in _DICT_CATEGORIES)
@@ -156,18 +168,18 @@ def _merge_into_sections(existing_lines: List[str], final_list: List[List[str]])
 
     lines = list(existing_lines)
     if not any(line.strip() for line in lines):
-        lines = ["# 格式为日文[Tab]中文[Tab]解释(可不写)，参考项目wiki"]
+        lines = ["# 형식: 일본어[Tab]한국어[Tab]비고(선택)" if korean else "# 格式为日文[Tab]中文[Tab]解释(可不写)，参考项目wiki"]
     for category, items in groups.items():
         if not items:
             continue
         head = next(
-            (i for i, line in enumerate(lines) if (m := _SECTION_RE.match(line)) and m.group(1) == category),
+            (i for i, line in enumerate(lines) if (m := _SECTION_RE.match(line)) and m.group(1) in (category, _KOREAN_CATEGORIES[category])),
             None,
         )
         if head is None:
             while lines and not lines[-1].strip():
                 lines.pop()
-            lines += ["", _section_line(category)] + items
+            lines += ["", _section_line(_KOREAN_CATEGORIES[category] if korean else category)] + items
             continue
         end = head + 1
         while end < len(lines) and not _SECTION_RE.match(lines[end]):
@@ -356,6 +368,17 @@ def _plan_name_batches(names: List[str], workers: int) -> List[List[str]]:
 
 
 class GenDic(BaseTranslate):
+    @property
+    def _korean(self) -> bool:
+        return getattr(self, "target_lang", "") in ("Korean", "ko")
+
+    def _prompt(self, stage: str) -> str:
+        return (KOREAN_PROMPTS if self._korean else _CHINESE_PROMPTS)[stage]
+
+    @property
+    def _empty_hint(self) -> str:
+        return "없음" if self._korean else "无"
+
     def __init__(
         self,
         config: CProjectConfig,
@@ -530,7 +553,7 @@ class GenDic(BaseTranslate):
                 existing_lines = f.read().splitlines()
         if not final_list and existing_lines:
             return path
-        lines = _merge_into_sections(existing_lines, final_list)
+        lines = _merge_into_sections(existing_lines, final_list, korean=self._korean)
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
         return path
@@ -634,7 +657,7 @@ class GenDic(BaseTranslate):
         thinking 模式的思考内容也一并记进会话：历史里少一条 reasoning_content，
         下一次请求会被 provider 判 400。流式接口偶尔整段返回空（不抛异常，ask_chatbot
         不会重试），空响应时再请求一次，否则这一片里的词就整片丢了。"""
-        messages = [{"role": "system", "content": GENDIC_SYSTEM}]
+        messages = [{"role": "system", "content": self._prompt("system")}]
         if session is not None:
             messages += session.messages
         messages.append({"role": "user", "content": prompt})
@@ -711,8 +734,8 @@ class GenDic(BaseTranslate):
             for src, (dst, note) in known_map.items()
             if any((len(src) >= 2 and src in n) or (len(n) >= 2 and n in src) for n in names)
         ]
-        prompt = GENDIC_NAME_PROMPT.format(
-            fixed="\n".join(fixed_rows[:60]) if fixed_rows else "无", input="\n".join(rows)
+        prompt = self._prompt("names").format(
+            fixed="\n".join(fixed_rows[:60]) if fixed_rows else self._empty_hint, input="\n".join(rows)
         )
         rsp = await self._ask_gendic(prompt, "이름 배치", batch_index)
         if rsp is None:
@@ -750,7 +773,7 @@ class GenDic(BaseTranslate):
         不再重复提示；装不下（轮数/字数到上限）就先清空会话；这一轮失败时用全新会话重试一次。"""
         self._raise_if_stop_requested()
         hinted = session.hinted if session is not None else set()
-        hint = "无"
+        hint = self._empty_hint
         name_hit = [name for name in name_list if name in text and name not in hinted]
 
         parts: List[str] = []
@@ -763,22 +786,22 @@ class GenDic(BaseTranslate):
             }
             if appeared:
                 lines = [f"{src}\t{dst}\t{note}" for src, (dst, note) in appeared.items()]
-                parts.append("以下词汇已有确定翻译，请严格保持一致，不要重复提取：\n" + "\n".join(lines))
+                parts.append(("다음 확정 번역어를 유지하고 중복 추출하지 않는다:\n" if self._korean else "以下词汇已有确定翻译，请严格保持一致，不要重复提取：\n") + "\n".join(lines))
         if name_hit:
             decided = [n for n in name_hit if self.name_decisions.get(n)]
             undecided = [n for n in name_hit if not self.name_decisions.get(n)]
             if decided:
                 # 说话人名已经统一译过：给出译名供全名、昵称对齐，但不要每片再输出一遍
                 lines = [f"{n}\t{self.name_decisions[n][0]}" for n in decided]
-                parts.append("以下角色名已收录（译名供参考，相关的全名、昵称请与之一致），不要再输出：\n" + "\n".join(lines))
+                parts.append(("이미 수록된 이름이다. 전체 이름과 별명을 이 한국어 표기에 맞추고 중복 출력하지 않는다:\n" if self._korean else "以下角色名已收录（译名供参考，相关的全名、昵称请与之一致），不要再输出：\n") + "\n".join(lines))
             if undecided:
-                parts.append("以下说话人名是角色名，要加入术语表：\n" + "\n".join(undecided))
+                parts.append(("다음 화자 이름을 용어집에 포함한다:\n" if self._korean else "以下说话人名是角色名，要加入术语表：\n") + "\n".join(undecided))
         if parts:
             hint = "\n\n".join(parts)
 
         rsp = None
         if session is not None and session.turns > 0:
-            prompt = GENDIC_FOLLOWUP_PROMPT.format(input=text, hint=hint)
+            prompt = self._prompt("followup").format(input=text, hint=hint)
             if session.has_room(len(prompt)):
                 rsp = await self._ask_gendic(prompt, "조각", task_index, session)
             if rsp is not None:
@@ -789,7 +812,7 @@ class GenDic(BaseTranslate):
                 session.reset()
                 return await self.llm_gen_dic(text, name_list, task_index, session)
         else:
-            prompt = GENDIC_PROMPT.format(input=text, hint=hint)
+            prompt = self._prompt("extract").format(input=text, hint=hint)
             rsp = await self._ask_gendic(prompt, "조각", task_index, session)
             if rsp is not None and session is not None:
                 hinted.update(appeared)
@@ -804,7 +827,7 @@ class GenDic(BaseTranslate):
             sp = line.split("\t")
             if len(sp) < 2:
                 continue
-            if "日文" in sp[0]:
+            if "日文" in sp[0] or sp[0].strip() == "일본어 원문":
                 continue
             src = sp[0].strip().strip(_WRAPPING_BRACKETS)
             dst = sp[1].strip().strip(_WRAPPING_BRACKETS)
@@ -928,15 +951,15 @@ class GenDic(BaseTranslate):
             fixed_rows.append(f"{src}\t{dst}\t{note}".rstrip("\t"))
             fixed_srcs.append(src)
         prompt_args = dict(
-            fixed="\n".join(fixed_rows) or "无",
-            catalog=catalog or "无",
-            protected="、".join(sorted(batch_srcs & protected_names)) or "无",
+            fixed="\n".join(fixed_rows) or self._empty_hint,
+            catalog=catalog or self._empty_hint,
+            protected="、".join(sorted(batch_srcs & protected_names)) or self._empty_hint,
             input="\n".join(rows),
         )
 
         rsp = None
         if session is not None and session.turns > 0:
-            prompt = GENDIC_REVIEW_FOLLOWUP_PROMPT.format(**prompt_args)
+            prompt = self._prompt("review_followup").format(**prompt_args)
             if session.has_room(len(prompt)):
                 rsp = await self._ask_gendic(prompt, "검토 배치", batch_index, session)
             if rsp is None:
@@ -946,7 +969,7 @@ class GenDic(BaseTranslate):
                     catalog=catalog, protected_names=protected_names,
                 )
         else:
-            prompt = GENDIC_REVIEW_PROMPT.format(**prompt_args)
+            prompt = self._prompt("review").format(**prompt_args)
             rsp = await self._ask_gendic(prompt, "검토 배치", batch_index, session)
         if rsp is None:
             return False
@@ -1048,7 +1071,7 @@ class GenDic(BaseTranslate):
         names.sort(key=lambda item: -all_text.count(item[0]))
         for src, (dst, note) in names:
             dst, note = self.review_decisions.get(src) or (dst, note)
-            final_list.append([src, dst, note or "人名"])
+            final_list.append([src, dst, note or ("인명" if self._korean else "人名")])
         for c in candidates:
             src = c["src"]
             if src in self.review_decisions:
@@ -1085,7 +1108,7 @@ class GenDic(BaseTranslate):
         for c in direct:
             self.review_decisions[c["src"]] = (c["dsts"][0], c["note"])
         name_candidates = [
-            {"src": src, "dsts": [dst], "note": note or "人名", "count": all_text.count(src)}
+            {"src": src, "dsts": [dst], "note": note or ("인명" if self._korean else "人名"), "count": all_text.count(src)}
             for src, (dst, note) in named.items()
         ]
         to_review = to_review + name_candidates
@@ -1102,7 +1125,7 @@ class GenDic(BaseTranslate):
             if _category_of(c["note"]) == "人名"
             and not _SPEAKER_JOINER_RE.search(c["src"])
             and not _SENTENCE_MARK_RE.search(c["src"])
-            and not any(k in c["note"] for k in ("昵称", "爱称", "外号", "绰号", "全名", "简称", "缩写"))
+            and not any(k in c["note"] for k in ("昵称", "爱称", "外号", "绰号", "全名", "简称", "缩写", "별명", "애칭", "전체 이름", "약칭", "줄임말"))
         }
         review_ref.update({c["src"]: (c["dsts"][0], c["note"]) for c in direct})
         review_ref.update(known_map)

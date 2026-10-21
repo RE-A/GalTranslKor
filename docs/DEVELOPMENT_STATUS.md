@@ -7,7 +7,8 @@
 - 개발 Fork: `RE-A/GalTranslKor`; 원본: `GalTransl/GalTransl` (Push 대상 아님)
 - 현재 통합 브랜치: `main`; 완료된 기능 브랜치: `feature/ollama-ko-translation` (보존)
 - 2차 확장 브랜치: `claude/repo-commit-access-check-p1n66r` (Claude Cloud 세션이 지정한 개발 브랜치,
-  `main` `6f02a04`에서 시작). 사용자 요청 없이 PR 생성·병합하지 않음. 커밋은 이 브랜치의 `git log` 참고.
+  `main` `6f02a04`에서 시작). 사용자가 "새 PR 없이 main에 올려 달라"고 요청해 PR 없이 Fork `main`에
+  fast-forward로 반영함(`ea3fe90` Ollama 2차 확장, `81bc56c` 한국어화, 이 기록 커밋). 브랜치는 보존.
 - PR: [RE-A/GalTranslKor #1](https://github.com/RE-A/GalTranslKor/pull/1)
   (`feature/ollama-ko-translation` → Fork의 `main`), 사용자 명시 요청으로 병합 완료.
 - 병합 커밋: `a3106718d81ae0f95a76d0fe3b1efc03aa552530` (2026-10-21 15:33 KST).
@@ -144,6 +145,9 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 사용자 요청으로 2차 확장·한국어화 커밋을 PR 없이 Fork `main`에 fast-forward 반영
+  (강제 Push 없음, 원본 저장소 Push 없음). 반영 전 `main`은 `6f02a04`에서 변경 없음을 확인.
 
 - 2026-10-21 / Claude Cloud: 사용자 요청으로 README·UI·백엔드 메시지 한국어화(위 "한국어화"). 같은 브랜치에 커밋/Push.
 

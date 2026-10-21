@@ -1,0 +1,37 @@
+# 평가용 합성 인물 (실제 작품의 인물이 아닙니다)
+characters:
+  - ja: 湊
+    ko: 미나토
+    aliases: [湊くん, みなとくん, お兄ちゃん]
+    personality: 주인공(1인칭 "俺"). 무뚝뚝하고 감정 표현이 서툴다.
+    speech: 葵·結衣에게 짧은 반말. 先生·春香에게 존댓말. 화가 나면 거칠어진다.
+    honorifics: 葵를 "아오이", 春香를 "하루카 선배", 佐伯를 "사에키 선생님"이라고 부른다
+    relationships: 葵의 소꿉친구, 結衣의 오빠, 春香의 문예부 후배
+  - ja: 葵
+    ko: 아오이
+    aliases: [葵さん]
+    personality: 밝고 다정하지만 고집이 있다.
+    speech: 湊·結衣에게 부드러운 반말. 어른에게 존댓말.
+    honorifics: 湊를 "미나토"(湊くん)라고 부른다
+    relationships: 湊의 소꿉친구, 結衣의 학교 선배, 문예부원
+  - ja: 結衣
+    ko: 유이
+    personality: 湊의 여동생. 오빠를 잘 놀린다.
+    speech: 오빠에게 장난스러운 반말
+    honorifics: 湊를 "오빠"(お兄ちゃん), 葵를 "아오이 언니"(葵さん)라고 부른다
+    relationships: 湊의 여동생
+  - ja: 春香
+    ko: 하루카
+    aliases: [春香先輩, ハル]
+    personality: 문예부 부장. 여유롭고 장난을 좋아한다.
+    speech: 후배에게 부드러운 반말. 자신을 "ハル(하루)"라고 부른다.
+    honorifics: 湊를 "미나토"(湊くん)라고 부른다
+    relationships: 湊와 葵의 문예부 선배
+  - ja: 先生
+    ko: 사에키 선생님
+    aliases: [佐伯先生]
+    speech: 학생에게 차분한 반말
+    relationships: 湊와 葵의 담임
+  - ja: 店長
+    ko: 점장
+    speech: 손님에게 정중한 존댓말

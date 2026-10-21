@@ -114,6 +114,9 @@ powershell -ExecutionPolicy Bypass -File scripts\start_translation.ps1 -Project 
 
 번역에 끝내 실패한 줄은 출력 파일에 `(Failed)원문` 형태로 남습니다(GalTransl 기존 표기).
 
+설정이나 모델을 바꿨을 때 품질이 좋아졌는지는 합성 평가 세트 `examples/ollama_ko_eval`과
+`eval_ollama_ko.py`(블라인드 A/B 채점표·집계)로 비교합니다. 사용법은 [평가 세트 README](examples/ollama_ko_eval/README.md)를 보세요.
+
 ## 6. 중단된 번역 재개
 
 같은 명령을 다시 실행하면 됩니다.

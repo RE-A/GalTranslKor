@@ -1,0 +1,58 @@
+# 한국어 번역 품질 평가용 합성 프로젝트 설정 (examples/ollama_ko_eval/README.md 참고)
+# 처음 쓸 때는 backendSpecific.Ollama.model만 `ollama list`에 표시된 이름으로 바꾸면 됩니다.
+# 모든 값은 소스코드 수정 없이 이 파일에서 변경합니다. 자세한 설명: README_KO_OLLAMA.md
+backendSpecific:
+  Ollama:
+    model: ""  # 필수. 예: ollama list에 표시되는 설치된 모델의 정확한 이름(태그 포함)
+    endpoint: http://127.0.0.1:11434  # 서버 루트, /api, /v1 형식 모두 가능
+    api: native  # native: /api/chat (numCtx 적용, 권장), openai: /v1/chat/completions
+    apiKey: ollama  # openai 모드에서만 전송. 로컬 Ollama는 비어 있지 않은 임의 값이면 됨
+    temperature: 0.2
+    numCtx: 8192  # Ollama 컨텍스트 창(토큰). native 모드에서 요청마다 options.num_ctx로 전달
+    numPredict: 2048  # 응답 최대 토큰
+    maxPromptChars: 6000  # 지침+문맥+용어집+캐릭터+원문의 문자 수 상한. numCtx를 올리면 함께 올림
+    followingContext: 4  # 번역 대상 뒤의 원문 몇 줄을 참고용으로 보낼지 (0이면 끔)
+    characterFile: characters.yaml  # 캐릭터 사전. 현재 요청에 등장한 인물만 전달
+    apiTimeout: 300  # 요청 하나의 제한 시간(초). 26B 모델은 응답이 느릴 수 있음
+    maxAttempts: 3  # 요청당 총 시도 횟수(최초 포함)
+    retryWait: 2  # 재시도 대기 시작값(초), 지수 증가, 최대 30초
+    onFailure: mark  # mark: 실패 줄을 기록하고 계속 / stop: 즉시 중단
+    minLengthRatio: 0.2  # 원문 대비 이 비율보다 짧은 번역은 누락으로 보고 재시도 (0이면 끔)
+    allowJapanese: []  # 번역문에 일본어로 남겨도 되는 표기. 예: ["ぷにぷに"]
+    think: false  # native 모드에서 생각(thinking) 출력 끄기. 지원하지 않는 서버면 null
+
+common:
+  language: ja2ko
+  gpt.translation_guideline: JapaneseToKorean.md  # 프로젝트 폴더에 파일이 있으면 그 파일을 사용
+  gpt.numPerRequestTranslate: 5  # 한 요청의 번역 대상 줄 수
+  gpt.contextNum: 8  # 이전 문맥: 최근 원문+확정 번역 줄 수
+  workersPerProject: 1  # 동시 요청 수. 로컬 GPU 1장에서는 1 권장
+  splitFile: "no"  # 필수. 파일 내부 순서와 문맥 유지를 위해 엔진이 직접 배치를 나눔
+  sortBy: name
+  save_steps: 1
+  loggingLevel: info
+  saveLog: true  # GalTransl 실행 로그를 프로젝트 폴더에 저장
+  linebreakSymbol: auto
+  gpt.enableProofRead: false
+  retranslFail: true
+  retranslKey: []
+
+plugin:
+  filePlugin: file_vn_scene_txt
+  textPlugins: []  # 중국어용 텍스트 플러그인은 사용하지 않음
+  problemPlugins: []  # 한국어 검증은 Ollama-ko 엔진과 품질 리포트가 수행
+  file_vn_scene_txt:
+    inputEncoding: auto  # UTF-8/UTF-16(BOM)/Shift-JIS 자동 판별. 직접 지정 예: cp932
+    outputEncoding: auto  # UTF-8 (원본에 BOM이 있으면 유지)
+
+dictionary:
+  defaultDictFolder: Dict
+  preDict: []  # 기본 Dict 폴더의 중국어용 사전은 넣지 않음
+  postDict: []
+  gpt.dict: ["(project_dir)glossary.txt"]  # 용어집: 원어<TAB>한국어<TAB>설명
+  useGPTDictInName: true  # 출력 TXT의 화자 이름을 용어집의 한국어 이름으로 변환
+  usePreDictInName: false
+  usePostDictInName: false
+
+proxy:
+  enableProxy: false

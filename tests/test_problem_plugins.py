@@ -164,7 +164,7 @@ class ProblemPluginTests(unittest.TestCase):
         self.assertEqual({item["name"] for item in catalog}, {item.name for item in CProblemType})
         self.assertEqual({item["name"] for item in catalog if item["default_enabled"]}, {
             "词频过高", "标点错漏", "残留日文", "多加换行", "比日文长",
-            "字典使用", "语言不通", "缺控制符", "独白男他",
+            "字典使用", "语言不通", "缺控制符", "独白男他", "数字不符",
         })
         self.assertIs(CProblemType.本无括号, CProblemType.标点错漏)
         self.assertEqual(CProblemType.标点错漏.value, 2)

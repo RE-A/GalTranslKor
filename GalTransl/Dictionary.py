@@ -452,8 +452,11 @@ class CGptDict:
 
         return promt
 
-    def check_dic_use(self, find_from_str: str, tran: CSentense):
+    def check_dic_use(self, find_from_str: str, tran: CSentense, ignore_spaces: bool = False):
+        """ignore_spaces: 한국어처럼 띄어쓰기가 흔들려도 같은 표기로 보는 대상 언어용."""
         problem_list = []
+        if ignore_spaces:
+            find_from_str = "".join(find_from_str.split())
         for dic in self._dic_list:
             if dic.search_word not in tran.post_src:
                 continue
@@ -466,6 +469,8 @@ class CGptDict:
 
             flag = False
             for replace_word in replace_word_list:
+                if ignore_spaces:
+                    replace_word = "".join(replace_word.split())
                 if replace_word in find_from_str:
                     flag = True
                     break

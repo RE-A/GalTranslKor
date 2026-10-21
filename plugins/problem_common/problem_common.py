@@ -217,6 +217,18 @@ class CProblemType(Enum):
     缺控制符 = 11, "번역문에 원문의 제어 문자(\\n, 변수 표기 등)가 없음.", True
     独白男他 = 12, "독백(name 없음) 번역문에 '他'가 나옴(중국어 출력 전용).", True
     单句过长 = 13, "번역문 문장이 너무 김. 평균 구간 길이가 기준값(avgSentenceLengthThreshold)을 넘음.", False
+    数字不符 = 14, "원문의 아라비아 숫자가 번역문에 없음(한국어 대상 전용, 제어 문자 안의 숫자는 제외).", True
+
+# Variables and control codes keep their digits verbatim; they are checked by 缺控制符.
+_CONTROL_CODE_RE = re.compile(r"%[-+ #0-9.]*[a-zA-Z]|\[[^\]]*\]|\{[^}]*\}|<[^>]*>|\\[a-zA-Z]+\d*")
+_NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*")
+_FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９．，", "0123456789.,")
+
+
+def _numbers(text: str) -> Counter:
+    text = _CONTROL_CODE_RE.sub(" ", text.translate(_FULLWIDTH_DIGITS))
+    return Counter(n.replace(",", "") for n in _NUMBER_RE.findall(text))
+
 
 MONOLOGUE_MALE_HE_EXCLUDES = (
     "其他",
@@ -346,8 +358,12 @@ def _check_problems(
 
             )
     if CProblemType.字典使用 in find_type and gpt_dict is not None:
-        if val := gpt_dict.check_dic_use(pre_dst, tran):
+        if val := gpt_dict.check_dic_use(pre_dst, tran, ignore_spaces=korean):
             problem_list.append(val)
+    if korean and CProblemType.数字不符 in find_type:
+        missing = _numbers(post_src) - _numbers(post_dst)
+        if missing:
+            problem_list.append(f"数字不符：{' '.join(missing.elements())}")
     if CProblemType.引入英文 in find_type:
         if not contains_english(post_src) and contains_english(pre_dst):
             eng_chars = contains_english(post_dst)

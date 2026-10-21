@@ -1,0 +1,47 @@
+# 모델이 설치된 Windows PC에서 model 값만 변경하세요.
+# 클라우드 테스트는 임시 Mock 서버 주소로 이 값을 덮어쓰며 실제 Ollama에 접속하지 않습니다.
+backendSpecific:
+  Ollama:
+    model: ""  # 예: ollama list에 표시되는 설치된 모델의 정확한 이름
+    endpoint: http://127.0.0.1:11434
+    api: native  # native: /api/chat, openai: /v1/chat/completions
+    apiTimeout: 180
+    maxAttempts: 3  # 최초 요청을 포함한 총 시도 횟수
+    retryWait: 1  # 지수 백오프 시작 시간(초), 최대 30초
+    temperature: 0.2
+    numCtx: 8192  # native API에만 적용
+    numPredict: 2048
+    maxPromptChars: 6000  # 시스템 지침 + JSON 입력 + 문맥 + 용어집 문자 예산
+    think: false  # native API: 생각 모드 비활성화. 구형 서버에는 null로 생략 가능
+
+common:
+  language: ja2ko
+  gpt.numPerRequestTranslate: 6
+  gpt.contextNum: 8
+  workersPerProject: 1
+  splitFile: "no"  # 파일 내부 문맥 순서를 위해 필수. 엔진이 요청 단위로 배치를 나눕니다.
+  sortBy: name
+  save_steps: 1
+  loggingLevel: info
+  saveLog: false
+  linebreakSymbol: auto
+  gpt.enableProofRead: false
+  retranslFail: true
+  retranslKey: []
+
+plugin:
+  filePlugin: file_galtransl_json
+  textPlugins: []
+  problemPlugins: []  # 한국어 전용 구조 검증은 Ollama-ko 엔진이 수행
+
+dictionary:
+  defaultDictFolder: Dict
+  preDict: []
+  postDict: []
+  gpt.dict: []  # 예: ["(project_dir)glossary.txt"]
+  usePreDictInName: false
+  usePostDictInName: false
+  useGPTDictInName: false
+
+proxy:
+  enableProxy: false

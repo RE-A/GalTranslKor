@@ -32,3 +32,9 @@ desktop/src-tauri/binaries/
 desktop/src-tauri/.tauri-linux-build.json
 desktop/src-tauri/.tauri-macos-build.json
 /docs
+
+# Runtime outputs from the committed Ollama Korean sample
+/examples/ollama_ko/gt_output/
+/examples/ollama_ko/transl_cache/
+/examples/ollama_ko/.galtransl-data/
+/examples/ollama_ko/name替换表.*

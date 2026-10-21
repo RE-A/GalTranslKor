@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Panel } from '../../components/Panel';
 import { PluginSettingsEditor } from '../../components/PluginSettingsEditor';
 import { localizePlugin } from '../../i18n/plugins';
+import { problemDisplayText } from '../../i18n/problemLabels';
 import { fetchProblemTypes, type ProblemTypeInfo, type PluginInfo } from '../../lib/api';
 
 interface ProblemAnalyzeSectionProps {
@@ -151,7 +152,7 @@ export function ProblemAnalyzeSection({ config, projectId, problemPlugins, onPro
             checked={checked} disabled={!available}
             onChange={(e) => toggle(item.name, e.target.checked)} />
           <span className="problem-analyze-section__item-body">
-            <span className="problem-analyze-section__name">{item.name}</span>
+            <span className="problem-analyze-section__name" title={item.name}>{problemDisplayText(item.name, uiLanguage)}</span>
             {item.description && <span className="problem-analyze-section__desc">{item.description}</span>}
             {sources.length > 1 && <span className="problem-analyze-section__desc">
               {translate('config:problemAnalyzeSection.sourcePlugins', { names: sources.join(', ') })}

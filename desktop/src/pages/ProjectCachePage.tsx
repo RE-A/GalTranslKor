@@ -36,6 +36,7 @@ import {
   updateProjectConfig } from '../lib/api';
 import { normalizeError } from '../lib/errors';
 import type { LocalizedText } from '../i18n/core';
+import { problemDisplayText } from '../i18n/problemLabels';
 import { escapeProblemFilterPattern, normalizeKeywordList, splitProblemItems, splitProblemTypes } from '../lib/problemFilter';
 import { joinPath } from '../lib/paths';
 
@@ -129,7 +130,7 @@ const CacheEntryCard = memo(function CacheEntryCard({
           <div className="cache-card__problem-slot">
             {splitProblemItems(entry.problem).map((problemItem, itemIndex) => (
               <span key={`${problemItem}-${itemIndex}`} className="cache-card__problem-item">
-                <span className="cache-card__pill cache-card__pill--problem" title={problemItem}>{problemItem}</span>
+                <span className="cache-card__pill cache-card__pill--problem" title={problemItem}>{problemDisplayText(problemItem, uiLanguage)}</span>
                 <button
                   type="button"
                   className="cache-card__problem-filter"
@@ -333,7 +334,7 @@ function SearchResultCard({
           {speaker !== '—' && (
             <span className="search-result-card__speaker" style={{ color: `hsl(${speakerHue(rawSpeaker)}, 55%, 32%)` }}>{speaker}</span>
           )}
-          {result.problem && <span className="search-result-card__problem">{result.problem}</span>}
+          {result.problem && <span className="search-result-card__problem" title={result.problem}>{splitProblemItems(result.problem).map((item) => problemDisplayText(item, uiLanguage)).join(', ')}</span>}
         </div>
       )}
       {result.post_src && (

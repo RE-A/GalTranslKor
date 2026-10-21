@@ -98,12 +98,12 @@ class ProjectGuidelineApiTests(unittest.TestCase):
     def test_replace_miss_is_readable_400(self) -> None:
         self._put({"mode": "overwrite", "content": "abc"})
         error = self._put_expect_400({"mode": "replace", "old_text": "不存在", "new_text": "x"})
-        self.assertIn("没有找到", error)
+        self.assertIn("찾지 못했습니다", error)
 
     def test_replace_ambiguous_is_400(self) -> None:
         self._put({"mode": "overwrite", "content": "哥哥 … 哥哥"})
         error = self._put_expect_400({"mode": "replace", "old_text": "哥哥", "new_text": "兄长"})
-        self.assertIn("2 次", error)
+        self.assertIn("2번", error)
 
     def test_unknown_mode_is_400(self) -> None:
         error = self._put_expect_400({"mode": "prepend", "content": "x"})
@@ -127,7 +127,7 @@ class ProjectGuidelineApiTests(unittest.TestCase):
         )
         # 文件还不存在时 replace 走的是「还不存在，请先用 overwrite 创建」这条，
         # 不是「old_text 没有找到」（那是文件已存在、没命中时的话）
-        self.assertIn("还不存在", error)
+        self.assertIn("아직 없습니다", error)
         self.assertFalse(self._get()["exists"])
 
 

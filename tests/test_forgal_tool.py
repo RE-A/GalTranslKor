@@ -467,9 +467,9 @@ class TranslationToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(requests[1][-2]["reasoning_content"], "thinking")
         self.assertEqual(published, [("file", i, "translated\ntext\tend", "test-model") for i in (1, 2)])
         logs = console.getvalue()
-        self.assertIn("[write_translation_result] 工具输入：\n*** Begin Patch", logs)
-        self.assertIn("[write_translation_result] 工具返回：\n补丁应用成功", logs)
-        self.assertIn("[write_translation_result] 工具返回：\n补丁应用失败", logs)
+        self.assertIn("[write_translation_result] 도구 입력:\n*** Begin Patch", logs)
+        self.assertIn("[write_translation_result] 도구 반환:\n补丁应用成功", logs)
+        self.assertIn("[write_translation_result] 도구 반환:\n补丁应用失败", logs)
         self.assertIn("All sentences are written.", logs)
 
     async def test_truncated_calls_and_text_only_are_not_results(self):

@@ -16,14 +16,14 @@ import {
 import { normalizeError } from '../lib/errors';
 
 /** 新建/空白规范时给个能照着改的骨架，比一句"请输入内容"有用（与项目规范那边同一份口径）。 */
-const PLACEHOLDER = `示例（按需增删）：
+const PLACEHOLDER = `예시(필요에 따라 추가·삭제):
 
-## 术语与称呼
-- 「お兄ちゃん」统一译作「哥哥」，不要用「老哥」
+## 용어와 호칭
+- 「お兄ちゃん」은 「오빠」로 통일하고 「형」으로 쓰지 않는다
 
-## 语气与文风
-- 主角内心独白用书面语，不用网络用语
-- 拟声词保留原文的声音感，不意译成"啪的一声"`;
+## 말투와 문체
+- 주인공의 속마음 독백은 문어체로 쓰고 인터넷 말투를 쓰지 않는다
+- 의성어는 원문의 소리 느낌을 살리고 "탁 하는 소리"처럼 풀어 쓰지 않는다`;
 
 function formatSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return translate("settings:commonGuidelinesPage.formatSize_message_file");

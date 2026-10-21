@@ -69,7 +69,7 @@
   파일 이름(`Basic.md` 등), 백엔드 문제 이름(`残留日文` 등), 설정 실제 값은 실제 값과 일치해야 하므로 번역하지 않음.
 - 백엔드: `GalTransl/i18n.py` 사용자 메시지 59개와 번역 템플릿 설명(`TRANSLATOR_SUPPORTED`) 14개에 `ko` 추가.
   기본 `GT_LANG=ko`(환경 변수로 `zh-cn`/`en` 전환), 한국어가 없는 메시지는 en → zh-cn 대체. 서버의 템플릿 설명도 `GT_LANG`을 따름.
-- 문서: `README.md`를 한국어로 번역하고 중국어 원본은 `README_ZH.md`로 보존(영어/중국어 README에 상호 링크).
+- 문서: `README.md`를 한국어로 번역(중국어 원본 `README_ZH.md`는 이후 삭제, 원본은 upstream 저장소 참조).
   `desktop/README.md`, `desktop/src/i18n/README.md`, `plugins/readme.md`, `plugins/SETTINGS_SCHEMA.md` 한국어화.
 - 원본 테스트 보존: 원본 테스트는 중국어 문구를 검증하므로 pytest는 `tests/conftest.py`에서 `GT_LANG=zh-cn`,
   프런트엔드 테스트 로더는 저장된 UI 언어 `zh-CN`을 기본 제공. 한국어 기본값·대체 순서는 별도 테스트
@@ -78,7 +78,36 @@
   (UI에서는 한국어 언어팩이 덮어씀, CLI·로그에는 원문 표시), 기본 중국어 사전·지침 파일(데이터/모델 입력이라 번역 대상 아님),
   `sampleProject` 설정 주석, 코드 주석.
 
+## 중국어 잔여분 정리 (2026-10-21, Claude Cloud)
+
+사용자 선택 범위: "사용자 메시지 번역" + "중국어 전용 데이터 삭제". 코드 주석 번역과 Git 이력 재작성은 하지 않음.
+
+- 삭제: `README_ZH.md`, 중국어 기본 사전 5개(`Dict/00通用字典_*`, `01H字典_*`, `GPT字典.txt`), 중국어 지침
+  `translation_guidelines/日译中_增强*.md`, 중국어 예제 `sampleProject/`, 일본어→중국어 평가 데이터
+  `plugins/file_mtbench_aio/gal_mtbench_data/`. `Dict/`는 빌드·배포 검사가 비어 있지 않은 폴더를 요구하므로
+  빈 한국어 공통 사전 `Dict/공통GPT사전.txt`(주석만)를 둠. Git 이력에는 남아 있어 저장소 크기는 줄지 않음.
+- 새 프로젝트 기본 설정(`GalTransl/DefaultProjectConfig.py`): 주석 한국어화, 기본 대상 언어 `ko`,
+  기본 지침 `JapaneseToKorean.md`, 삭제한 중국어 사전 참조 제거.
+- 번역한 사용자 메시지: 백엔드 로그·예외·서버 오류 응답·진행 단계·CLI/빌드 스크립트 출력, 플러그인 로그,
+  플러그인 YAML(이름·설명·라벨·주석), msg-tool README, Rust 데스크톱 셸 오류 문구, 데스크톱의 지침 예시와
+  에이전트 추천 지시 칩. 서버의 "AI로 이름 번역" 프롬프트를 중국어 표기에서 한국어(한글) 표기로 변경.
+- 화면이 백엔드 문자열을 비교하던 곳 보정: 서버 로그 필터(`Runner._ALLOWED_INFO_PREFIXES`)에 한국어 접두사 추가,
+  `ProjectTranslatePage`의 가용성 확인 단계 비교에 한국어 값 추가, 완료 알림 플러그인의 성공 판별 문구 동기화.
+- 일부러 유지한 중국어(실제 동작 값): 문제 이름과 문제 상세 문자열(`残留日文`, `翻译失败` 등, 캐시·필터·재번역 키워드와 비교),
+  플러그인 설정 키와 선택값(`换行模式: 保持位置` 등), 파일 이름(`name替换表.csv`, `项目GPT字典*.txt`),
+  `i18n.py`/`TRANSLATOR_SUPPORTED`/`zh-CN` 언어팩의 중국어 선택용 항목, msg-tool JIS 치환표 `subs_cn_jp.json`,
+  모델 입력(GenDic·Sakura·ForGal 프롬프트와 ForGal-tool 도구 결과, `GalTransl/Agent/` 전체), 코드 주석.
+- 테스트: 원본 테스트 중 바뀐 문구를 직접 비교하던 19개 테스트(서브테스트 포함 39건)의 기대값을 한국어로 갱신.
+  Rust 테스트 3곳의 기대 문구도 갱신(이 환경에서는 crate가 없어 `cargo test` 미실행, `rustfmt`로 구문만 확인).
+- 남은 일: GenDic(GPT 사전 자동 생성)은 프롬프트가 중국어 번역어를 만들도록 설계되어 한국어 용어집을 만들려면
+  프롬프트 재설계가 필요. 에이전트 모드도 시스템 프롬프트가 중국어라 답변 언어 확인과 한국어화 검토 필요.
+  백엔드 코드 주석과 CSS/Rust 주석은 중국어 그대로.
+
 ## 검증 결과
+
+중국어 잔여분 정리(Claude Cloud): 전체 Python **1542 passed, 7 skipped(기존과 동일), 371 subtests passed**,
+`npm test` **148 passed**, `npm run build` 성공, `npm run i18n:check` 오류 0, 플러그인 YAML 전부 `yaml.safe_load` 통과,
+Rust `main.rs`/`backend.rs`는 `rustfmt` 구문 검사만 통과(`cargo check`/`cargo test`는 오프라인 crate 부재로 미실행).
 
 한국어화(Claude Cloud): 전체 Python **1542 passed, 7 skipped, 371 subtests passed**, 프런트엔드 `npm test`
 **148 passed**, `npm run build` 성공(기존 큰 청크 경고), `npm run i18n:check` 1854개 키(en/ko) 오류 0.
@@ -145,6 +174,8 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-21 / Claude Cloud: 남은 중국어 사용자 메시지 번역과 중국어 전용 데이터 삭제(위 "중국어 잔여분 정리"). 같은 브랜치에 커밋 후 Fork `main`에 fast-forward 반영.
 
 - 2026-10-21 / Claude Cloud: 사용자 요청으로 2차 확장·한국어화 커밋을 PR 없이 Fork `main`에 fast-forward 반영
   (강제 Push 없음, 원본 저장소 Push 없음). 반영 전 `main`은 `6f02a04`에서 변경 없음을 확인.

@@ -13,13 +13,13 @@ class ExampleNoUse(GTextPlugin):
         # 打印提示的方法，打印时请带上模块名，以便区分日志。
         self.pname = plugin_conf["Core"].get("Name", "")
         settings = plugin_conf["Settings"]
-        LOGGER.info(f"[{self.pname}] 寄寄子·启动！")
+        LOGGER.info(f"[{self.pname}] 예제 플러그인 시작!")
         LOGGER.info(f"[{self.pname}] set_bool:{settings.get('set_bool', True)}")
         LOGGER.info(f"[{self.pname}] set_int:{settings.get('set_int', 10)}")
         LOGGER.info(
             f"[{self.pname}] set_str:{settings.get('set_string', 'default_str')}"
         )
-        LOGGER.info(f"[{self.pname}] 设置样例4:{settings.get('设置样例4', True)}")
+        LOGGER.info(f"[{self.pname}] 设置样例4(설정 예 4): {settings.get('设置样例4', True)}")
         # 读取配置文件中的设置，并保存到变量中。
         self.set_bool = settings.get("set_bool", True)
         self.set_int = settings.get("set_int", 10)
@@ -66,5 +66,5 @@ class ExampleNoUse(GTextPlugin):
         This method is called after all translations are done.
         在所有文件翻译完成之后的动作，例如输出提示信息。
         """
-        LOGGER.info(f"[{self.pname}] 寄不动了.jpg")
+        LOGGER.info(f"[{self.pname}] 예제 플러그인 종료")
         pass

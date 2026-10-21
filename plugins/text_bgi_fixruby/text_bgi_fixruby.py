@@ -120,13 +120,13 @@ class TextBgiFixruby(GTextPlugin):
         # 打印提示的方法，打印时请带上模块名，以便区分日志。
         self.pname = plugin_conf["Core"].get("Name", "text_bgi_fixruby")
         settings = plugin_conf["Settings"]
-        LOGGER.info(f"[{self.pname}] BGI 修复 ruby 标签扩展已启用")
+        LOGGER.info(f"[{self.pname}] BGI 루비 태그 수정 확장 사용")
         self.remove_incorrect = settings.get('remove_incorrect', True)
         if self.remove_incorrect:
-            LOGGER.info(f"[{self.pname}] 已启用移除不正确的 ruby 标签")
+            LOGGER.info(f"[{self.pname}] 잘못된 루비 태그 제거 사용")
         self.auto_correct = settings.get('auto_correct', True)
         if self.auto_correct:
-            LOGGER.info(f"[{self.pname}] 已启用自动修正着重符号（・）数量")
+            LOGGER.info(f"[{self.pname}] 강조점(・) 개수 자동 보정 사용")
         self.process_log_level = DEBUG_LEVEL[settings.get('process_log_level', 'debug')]
         self.count = 0
 
@@ -177,4 +177,4 @@ class TextBgiFixruby(GTextPlugin):
         This method is called after all translations are done.
         在所有文件翻译完成之后的动作，例如输出提示信息。
         """
-        LOGGER.info(f'[{self.pname}]修改了 {self.count} 条对话')
+        LOGGER.info(f'[{self.pname}]대사 {self.count}개 수정')

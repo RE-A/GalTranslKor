@@ -1,46 +1,46 @@
-# Galgame 脚本文件插件
+# 갈게임 스크립트 파일 플러그인
 
-通过随程序分发的 `res/msg_tool.exe` 提取和回填脚本。
+프로그램과 함께 배포되는 `res/msg_tool.exe`로 스크립트를 추출하고 되씁니다.
 
-## 重新提取原文
+## 원문 다시 추출
 
-修改脚本引擎或原文编码后，在此插件设置内、**原文编码**下方点击 **重新提取原文**。按钮先保存当前项目配置，再按该配置批量重新提取此插件处理的输入文件，并在原处显示成功文件数、句数和失败原因。提取成功会更新提取缓存；单个文件失败时保留它上次成功的提取缓存，并继续处理其他文件。无需切换到「浏览文本」页；以后打开该页时会重新读取内容。
+스크립트 엔진이나 원문 인코딩을 바꾼 뒤에는 이 플러그인 설정의 **원문 인코딩** 아래에 있는 **원문 다시 추출**을 누르세요. 버튼을 누르면 현재 프로젝트 설정을 먼저 저장하고, 그 설정으로 이 플러그인이 처리하는 입력 파일을 한꺼번에 다시 추출한 뒤, 성공한 파일 수와 문장 수, 실패 이유를 그 자리에 보여 줍니다. 추출에 성공하면 추출 캐시를 갱신합니다. 파일 하나가 실패하면 그 파일의 마지막 성공 추출 캐시를 유지하고 다른 파일을 계속 처리합니다. "번역문 보기" 페이지로 갈 필요가 없으며, 나중에 그 페이지를 열면 내용을 다시 읽습니다.
 
-提取缓存与翻译缓存独立。已有翻译缓存的文件继续显示译文，刷新不会删除或覆盖翻译缓存。
+추출 캐시는 번역 캐시와 별개입니다. 번역 캐시가 있는 파일은 계속 번역문을 보여 주며, 새로 고쳐도 번역 캐시를 지우거나 덮어쓰지 않습니다.
 
-## 回填编码检查
+## 되쓰기 인코딩 검사
 
-“原文编码”（`source_encoding`）控制读取；“输出编码”（`patched_encoding`）控制回填。输出编码留空时使用 msg-tool 的引擎默认值，不会自动跟随原文编码。例如 CatSystem2 的 CST 默认以 CP932 / Shift-JIS 回填，部分中文字符无法直接写入。
+"원문 인코딩"(`source_encoding`)은 읽기를, "출력 인코딩"(`patched_encoding`)은 되쓰기를 정합니다. 출력 인코딩을 비우면 msg-tool의 엔진 기본값을 쓰며 원문 인코딩을 자동으로 따르지 않습니다. 예를 들어 CatSystem2의 CST는 기본으로 CP932 / Shift-JIS로 되쓰므로 일부 문자(한글 포함)는 그대로 쓸 수 없습니다.
 
-插件会在调用 msg-tool 回填前检查已确认编码规则的 CST 和 KAG 文本，发现无法编码的字符后列出文件、数据条目、人名/正文及字符码位，并保留原脚本和已有输出。Unicode BOM、封装 KAG、Windows 代码页参数及工具的替换表/人名表交由工具处理，避免错误拦截；其他格式或预检未覆盖的编码问题，也会在工具返回错误或警告时给出处理提示并保留原始诊断。msg-tool 的 `gb2312` 实际使用 GBK，预检也按 GBK 处理。
+플러그인은 msg-tool로 되쓰기 전에 인코딩 규칙이 확인된 CST와 KAG 텍스트를 검사합니다. 인코딩할 수 없는 문자를 찾으면 파일, 데이터 항목, 이름/본문, 문자 코드값을 알려 주고 원본 스크립트와 기존 출력을 유지합니다. Unicode BOM, 묶인 KAG, Windows 코드 페이지 인수, 도구의 치환표/이름표는 잘못 막지 않도록 도구에 맡깁니다. 다른 형식이나 사전 검사가 다루지 않는 인코딩 문제도 도구가 오류나 경고를 반환하면 처리 안내와 함께 원본 진단을 보여 줍니다. msg-tool의 `gb2312`는 실제로 GBK를 쓰므로 사전 검사도 GBK 기준입니다.
 
-遇到 `Failed to encode Shift-JIS` 或编码丢失提示时，可按游戏支持情况选择：
+`Failed to encode Shift-JIS`나 인코딩 손실 안내가 나오면 게임 지원 여부에 따라 고르세요.
 
-- 游戏需要日文编码：开启下述 **JIS 替换**，并部署 UIF 配置或对应替换字体。
-- 游戏支持其他编码：将 **输出编码** 改成 `gb2312` 或 `utf8`。仅修改原文编码无效；如果 `extra_args` 指定了 `-p` / `-P`，需同步修改或移除，这些额外参数优先于输出编码设置。
-- 修正提示中的字符后重新构建结果；调整输出配置不需要重新翻译。
+- 게임이 일본어 인코딩을 요구하면: 아래 **JIS 치환**을 켜고 UIF 설정이나 대응 치환 글꼴을 배포합니다. JIS 치환 사전은 중국어 간체자용이라 한글은 치환할 수 없습니다.
+- 게임이 다른 인코딩을 지원하면: **출력 인코딩**을 `utf8`(또는 `gb2312`)로 바꿉니다. 원문 인코딩만 바꾸면 효과가 없습니다. `extra_args`에 `-p` / `-P`가 있으면 함께 고치거나 지우세요. 이 추가 인수가 출력 인코딩 설정보다 우선합니다.
+- 안내된 문자를 고친 뒤 결과를 다시 만듭니다. 출력 설정만 바꿨다면 다시 번역할 필요가 없습니다.
 
-## JIS 替换
+## JIS 치환
 
-在插件设置中开启 **JIS 替换**（`jis_substitution: true`），回填时会将正文和人名中 CP932 无法编码的字符按内置字典替换成日文字符。可直接编码的字符保持原样；保留原文模式下，追加的原文也会经过检查。翻译缓存和传入的数据不变。
+플러그인 설정에서 **JIS 치환**(`jis_substitution: true`)을 켜면, 되쓸 때 본문과 이름에서 CP932로 인코딩할 수 없는 문자를 내장 사전에 따라 일본어 문자로 바꿉니다. 바로 인코딩할 수 있는 문자는 그대로 둡니다. 원문 유지 모드에서는 덧붙인 원문도 검사합니다. 번역 캐시와 전달된 데이터는 바뀌지 않습니다.
 
-- 开启后固定以 CP932 输出，忽略 `patched_encoding`；`source_encoding` 仍控制源脚本的读取编码。请移除 `extra_args` 中的输出编码参数。
-- 每次成功回填都会在项目输出根目录生成或更新 `uif_config.json`（通常为 `gt_output/uif_config.json`，旧项目可能为 `json_cn/uif_config.json`）。子目录内的脚本共用此配置，无需等全部翻译完成。
-- UIF 的 `character_substitution.source_characters` 为替换后的日文字符，`target_characters` 为对应中文。映射汇总当前插件实例成功写出的所有脚本；重复保存同一文件时更新该文件的映射。续跑时保留此前配置中的映射，以兼容未重新回填的脚本；需要清除历史映射时，可删除输出目录的配置后完整重建输出。
-- 已有配置中的字体、注入等其他设置会保留。复制脚本到游戏后，需要配合 [UniversalInjectorFramework](https://github.com/AtomCrafty/UniversalInjectorFramework) 和此配置，或使用与字典对应的替换字体，才能还原中文显示。
-- **JIS 未匹配字符处理**（`jis_unmapped`）默认 `error`：字典未覆盖时停止该文件的写出。设为 `space` 时与 SExtractor 一致，替换成全角空格，并在配置的 `character_substitution.remain` 中列出字符，同时输出警告。
-- 文本本身包含替换字典的目标字符时，会在 `character_substitution.repeat` 中列出并提示检查显示。双语文本或使用替换字体时尤其需要检查。
+- 켜면 항상 CP932로 출력하며 `patched_encoding`을 무시합니다. `source_encoding`은 계속 원본 스크립트의 읽기 인코딩을 정합니다. `extra_args`의 출력 인코딩 인수는 지우세요.
+- 되쓰기에 성공할 때마다 프로젝트 출력 루트에 `uif_config.json`을 만들거나 갱신합니다(보통 `gt_output/uif_config.json`, 옛 프로젝트는 `json_cn/uif_config.json`일 수 있음). 하위 폴더의 스크립트도 이 설정을 함께 쓰며, 번역이 모두 끝날 때까지 기다릴 필요가 없습니다.
+- UIF의 `character_substitution.source_characters`는 치환된 일본어 문자, `target_characters`는 그에 대응하는 원래 문자입니다. 매핑은 현재 플러그인 인스턴스가 성공적으로 쓴 모든 스크립트를 합친 것이며, 같은 파일을 다시 저장하면 그 파일의 매핑을 갱신합니다. 이어서 실행할 때는 다시 되쓰지 않은 스크립트와 호환되도록 이전 설정의 매핑을 유지합니다. 옛 매핑을 지우려면 출력 폴더의 설정을 지운 뒤 출력을 전부 다시 만드세요.
+- 기존 설정의 글꼴, 삽입 등 다른 설정은 유지합니다. 스크립트를 게임에 복사한 뒤 [UniversalInjectorFramework](https://github.com/AtomCrafty/UniversalInjectorFramework)와 이 설정을 함께 쓰거나, 사전에 대응하는 치환 글꼴을 써야 원래 문자가 표시됩니다.
+- **JIS 매핑 불가 문자 처리**(`jis_unmapped`)의 기본값은 `error`이며, 사전에 없는 문자가 있으면 그 파일의 쓰기를 멈춥니다. `space`로 하면 SExtractor처럼 전각 공백으로 바꾸고, 설정의 `character_substitution.remain`에 그 문자를 기록하며 경고를 출력합니다.
+- 텍스트 자체에 치환 사전의 대상 문자가 있으면 `character_substitution.repeat`에 기록하고 화면 확인을 안내합니다. 대역 텍스트나 치환 글꼴을 쓸 때 특히 확인하세요.
 
-关闭 JIS 替换后恢复原有回填流程，不生成或更新 UIF 配置。
+JIS 치환을 끄면 원래 되쓰기 흐름으로 돌아가며 UIF 설정을 만들거나 갱신하지 않습니다.
 
-## Agent 调整设置
+## 에이전트로 설정 조정
 
-Agent 可调用 `get_plugin_settings(plugin_name="file_msgtool_script")` 查看默认值、项目生效值、中文选项说明和完整配置路径。即使项目 YAML 尚未包含某项，也可通过 `update_project_config` 新增插件声明的设置，例如 `plugin.file_msgtool_script.jis_substitution: true`；未知键、错误类型和无效选项会被拒绝，写入仍遵循当前 Agent 权限模式及审批预览。
+에이전트는 `get_plugin_settings(plugin_name="file_msgtool_script")`로 기본값, 프로젝트 적용값, 선택지 설명, 전체 설정 경로를 볼 수 있습니다. 프로젝트 YAML에 아직 없는 항목도 `update_project_config`로 플러그인이 선언한 설정을 추가할 수 있습니다. 예: `plugin.file_msgtool_script.jis_substitution: true`. 모르는 키, 잘못된 종류, 올바르지 않은 선택지는 거부되며, 쓰기는 현재 에이전트 권한 모드와 승인 미리보기를 따릅니다.
 
-回填编码失败时，`wait` 和 `get_runtime` 会返回完整错误及结构化修复指引：先查询设置，再依据游戏兼容性选择 JIS 替换或调整 `plugin.file_msgtool_script.patched_encoding`。只改回填配置后可调用 `start_translation(translator="rebuildr")` 从缓存重新构建，并等待任务成功；使用 JIS 时仍须部署 UIF/对应字体。
+되쓰기 인코딩에 실패하면 `wait`와 `get_runtime`이 전체 오류와 구조화된 해결 안내를 돌려줍니다. 먼저 설정을 조회한 뒤 게임 호환성에 따라 JIS 치환을 고르거나 `plugin.file_msgtool_script.patched_encoding`을 조정합니다. 되쓰기 설정만 바꿨다면 `start_translation(translator="rebuildr")`로 캐시에서 다시 만들고 작업 성공을 기다립니다. JIS를 쓸 때는 UIF/대응 글꼴도 배포해야 합니다.
 
-## 字典来源
+## 사전 출처
 
-`subs_cn_jp.json`（2,999 组映射）与 `uif_config.json` 模板复制自 [SExtractor](https://github.com/satan53x/SExtractor)，版本 `8d8d976fd04ae54e7c677705af937273d04a376a` 的 `src/subs_cn_jp.json`、`src/uif_config.json`。替换规则参考 `src/helper_text.py` 的 `generateSubsJis` / `generateSubsConfig`，字典由 SExtractor 注明最初来自 GalTransl_DumpInjector。SExtractor 和本项目均使用 GPL-3.0 许可证，详见仓库根目录的 `LICENSE`。
+`subs_cn_jp.json`(2,999개 매핑)과 `uif_config.json` 템플릿은 [SExtractor](https://github.com/satan53x/SExtractor) 버전 `8d8d976fd04ae54e7c677705af937273d04a376a`의 `src/subs_cn_jp.json`, `src/uif_config.json`에서 복사했습니다. 치환 규칙은 `src/helper_text.py`의 `generateSubsJis` / `generateSubsConfig`를 참고했으며, SExtractor에 따르면 사전은 원래 GalTransl_DumpInjector에서 왔습니다. SExtractor와 이 프로젝트는 모두 GPL-3.0 라이선스를 쓰며 자세한 내용은 저장소 루트의 `LICENSE`를 보세요.
 
-字典及模板随插件打包，运行时无需安装 SExtractor。
+사전과 템플릿은 플러그인과 함께 묶여 있어 실행할 때 SExtractor를 설치할 필요가 없습니다.

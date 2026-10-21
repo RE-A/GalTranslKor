@@ -24,7 +24,7 @@ class file_plugin(GFilePlugin):
         """
         if not file_path.endswith(".json"):
             # 检查不支持的文件类型并抛出TypeError
-            raise TypeError("请检查filePlugin的配置并选择合适的文件插件.")
+            raise TypeError("filePlugin 설정을 확인하고 알맞은 파일 플러그인을 고르세요.")
         with open(file_path, "r", encoding="utf-8") as f:
             json_list = orjson.loads(f.read())
         if self.output_with_src:

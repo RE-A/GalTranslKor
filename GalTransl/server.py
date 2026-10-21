@@ -620,7 +620,7 @@ def _create_guideline_from_payload(payload: dict[str, Any]) -> tuple[dict[str, A
         os.makedirs(directory, exist_ok=True)
         file_path = os.path.join(directory, filename)
         if os.path.exists(file_path):
-            return {"error": f"「{filename}」已存在，换个文件名或直接编辑它"}, HTTPStatus.CONFLICT
+            return {"error": f"“{filename}”이(가) 이미 있습니다. 다른 파일 이름을 쓰거나 기존 파일을 편집하세요"}, HTTPStatus.CONFLICT
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(str(payload.get("content", "")))
         return {"success": True, "filename": filename, "path": file_path}, HTTPStatus.OK
@@ -663,7 +663,7 @@ def _delete_guideline_from_payload(payload: dict[str, Any]) -> tuple[dict[str, A
         return {"error": "invalid guideline filename"}, HTTPStatus.BAD_REQUEST
     if filename == DEFAULT_GUIDELINE_NAME:
         return (
-            {"error": f"「{DEFAULT_GUIDELINE_NAME}」是未配置规范时的兜底文件，不能删除"},
+            {"error": f"“{DEFAULT_GUIDELINE_NAME}”은(는) 지침을 지정하지 않았을 때 쓰는 기본 파일이라 삭제할 수 없습니다"},
             HTTPStatus.BAD_REQUEST,
         )
     file_path = os.path.join(_guidelines_dir(), filename)
@@ -709,7 +709,7 @@ def _init_file_plugin(project_dir: str, cfg, fname: str):
         info_path = os.path.join(str(get_plugins_dir()), fname, f"{fname}.yaml")
         candidate = plugin_manager.getPluginCandidateByInfoPath(info_path)
     if candidate is None:
-        raise RuntimeError(f"未找到文件插件: {fname}")
+        raise RuntimeError(f"파일 플러그인을 찾지 못함: {fname}")
     plugin_manager.setPluginCandidates([candidate])
     plugin_manager.loadPlugins()
     for plugin in plugin_manager.getPluginsOfCategory("GFilePlugin"):
@@ -725,7 +725,7 @@ def _init_file_plugin(project_dir: str, cfg, fname: str):
         project_conf["project_dir"] = project_dir
         plugin.plugin_object.gtp_init(plugin_conf, project_conf)
         return plugin.plugin_object
-    raise RuntimeError(f"文件插件 {fname} 加载失败")
+    raise RuntimeError(f"파일 플러그인 {fname}을(를) 불러오지 못함")
 
 
 class _ProjectFilePlugins:
@@ -740,7 +740,7 @@ class _ProjectFilePlugins:
         self.cfg = CProjectConfig(project_dir, config_file_name or "config.yaml")
         self.fname = self.cfg.getFilePlugin()
         if not self.fname:
-            raise RuntimeError("项目配置没有设置文件插件（plugin.filePlugin），无法解析输入文件")
+            raise RuntimeError("프로젝트 설정에 파일 플러그인(plugin.filePlugin)이 없어 입력 파일을 해석할 수 없습니다")
         self.auto = is_auto(self.fname)
         self._ext_map = scan_extension_map(project_dir) if self.auto else None
         self._objects: dict[str, Any] = {}
@@ -753,7 +753,7 @@ class _ProjectFilePlugins:
         if self.auto:
             fname = detect_file_plugin(file_path, self._ext_map)
             if not fname:
-                raise RuntimeError(f"无法自动识别 {os.path.basename(file_path)} 的格式，没有可用的文件插件")
+                raise RuntimeError(f"{os.path.basename(file_path)}의 형식을 자동으로 알 수 없습니다. 사용할 수 있는 파일 플러그인이 없습니다")
         if fname not in self._objects:
             self._objects[fname] = _init_file_plugin(self.project_dir, self.cfg, fname)
         return self._objects[fname], fname
@@ -764,7 +764,7 @@ def _normalize_input_entries(result: Any, fname: str) -> list[dict[str, Any]]:
     if isinstance(result, tuple):
         result = result[0]
     if not isinstance(result, list):
-        raise RuntimeError(f"文件插件 {fname} 返回了非列表结果")
+        raise RuntimeError(f"파일 플러그인 {fname}이(가) 목록이 아닌 결과를 반환했습니다")
     entries: list[dict[str, Any]] = []
     for i, item in enumerate(result):
         # 文件插件返回原始条目：正文键是 message（GalTransl JSON 约定），
@@ -835,7 +835,7 @@ def _reextract_msgtool_input(project_dir: str, config_file_name: str) -> dict[st
 
     plugins = _ProjectFilePlugins(project_dir, config_file_name)
     if not plugins.auto and plugins.fname.removeprefix("(project_dir)") != MSGTOOL_SCRIPT:
-        raise ValueError("当前文件插件不是 file_msgtool_script，请先选择此插件或自动识别")
+        raise ValueError("현재 파일 플러그인이 file_msgtool_script가 아닙니다. 먼저 이 플러그인이나 자동 인식을 선택하세요")
     input_dir = os.path.join(project_dir, INPUT_FOLDERNAME)
     files = sorted(get_file_list(input_dir)) if os.path.isdir(input_dir) else []
     refreshed = []
@@ -1230,8 +1230,8 @@ def _search_input_dir(
         out["source"] = "output"
         if not file_rows and not files_failed:
             out["note"] = (
-                f"输出文件 {filename} 不存在；请使用 gt_output 中的实际相对路径。"
-                if filename else "gt_output 是空的，请用 rebuild 重建结果。"
+                f"출력 파일 {filename}이(가) 없습니다. gt_output의 실제 상대 경로를 쓰세요."
+                if filename else "gt_output이 비어 있습니다. rebuild로 결과를 다시 만드세요."
             )
     return out
 
@@ -1307,7 +1307,7 @@ def _scan_plugins(project_dir: str = "") -> list[dict[str, Any]]:
 
 
 INDEX_HTML = """<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1478,37 +1478,37 @@ INDEX_HTML = """<!DOCTYPE html>
   <div class="page">
     <section class="hero">
       <h1>GalTransl Backend Mode</h1>
-      <p>这是一个为后续 Web UI 铺路的最小验证界面。它不会替换原来的 <code>run_GalTransl.py</code>，而是通过独立的本地服务入口提交和查看翻译任务。</p>
+      <p>이후 Web UI를 위한 최소 검증 화면입니다. 기존 <code>run_GalTransl.py</code>를 대신하지 않으며, 별도의 로컬 서비스 입구로 번역 작업을 제출하고 확인합니다.</p>
     </section>
 
     <div class="layout">
       <section class="card">
-        <h2>提交任务</h2>
+        <h2>작업 제출</h2>
         <form id="job-form">
           <div class="field">
-            <label for="project_dir">项目目录</label>
-            <input id="project_dir" name="project_dir" placeholder="例如：E:\\GalTransl\\sampleProject" required />
+            <label for="project_dir">프로젝트 폴더</label>
+            <input id="project_dir" name="project_dir" placeholder="예: E:\\GalTransl\\projects\\mygame" required />
           </div>
           <div class="field">
-            <label for="config_file_name">配置文件名</label>
+            <label for="config_file_name">설정 파일 이름</label>
             <input id="config_file_name" name="config_file_name" value="config.yaml" required />
           </div>
           <div class="field">
-            <label for="translator">翻译模板</label>
+            <label for="translator">번역 템플릿</label>
             <select id="translator" name="translator" required></select>
           </div>
           <div class="actions">
-            <button type="submit">启动任务</button>
-            <button type="button" class="secondary" id="refresh-btn">刷新状态</button>
+            <button type="submit">작업 시작</button>
+            <button type="button" class="secondary" id="refresh-btn">상태 새로 고침</button>
           </div>
         </form>
         <div class="hint">
-          建议先用 <code>show-plugs</code> 或现有可工作的项目配置来验证服务链路。当前版本采用单执行槽，避免和共享日志、缓存输出发生冲突。
+          먼저 <code>show-plugs</code>나 동작이 확인된 프로젝트 설정으로 서비스 연결을 확인하세요. 현재 버전은 공유 로그와 캐시 출력 충돌을 피하려고 실행 칸을 하나만 씁니다.
         </div>
       </section>
 
       <section class="card">
-        <h2>任务列表</h2>
+        <h2>작업 목록</h2>
         <div id="jobs" class="job-list"></div>
       </section>
     </div>
@@ -1543,7 +1543,7 @@ INDEX_HTML = """<!DOCTYPE html>
 
     function renderJobs(jobs) {
       if (!jobs.length) {
-        jobsContainer.innerHTML = '<div class="empty">还没有任务，先从左侧提交一个本地任务。</div>';
+        jobsContainer.innerHTML = '<div class="empty">아직 작업이 없습니다. 왼쪽에서 로컬 작업을 먼저 제출하세요.</div>';
         return;
       }
 
@@ -1555,11 +1555,11 @@ INDEX_HTML = """<!DOCTYPE html>
           </div>
           <div>${escapeHtml(job.translator)} / ${escapeHtml(job.config_file_name)}</div>
           <div class="job-meta">
-            <div><strong>任务 ID：</strong>${escapeHtml(job.job_id)}</div>
-            <div><strong>创建时间：</strong>${escapeHtml(job.created_at || '-')}</div>
-            <div><strong>开始时间：</strong>${escapeHtml(job.started_at || '-')}</div>
-            <div><strong>结束时间：</strong>${escapeHtml(job.finished_at || '-')}</div>
-            <div><strong>执行结果：</strong>${job.success ? 'success' : 'not finished / failed'}</div>
+            <div><strong>작업 ID: </strong>${escapeHtml(job.job_id)}</div>
+            <div><strong>생성 시각: </strong>${escapeHtml(job.created_at || '-')}</div>
+            <div><strong>시작 시각: </strong>${escapeHtml(job.started_at || '-')}</div>
+            <div><strong>종료 시각: </strong>${escapeHtml(job.finished_at || '-')}</div>
+            <div><strong>실행 결과: </strong>${job.success ? 'success' : 'not finished / failed'}</div>
           </div>
           ${job.error ? `<div class="job-error">${escapeHtml(job.error)}</div>` : ''}
         </article>
@@ -1588,7 +1588,7 @@ INDEX_HTML = """<!DOCTYPE html>
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || '提交任务失败');
+        alert(data.error || '작업을 제출하지 못했습니다');
         return;
       }
 
@@ -1703,7 +1703,7 @@ class JobRegistry:
             if self._has_running_job_for_project(project_dir):
                 raise ValueError("the project already has a pending or running job")
             if self._running_job_count() >= self._max_workers:
-                raise _ConcurrentLimitError(f"已达到最大并发翻译任务数 ({self._max_workers})，请等待已有任务完成后再试")
+                raise _ConcurrentLimitError(f"동시 번역 작업 수 상한({self._max_workers})에 도달했습니다. 기존 작업이 끝난 뒤 다시 시도하세요")
 
             job_id = uuid4().hex[:12]
             spec = JobSpec(
@@ -1846,7 +1846,7 @@ def build_handler(registry: JobRegistry):
                 except ValueError as exc:
                     self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
                 except Exception as exc:
-                    self._send_json({"error": f"重新提取原文失败：{exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                    self._send_json({"error": f"원문 다시 추출 실패: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                 return
 
             if sub_path == "/config":
@@ -2037,12 +2037,12 @@ def build_handler(registry: JobRegistry):
                     if not candidates:
                         has_output_files = any(files for _, _, files in os.walk(output_dir))
                         error = (f"output file not found: {filename}" if has_output_files
-                                 else "gt_output 是空的，请用rebuild重建结果。")
+                                 else "gt_output이 비어 있습니다. rebuild로 결과를 다시 만드세요.")
                         self._send_json({"error": error}, status=HTTPStatus.NOT_FOUND)
                         return
                     if len(candidates) > 1:
                         self._send_json({
-                            "error": f"缓存文件名 {filename} 对应多个输出文件，你是不是想读取其中之一：{candidates}？请指定实际输出文件名。",
+                            "error": f"캐시 파일 이름 {filename}에 대응하는 출력 파일이 여러 개입니다. 이 중 하나를 읽으려던 건가요: {candidates}? 실제 출력 파일 이름을 지정하세요.",
                             "candidates": candidates,
                         }, status=HTTPStatus.CONFLICT)
                         return
@@ -2912,7 +2912,7 @@ def build_handler(registry: JobRegistry):
                                         src_idx = header.index("JP_Name")
                                         dst_idx = header.index("CN_Name")
                                     except ValueError:
-                                        self._send_json({"error": "CSV缺少 SRC_Name/DST_Name (或旧版 JP_Name/CN_Name) 列"}, status=HTTPStatus.BAD_REQUEST)
+                                        self._send_json({"error": "CSV에 SRC_Name/DST_Name(또는 옛 JP_Name/CN_Name) 열이 없습니다"}, status=HTTPStatus.BAD_REQUEST)
                                         return
                                 count_idx = header.index("Count") if "Count" in header else -1
                                 for row in reader:
@@ -2923,7 +2923,7 @@ def build_handler(registry: JobRegistry):
                                             "count": int(row[count_idx]) if count_idx >= 0 and count_idx < len(row) and row[count_idx].isdigit() else 0,
                                         })
                     except Exception as exc:
-                        self._send_json({"error": f"读取CSV人名表失败: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                        self._send_json({"error": f"CSV 이름 표 읽기 실패: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                         return
                 elif os.path.isfile(xlsx_path):
                     source_file = "name替换表.xlsx"
@@ -2940,7 +2940,7 @@ def build_handler(registry: JobRegistry):
                                 src_idx = header.index("JP_Name")
                                 dst_idx = header.index("CN_Name")
                             except ValueError:
-                                self._send_json({"error": "XLSX缺少 SRC_Name/DST_Name (或旧版 JP_Name/CN_Name) 列"}, status=HTTPStatus.BAD_REQUEST)
+                                self._send_json({"error": "XLSX에 SRC_Name/DST_Name(또는 옛 JP_Name/CN_Name) 열이 없습니다"}, status=HTTPStatus.BAD_REQUEST)
                                 return
                         count_idx = header.index("Count") if "Count" in header else -1
                         for row in sheet.iter_rows(min_row=2):
@@ -2954,7 +2954,7 @@ def build_handler(registry: JobRegistry):
                                     "count": int(count_val) if count_val else 0,
                                 })
                     except Exception as exc:
-                        self._send_json({"error": f"读取XLSX人名表失败: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                        self._send_json({"error": f"XLSX 이름 표 읽기 실패: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                         return
 
                 self._send_json({
@@ -2988,7 +2988,7 @@ def build_handler(registry: JobRegistry):
                 except ValueError as exc:
                     self._send_json({"error": str(exc)}, status=HTTPStatus.CONFLICT)
                 except Exception as exc:
-                    self._send_json({"error": f"生成人名表失败: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                    self._send_json({"error": f"이름 표 생성 실패: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                 return
 
             # POST /api/projects/:id/name-table/ai-translate  (SSE streaming)
@@ -3018,7 +3018,7 @@ def build_handler(registry: JobRegistry):
                             if isinstance(candidate, dict):
                                 oai_section = candidate
                         elif backend_profile:
-                            self._send_json({"error": f"后端配置 '{backend_profile}' 不存在"}, status=HTTPStatus.NOT_FOUND)
+                            self._send_json({"error": f"백엔드 설정 '{backend_profile}'이(가) 없습니다"}, status=HTTPStatus.NOT_FOUND)
                             return
                         else:
                             for _pname, _pconf in profiles.items():
@@ -3027,12 +3027,12 @@ def build_handler(registry: JobRegistry):
                                     break
 
                     if not oai_section:
-                        self._send_json({"error": "未找到可用的 OpenAI 兼容后端配置，请先在后端配置中添加 OpenAI 兼容接口"}, status=HTTPStatus.BAD_REQUEST)
+                        self._send_json({"error": "사용할 수 있는 OpenAI 호환 백엔드 설정이 없습니다. 먼저 모델 설정에서 OpenAI 호환 API를 추가하세요"}, status=HTTPStatus.BAD_REQUEST)
                         return
 
                     tokens = oai_section.get("tokens", [])
                     if not tokens:
-                        self._send_json({"error": "后端配置中没有 API token"}, status=HTTPStatus.BAD_REQUEST)
+                        self._send_json({"error": "백엔드 설정에 API token이 없습니다"}, status=HTTPStatus.BAD_REQUEST)
                         return
 
                     token_entry = tokens[0]
@@ -3042,7 +3042,7 @@ def build_handler(registry: JobRegistry):
                     timeout = oai_section.get("apiTimeout", 300)
 
                     if not api_key or "-example-" in api_key:
-                        self._send_json({"error": "后端配置中的 API token 无效"}, status=HTTPStatus.BAD_REQUEST)
+                        self._send_json({"error": "백엔드 설정의 API token이 올바르지 않습니다"}, status=HTTPStatus.BAD_REQUEST)
                         return
 
                     import re as _re
@@ -3056,7 +3056,7 @@ def build_handler(registry: JobRegistry):
 
                     src_names = [str(n.get("src_name", "")) for n in untranslated if str(n.get("src_name", "")).strip()]
                     if not src_names:
-                        self._send_json({"error": "没有需要翻译的人名"}, status=HTTPStatus.BAD_REQUEST)
+                        self._send_json({"error": "번역할 이름이 없습니다"}, status=HTTPStatus.BAD_REQUEST)
                         return
 
                     # --- SSE streaming response ---
@@ -3073,14 +3073,14 @@ def build_handler(registry: JobRegistry):
 
                     names_text = "\n".join(f"- {n}" for n in src_names)
                     system_prompt = (
-                        "你是一个专业的日语/中文人名翻译专家。"
-                        "请将以下日本人名翻译为中文译名。"
-                        "以JSONL格式回答，每行一个JSON对象，格式为："
-                        '{"src":"原名","dst":"译名"}\n'
-                        "每翻译一个人名就输出一行，不要输出其他任何内容。"
-                        "如果某个名字不确定，请尽量给出最常用的中文译名。"
+                        "당신은 일본어 인명을 한국어로 옮기는 전문 번역가입니다."
+                        "다음 일본 인명을 한국어(한글) 표기로 번역하세요."
+                        "JSONL 형식으로 답하고, 한 줄에 JSON 객체 하나씩 다음 형식으로 쓰세요:"
+                        '{"src":"원래 이름","dst":"한국어 이름"}\n'
+                        "이름 하나를 번역할 때마다 한 줄씩 출력하고, 다른 내용은 출력하지 마세요."
+                        "읽는 법이 확실하지 않으면 가장 흔한 한국어 표기를 쓰세요."
                     )
-                    user_prompt = f"请翻译以下人名：\n{names_text}"
+                    user_prompt = f"다음 인명을 번역하세요:\n{names_text}"
 
                     from openai import OpenAI
                     from GalTransl.Reasoning import build_reasoning_kwargs
@@ -3144,7 +3144,7 @@ def build_handler(registry: JobRegistry):
                 except Exception as exc:
                     # If headers already sent (SSE started), send error as event
                     try:
-                        err_msg = f"AI翻译人名失败: {exc}"
+                        err_msg = f"AI 이름 번역 실패: {exc}"
                         self.wfile.write(f"event: error\ndata: {json.dumps({'error': err_msg}, ensure_ascii=False)}\n\n".encode("utf-8"))
                         self.wfile.flush()
                     except Exception:
@@ -3180,7 +3180,7 @@ def build_handler(registry: JobRegistry):
                 except json.JSONDecodeError:
                     self._send_json({"error": "invalid json body"}, status=HTTPStatus.BAD_REQUEST)
                 except Exception as exc:
-                    self._send_json({"error": f"保存人名表失败: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                    self._send_json({"error": f"이름 표 저장 실패: {exc}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                 return
 
             # GET /api/projects/:id/name-dict
@@ -3580,7 +3580,7 @@ def build_handler(registry: JobRegistry):
                         self._send_json({"error": "project_dir is required"}, status=HTTPStatus.BAD_REQUEST)
                         return
                     if not isinstance(backend_profile_data, dict) or not backend_profile_data:
-                        self._send_json({"error": "backend_profile_data is required (请先选择一个翻译后端配置)"}, status=HTTPStatus.BAD_REQUEST)
+                        self._send_json({"error": "backend_profile_data is required (먼저 번역 백엔드 설정을 선택하세요)"}, status=HTTPStatus.BAD_REQUEST)
                         return
                     status = AGENT_REGISTRY.start(
                         project_dir=project_dir,
@@ -3930,13 +3930,13 @@ def build_handler(registry: JobRegistry):
                         )
                         return
                     except urllib.error.URLError as url_exc:
-                        self._send_json({"error": f"请求失败: {url_exc.reason}"}, status=HTTPStatus.BAD_GATEWAY)
+                        self._send_json({"error": f"요청 실패: {url_exc.reason}"}, status=HTTPStatus.BAD_GATEWAY)
                         return
 
                     try:
                         data = json.loads(raw.decode("utf-8", errors="replace"))
                     except json.JSONDecodeError:
-                        self._send_json({"error": "响应不是合法的 JSON"}, status=HTTPStatus.BAD_GATEWAY)
+                        self._send_json({"error": "응답이 올바른 JSON이 아닙니다"}, status=HTTPStatus.BAD_GATEWAY)
                         return
 
                     # OpenAI-style: {"data": [{"id": "..."}, ...]}
@@ -4329,8 +4329,8 @@ def serve(host: str = "127.0.0.1", port: int = 12333, *, ready_file: str | None 
         winerror = getattr(exc, "winerror", None)
         if errno_val in (errno.EADDRINUSE, 10048) or winerror == 10048:
             print(
-                f"[错误] 端口 {port} 已被占用，无法启动 GalTransl 后端服务。\n"
-                f"       请先关闭占用该端口的程序，或使用 --port 指定其他端口，例如：\n"
+                f"[오류] 포트 {port}을(를) 이미 사용 중이라 GalTransl 백엔드 서비스를 시작할 수 없습니다.\n"
+                f"       그 포트를 쓰는 프로그램을 먼저 닫거나 --port로 다른 포트를 지정하세요. 예:\n"
                 f"       python run_backend.py --host {host} --port {port + 1}"
             )
             raise SystemExit(1)
@@ -4338,12 +4338,12 @@ def serve(host: str = "127.0.0.1", port: int = 12333, *, ready_file: str | None 
             # Windows can return WSAEACCES when another socket owns the port
             # exclusively; reserved ports and access restrictions also use it.
             print(
-                f"[错误] 无法绑定 {host}:{port}：端口已被其他程序独占或被系统限制访问。\n"
-                f"       请检查已有后端实例和系统端口限制，或使用 --port 指定其他端口。\n"
-                f"       系统错误：{exc}"
+                f"[오류] {host}:{port}에 바인딩할 수 없습니다. 다른 프로그램이 포트를 독점하거나 시스템이 접근을 제한합니다.\n"
+                f"       실행 중인 백엔드와 시스템 포트 제한을 확인하거나 --port로 다른 포트를 지정하세요.\n"
+                f"       시스템 오류: {exc}"
             )
             raise SystemExit(1)
-        print(f"[错误] 无法绑定 {host}:{port} —— {exc}")
+        print(f"[오류] {host}:{port}에 바인딩할 수 없음 —— {exc}")
         raise SystemExit(1)
     try:
         # Agent tool calls (including restored sessions) must stay on this backend.
@@ -4358,7 +4358,7 @@ def serve(host: str = "127.0.0.1", port: int = 12333, *, ready_file: str | None 
                 }), encoding="utf-8")
                 os.replace(temporary_path, ready_path)
             except OSError as exc:
-                print(f"[错误] 无法通知桌面端后端地址：{exc}", flush=True)
+                print(f"[오류] 데스크톱 앱에 백엔드 주소를 알리지 못함: {exc}", flush=True)
                 raise SystemExit(1)
             finally:
                 temporary_path.unlink(missing_ok=True)

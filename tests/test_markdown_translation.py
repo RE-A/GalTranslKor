@@ -76,7 +76,7 @@ class MarkdownTranslationTests(unittest.IsolatedAsyncioTestCase):
         row.speaker = 'アリス'
         response = '| ID | NAME | DST |\n| --- | --- | --- |\n' + markdown_row('1', '爱丽丝', '爱丽丝|你好')
         engine.ask_chatbot = AsyncMock(return_value=(response, SimpleNamespace(model_name='model')))
-        with self.assertRaisesRegex(TranslationParseError, '姓名列'):
+        with self.assertRaisesRegex(TranslationParseError, '이름 열'):
             await engine.translate([row], filename='a')
         self.assertEqual(row.pre_dst, '')
 

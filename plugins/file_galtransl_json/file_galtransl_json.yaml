@@ -1,18 +1,18 @@
 Core:
-  Name: GalTransl标准json
+  Name: GalTransl 표준 json
   Type: file
   Module: file_galtransl_json
 
 Documentation:
   Author: cx2333
   Version: 1.0
-  Description: 标准的name(可选)-message格式json文件，有name效果更好
+  Description: 표준 name(선택)-message json 형식. name이 있으면 결과가 더 좋습니다
 
-Settings: # 这里存放插件的设置
-  output_with_src: False # 输出到gt_output时是否保留原文
+Settings: # 플러그인 설정
+  output_with_src: False # gt_output 출력에 원문을 남길지
 
 SettingsSchema:
   output_with_src:
-    label: 输出时保留原文
-    description: 在输出 JSON 中保留原文，便于对照译文。
+    label: 출력에 원문 유지
+    description: 출력 JSON에 원문을 남겨 번역문과 비교할 수 있게 합니다.
     advanced: false

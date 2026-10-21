@@ -87,7 +87,7 @@ async def ensure_model_available_if_needed(projectConfig: CProjectConfig):
 
         _check_stop_requested(projectConfig)
         proxy_pool = getattr(projectConfig, "proxyPool", None)
-        _update_runtime(projectConfig, stage="检查模型可用性")
+        _update_runtime(projectConfig, stage="모델 가용성 확인")
         try:
             await token_pool.checkTokenAvailablity(
                 proxy_pool.getProxy() if proxy_pool else None,
@@ -198,7 +198,7 @@ async def update_progress_title(
     bar, semaphore, workersPerProject: int, projectConfig: CProjectConfig
 ):
     """异步任务，用于动态更新 alive_bar 的标题以显示活动工作线程数。"""
-    base_title = "翻译进度"
+    base_title = "번역 진행률"
     is_interactive = should_print_translation_logs(projectConfig)
     while True:
         try:
@@ -224,7 +224,7 @@ async def update_progress_title(
             )
             # 更新标题（仅 CLI 模式有 bar）
             if is_interactive:
-                new_title = f"{base_title} [{active_workers}/{configured_workers} 并发]"
+                new_title = f"{base_title} [동시 {active_workers}/{configured_workers}]"
                 bar.title(new_title)
 
             # 每隔一段时间更新一次，避免过于频繁
@@ -232,12 +232,12 @@ async def update_progress_title(
         except asyncio.CancelledError:
             # 当任务被取消时，设置最终标题并退出循环
             if is_interactive:
-                bar.title(f"{base_title} [处理完成]")
+                bar.title(f"{base_title} [처리 완료]")
             break
         except Exception as e:
             # 记录任何其他异常并停止更新
-            LOGGER.error(f"更新进度条标题时出错: {e}")
-            bar.title(f"{base_title} [更新出错]")
+            LOGGER.error(f"진행 막대 제목 갱신 중 오류: {e}")
+            bar.title(f"{base_title} [갱신 오류]")
             break
 
 
@@ -287,7 +287,7 @@ def postprocess_trans_list(trans_list, projectConfig, post_dic, tPlugins=None):
                 try:
                     tran = plugin.plugin_object.before_dst_processed(tran)
                 except Exception as e:
-                    LOGGER.error(f" 插件 {plugin.name} 执行失败: {e}", exc_info=True)
+                    LOGGER.error(f" 플러그인 {plugin.name} 실행 실패: {e}", exc_info=True)
 
         tran.recover_dialogue_symbol()
         tran.post_dst = post_dic.do_replace(tran.post_dst, tran)
@@ -363,10 +363,10 @@ async def doLLMTranslate(
         # dump-name / GenDic 等仅基于输入文件的短路流程，空目录不算致命错误，友好返回
         if "dump-name" in eng_type or eng_type == "GenDic":
             LOGGER.warning(
-                f"{projectConfig.getInputPath()} 中没有待翻译的文件，已跳过。"
+                f"{projectConfig.getInputPath()}에 번역할 파일이 없어 건너뜁니다."
             )
             return True
-        raise RuntimeError(f"{projectConfig.getInputPath()}中没有待翻译的文件")
+        raise RuntimeError(f"{projectConfig.getInputPath()}에 번역할 파일이 없습니다")
 
     # 只翻译指定文件子集（试译/部分重翻场景）。按文件名（basename）匹配，
     # 兼容嵌套目录；指定了但一个都不存在时报错，避免静默全量翻译。
@@ -376,9 +376,9 @@ async def doLLMTranslate(
         file_list = [f for f in file_list if os_path.basename(f) in wanted]
         if not file_list:
             raise RuntimeError(
-                f"指定的输入文件 {sorted(wanted)} 在 {projectConfig.getInputPath()} 中都不存在"
+                f"지정한 입력 파일 {sorted(wanted)}이(가) {projectConfig.getInputPath()}에 하나도 없습니다"
             )
-        LOGGER.info(f"本次只翻译指定的 {len(file_list)} 个文件: {sorted(os_path.basename(f) for f in file_list)}")
+        LOGGER.info(f"이번에는 지정한 파일 {len(file_list)}개만 번역:  {sorted(os_path.basename(f) for f in file_list)}")
 
     # 按文件名自然排序（处理数字部分）
     import re
@@ -552,7 +552,7 @@ async def doLLMTranslate(
     # ---- 7. 进入翻译阶段：进度条 + worker 协程池 ----
     with terminal_progress(
         should_print_translation_logs(projectConfig),
-        total=total_lines, title="翻译进度", unit=" line", enrich_print=False, dual_line=True,length=30
+        total=total_lines, title="번역 진행률", unit=" line", enrich_print=False, dual_line=True,length=30
     ) as bar:
         projectConfig.bar = bar
 
@@ -631,7 +631,7 @@ async def doLLMTranslate(
                 try:
                     await shutdown_callable()
                 except Exception as ex:
-                    LOGGER.warning(f"关闭模型客户端时出错: {str(ex)}")
+                    LOGGER.warning(f"모델 클라이언트 종료 중 오류: {str(ex)}")
 
 
 async def doLLMTranslSingleChunk(
@@ -683,13 +683,13 @@ async def doLLMTranslSingleChunk(
             projectConfig,
             current_file=file_name,
         )
-        LOGGER.info(f">>> 开始翻译 (project_dir){split_chunk.file_path.replace(proj_dir,'')}")
-        LOGGER.debug(f"文件 {file_name} 分块 {file_index+1}/{total_splits}:")
-        LOGGER.debug(f"  开始索引: {split_chunk.start_index}")
-        LOGGER.debug(f"  结束索引: {split_chunk.end_index}")
-        LOGGER.debug(f"  非交叉大小: {split_chunk.chunk_non_cross_size}")
-        LOGGER.debug(f"  实际大小: {split_chunk.chunk_size}")
-        LOGGER.debug(f"  交叉数量: {split_chunk.cross_num}")
+        LOGGER.info(f">>> 번역 시작 (project_dir){split_chunk.file_path.replace(proj_dir,'')}")
+        LOGGER.debug(f"파일 {file_name} 조각 {file_index+1}/{total_splits}:")
+        LOGGER.debug(f"  시작 번호: {split_chunk.start_index}")
+        LOGGER.debug(f"  끝 번호: {split_chunk.end_index}")
+        LOGGER.debug(f"  겹침 제외 크기: {split_chunk.chunk_non_cross_size}")
+        LOGGER.debug(f"  실제 크기: {split_chunk.chunk_size}")
+        LOGGER.debug(f"  겹침 수: {split_chunk.cross_num}")
 
         # 翻译前处理
         preprocess_trans_list(split_chunk.trans_list, projectConfig, pre_dic, tPlugins)
@@ -743,7 +743,7 @@ async def doLLMTranslSingleChunk(
                         retran_key=projectConfig.getKey("retranslKey"),
                     )
                 else:
-                    LOGGER.warning("当前引擎不支持校对，跳过校对步骤")
+                    LOGGER.warning("현재 엔진은 교정을 지원하지 않아 교정 단계를 건너뜁니다")
             gptapi.clean_up()
 
         # 翻译后处理
@@ -810,7 +810,7 @@ async def postprocess_results(
 
     # 使用output_combiner合并结果，即使只有一个结果
     all_trans_list, all_json_list = DictionaryCombiner.combine(resultChunks)
-    LOGGER.debug(f"合并后总行数: {len(all_trans_list)}")
+    LOGGER.debug(f"합친 뒤 총 줄 수: {len(all_trans_list)}")
     file_path = resultChunks[0].file_path
     output_file_path = file_path.replace(input_dir, output_dir)
     save_func = projectConfig.file_save_funcs.get(file_path, save_json)
@@ -821,7 +821,7 @@ async def postprocess_results(
         )
         makedirs(dirname(output_file_path), exist_ok=True)
         save_func(output_file_path, final_result)
-        LOGGER.info(f"+++ 结果保存 (project_dir){output_file_path.replace(proj_dir,'')}")  # 添加保存确认日志
+        LOGGER.info(f"+++ 결과 저장 (project_dir){output_file_path.replace(proj_dir,'')}")  # 添加保存确认日志
 
 
 async def init_gptapi(
@@ -880,7 +880,7 @@ async def init_gptapi(
             from GalTransl.Backend.GenDic import GenDic
             return GenDic(projectConfig, eng_type, proxyPool, tokenPool)
         case _:
-            raise ValueError(f"不支持的翻译引擎类型 {eng_type}")
+            raise ValueError(f"지원하지 않는 번역 엔진 종류 {eng_type}")
 
 
 def route_file_plugins(file_list: List[str], fPlugins: list, project_dir: str) -> Dict[str, list]:
@@ -896,9 +896,9 @@ def route_file_plugins(file_list: List[str], fPlugins: list, project_dir: str) -
     for file_path, name in detect_file_plugins(file_list, project_dir).items():
         plugin = by_name.get((name or "").replace("(project_dir)", ""))
         if plugin is None:
-            LOGGER.warning(f"自动识别文件插件：{file_path} 没有匹配的文件插件，已跳过")
+            LOGGER.warning(f"파일 플러그인 자동 인식: {file_path}에 맞는 파일 플러그인이 없어 건너뜀")
         else:
-            LOGGER.debug(f"自动识别文件插件：{file_path} -> {plugin.name}")
+            LOGGER.debug(f"파일 플러그인 자동 인식: {file_path} -> {plugin.name}")
         routes[file_path] = [plugin] if plugin else []
     return routes
 
@@ -914,7 +914,7 @@ def fplugins_load_file(file_path: str, fPlugins: list) -> Tuple[List[Dict], Any]
     for plugin in fPlugins:
 
         if isinstance(plugin, str):
-            LOGGER.warning(f"跳过无效的插件项: {plugin}")
+            LOGGER.warning(f"잘못된 플러그인 항목 건너뜀: {plugin}")
             continue
         try:
             result = plugin.plugin_object.load_file(file_path)
@@ -922,15 +922,15 @@ def fplugins_load_file(file_path: str, fPlugins: list) -> Tuple[List[Dict], Any]
             break
         except TypeError as e:
             LOGGER.error(
-                f"{file_path} 不是文件插件'{getattr(plugin, 'name', 'Unknown')}'支持的格式：{e}"
+                f"{file_path}은(는) 파일 플러그인 '{getattr(plugin, 'name', 'Unknown')}'이(가) 지원하는 형식이 아님: {e}"
             )
         except Exception as e:
             LOGGER.error(
-                f"插件 {getattr(plugin, 'name', 'Unknown')} 读取文件 {file_path} 出错: {e}"
+                f"플러그인 {getattr(plugin, 'name', 'Unknown')}이(가) 파일 {file_path}을(를) 읽는 중 오류: {e}"
             )
 
     assert result is not None, get_text("file_load_failed", GT_LANG, file_path)
 
-    assert isinstance(result, list), f"文件 {file_path} 不是列表"
+    assert isinstance(result, list), f"파일 {file_path}의 결과가 목록이 아닙니다"
 
     return result, save_func

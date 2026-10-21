@@ -1,11 +1,11 @@
 Core:
-  Name: 跳过非日文行
+  Name: 일본어 없는 줄 건너뛰기
   Type: text
   Module: text_common_skipNoJP
 
 Documentation:
   Author: cx2333
   Version: 1.0
-  Description: 跳过不包含日文的行
+  Description: 일본어가 없는 줄을 건너뜁니다
 
 

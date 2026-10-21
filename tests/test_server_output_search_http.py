@@ -90,7 +90,7 @@ class OutputSearchHttpTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["filename"], "chapter/b.json")
         missing = self._search(filename="missing.json")
         self.assertEqual(missing["total"], 0)
-        self.assertIn("不存在", missing["note"])
+        self.assertIn("없습니다", missing["note"])
         self.assertEqual(self._search(filename="../config.yaml")["total"], 0)
 
     def test_sampling_uses_all_hits_before_limiting(self):
@@ -134,7 +134,7 @@ class OutputSearchHttpTests(unittest.TestCase):
                     (Path(project) / OUTPUT_FOLDERNAME / "empty").mkdir(parents=True)
                 result = _search_output_dir(project, "config.yaml", query="final")
                 self.assertEqual(result["total"], 0)
-                self.assertIn("gt_output 是空的", result["note"])
+                self.assertIn("gt_output이 비어 있습니다", result["note"])
 
     def test_search_reads_updated_delivery_instead_of_reusing_old_text(self):
         path = self.output / "updated.json"

@@ -1,33 +1,33 @@
 Core:
-  Name: 样例文本插件
+  Name: 예제 텍스트 플러그인
   Type: text
   Module: text_example_nouse
 
 Documentation:
   Author: cx2333
   Version: 1.0
-  Description: 这是个样例文本插件，任何项目都不应该使用本插件
+  Description: 예제 텍스트 플러그인입니다. 실제 프로젝트에서는 사용하지 마세요
 
-Settings: # 这里存放插件的设置
+Settings: # 플러그인 설정
   set_int: 123
-  set_string: "aaa" # string建议双引号包裹 
+  set_string: "aaa" # 문자열은 큰따옴표로 감싸는 것을 권장 
   set_bool: True
-  设置样例4: False # 可以用中文
+  设置样例4: False # 키에 중국어 등 비영문자도 쓸 수 있음
 
 SettingsSchema:
   set_int:
-    label: 整数设置示例
-    description: 演示插件如何接收整数值；此示例插件不应在实际翻译项目中启用。
+    label: 정수 설정 예
+    description: 플러그인이 정수 값을 받는 방법을 보여 줍니다. 실제 번역 프로젝트에서는 이 예제 플러그인을 켜지 마세요.
     advanced: true
   set_string:
-    label: 文本设置示例
-    description: 演示插件如何接收字符串值；不影响任何实际翻译功能。
+    label: 텍스트 설정 예
+    description: 플러그인이 문자열 값을 받는 방법을 보여 줍니다. 실제 번역 기능에는 영향이 없습니다.
     advanced: true
   set_bool:
-    label: 布尔开关示例
-    description: 演示英文配置键对应的开关控件。
+    label: 불리언 스위치 예
+    description: 영문 설정 키의 스위치 컨트롤을 보여 줍니다.
     advanced: true
   设置样例4:
-    label: 中文配置键示例
-    description: 演示使用中文配置键的开关控件。
+    label: 중국어 설정 키 예
+    description: 중국어 설정 키를 쓰는 스위치 컨트롤을 보여 줍니다.
     advanced: true

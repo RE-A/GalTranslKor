@@ -7,7 +7,7 @@
 <div align=center><img src="https://img.shields.io/github/v/release/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/license/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/stars/XD2333/GalTransl"/></div>
 <p align='center' >Visual Novel Automatic Translation Solution Supporting GPT/Claude/Deepseek/Sakura and More</p>
 
-  [한국어](README.md) · [中文](README_ZH.md)
+  [한국어](README.md) · [中文 (upstream)](https://github.com/GalTransl/GalTransl)
 
   GalTransl is a set of visual novel automatic translation tools that combines several minor innovations in basic functions with deep use of GPT prompt engineering to create embedded translation patches. Now featuring a **desktop graphical interface** — no command-line experience needed to complete the full translation workflow.
 

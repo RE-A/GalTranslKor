@@ -141,7 +141,7 @@ class CommonGuidelineApiTests(unittest.TestCase):
     def test_create_refuses_to_overwrite(self) -> None:
         self._write_file("Basic.md", "原文")
         message = self._post_expect_error("create", {"filename": "Basic.md", "content": "改掉"}, 409)
-        self.assertIn("已存在", message)
+        self.assertIn("이미 있습니다", message)
         with open(os.path.join(self.guidelines_dir, "Basic.md"), "r", encoding="utf-8") as f:
             self.assertEqual(f.read(), "原文")  # 一个字都没动
 
@@ -192,7 +192,7 @@ class CommonGuidelineApiTests(unittest.TestCase):
 
         message = self._post_expect_error("delete", {"filename": self.default_name}, 400)
 
-        self.assertIn("兜底", message)
+        self.assertIn("기본 파일", message)
         self.assertTrue(os.path.exists(path))
 
     def test_delete_missing_is_404(self) -> None:

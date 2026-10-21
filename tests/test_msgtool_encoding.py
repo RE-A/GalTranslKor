@@ -56,8 +56,8 @@ class MsgToolEncodingTests(unittest.TestCase):
                 plugin.save_file(str(self.dst), rows)
             run.assert_not_called()
         error = str(caught.exception)
-        for detail in (str(self.src), "回填前", "CP932", "第 1 条人名", "第 1 条正文",
-                       "U+4F60", "JIS 替换", "jis_substitution", "patched_encoding", "无需重新翻译"):
+        for detail in (str(self.src), "되쓰기 전", "CP932", "1번째 이름", "1번째 본문",
+                       "U+4F60", "JIS 치환", "jis_substitution", "patched_encoding", "다시 번역할 필요는 없습니다"):
             self.assertIn(detail, error)
         self.assertEqual(rows, self.rows)
         self.assertEqual(self.src.read_bytes(), original)
@@ -92,8 +92,8 @@ class MsgToolEncodingTests(unittest.TestCase):
                     with patch("subprocess.run", return_value=proc), self.assertRaises(RuntimeError) as caught:
                         self.plugin()._run(args)
                     error = str(caught.exception)
-                    for detail in ("脚本回填编码失败", "CP932", "U+4F60", "第 1 条人名",
-                                   "JIS 替换", "patched_encoding", "原始诊断", problem):
+                    for detail in ("스크립트 되쓰기 인코딩 실패", "CP932", "U+4F60", "1번째 이름",
+                                   "JIS 치환", "patched_encoding", "원본 진단", problem):
                         self.assertIn(detail, error)
 
     def test_decode_and_export_failures_are_not_mislabeled_as_import_encoding(self):
@@ -115,7 +115,7 @@ class MsgToolEncodingTests(unittest.TestCase):
                 proc = subprocess.CompletedProcess([], 2, stdout=b"", stderr=problem.encode())
                 with patch("subprocess.run", return_value=proc), self.assertRaises(RuntimeError) as caught:
                     self.plugin(**settings)._run(["import"])
-                self.assertNotIn("开启「JIS 替换」", str(caught.exception))
+                self.assertNotIn("“JIS 치환”", str(caught.exception))
                 self.assertIn("patched_encoding", str(caught.exception))
 
     def test_output_overrides_prevent_false_cp932_preflight_and_duplicate_flags(self):
@@ -168,7 +168,7 @@ class MsgToolEncodingTests(unittest.TestCase):
         error = str(caught.exception)
         self.assertIn("Failed to encode Shift-JIS", error)
         self.assertIn("msg-tool exit=2", error)
-        self.assertIn("JIS 替换", error)
+        self.assertIn("JIS 치환", error)
         self.assertIn("U+4F60", error)
         self.assertEqual(self.src.read_bytes(), original)
         self.assertEqual(self.dst.read_bytes(), b"previous output")

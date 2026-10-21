@@ -1,9 +1,9 @@
 Core:
-  Name: Key-Value格式json文件
+  Name: 키-값 json 파일
   Type: file
   Module: file_i18n_json
 
 Documentation:
   Author: cx2333
   Version: 1.0
-  Description: 可以处理任意字典格式的json文件。可以用来做一些i18n的翻译，或翻译mtool导出的结果（但此类工具提取的文本缺少人名，Gal请优先使用VNT或SE）
+  Description: 임의의 사전 형식 json 파일을 처리합니다. i18n 번역이나 mtool 출력 번역에 쓸 수 있습니다(이런 도구로 추출한 텍스트에는 이름이 없으므로 갈게임에는 VNT나 SE를 권장합니다)

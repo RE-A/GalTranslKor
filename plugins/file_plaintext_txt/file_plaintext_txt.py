@@ -19,7 +19,7 @@ class file_plugin(GFilePlugin):
         self.txt写入编码 = settings.get("txt写入编码", "utf-8")
         settings = plugin_conf["Settings"]
         LOGGER.debug(
-            f"[{self.pname}] 当前配置：\n  txt读取编码:{self.txt读取编码}\n  txt写入编码:{self.txt写入编码}\n  保存双语txt文件:{self.保存双语txt文件}\n  上下双语1左右双语2:{self.上下双语1左右双语2}")
+            f"[{self.pname}] 현재 설정:\n  txt读取编码:{self.txt读取编码}\n  txt写入编码:{self.txt写入编码}\n  保存双语txt文件:{self.保存双语txt文件}\n  上下双语1左右双语2:{self.上下双语1左右双语2}")
 
 
     def load_file(self, file_path: str) -> list:

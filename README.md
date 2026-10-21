@@ -5,7 +5,7 @@
 <div align=center><img src="https://img.shields.io/github/v/release/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/license/XD2333/GalTransl"/>   <img src="https://img.shields.io/github/stars/XD2333/GalTransl"/></div>
 <p align='center' >GPT/Claude/Deepseek/Sakura 등 대규모 언어 모델을 지원하는 갈게임 자동 번역 솔루션</p>
 
-  한국어 · [中文](README_ZH.md) · [English](README_EN.md)
+  한국어 · [English](README_EN.md)
 
 > [!NOTE]
 > 이 저장소는 [GalTransl](https://github.com/GalTransl/GalTransl)을 한국어 사용자용으로 고친 Fork입니다.
@@ -13,6 +13,8 @@
 > **로컬 Ollama 모델로 일본어 장면 TXT를 한국어로 번역하는 방법**은
 > [한국어 · Ollama 번역 설정 및 Windows 실행](README_KO_OLLAMA.md)에 정리되어 있습니다.
 > 아래 내용은 원본 README를 옮긴 것으로, 원본 기능 설명은 중국어 번역(汉化) 작업을 기준으로 합니다.
+> 이 Fork에서는 중국어 전용 데이터(중국어 기본 사전, 중국어 번역 지침, 중국어 예제 프로젝트, 중국어 평가 데이터, 중국어 README)를 삭제했습니다.
+> 중국어 원본이 필요하면 [원본 저장소](https://github.com/GalTransl/GalTransl)를 보세요.
 
   GalTransl은 몇 가지 기본 기능의 개선과 GPT 프롬프트 엔지니어링(Prompt Engineering)의 적극적인 활용을 결합한 갈게임 자동 번역 도구로, 게임에 넣는 번역 패치를 만드는 데 씁니다. 이제 **데스크톱 그래픽 인터페이스**를 제공해 명령줄 없이도 번역 전 과정을 진행할 수 있습니다.
 
@@ -163,7 +165,7 @@
 &ensp;&ensp;&ensp;&ensp;데스크톱 앱은 여러 프로젝트를 동시에 열 수 있고 다크 모드, 사용자 지정 배경 등을 지원하며 "설정" 페이지에서 조정합니다. 화면 언어도 "설정"에서 한국어/中文/English 중에 고를 수 있습니다.
 
 * **【2.2b. 명령줄로 번역 (고급 사용자)】**
-&ensp;&ensp;&ensp;&ensp;명령줄 버전을 쓰려면 예제 폴더 `sampleProject`에서 `config.inc.yaml`의 이름을 `config.yaml`로 바꾸고, 일본어 json 파일을 `gt_input` 폴더에 넣은 뒤 `config.yaml`에서 번역 백엔드를 설정합니다.
+&ensp;&ensp;&ensp;&ensp;명령줄 버전을 쓰려면 프로젝트 폴더를 만들고 `config.yaml`을 둡니다. 데스크톱 앱의 새 프로젝트 마법사가 만드는 설정(기본 템플릿 `GalTransl/DefaultProjectConfig.py`)을 쓰거나, Ollama 한국어 번역이라면 `run_ollama_ko.cmd projects\mygame --init`으로 만드세요. 그다음 일본어 파일을 `gt_input` 폴더에 넣고 `config.yaml`에서 번역 백엔드를 설정합니다.
 
 ```yaml
 # 번역 백엔드 설정
@@ -270,7 +272,7 @@ GPT 사전, 캐시, 일반 사전, 문제 찾기 등의 기능을 소개합니�
 
 ### GPT 사전
 &ensp;&ensp;&ensp;&ensp;GPT 사전 시스템은 GalTransl로 번역할 때 품질을 높이는 핵심 기능입니다. 설정을 보충해 주는 방식으로 번역 품질을 크게 높이며, GPT 번역이 기존 기계 번역과 다른 핵심입니다. gpt35, gpt4, newbing에 적용됩니다.
-프로그램 폴더의 `Dict` 폴더에 "通用GPT字典.txt(공통 GPT 사전)"가 있고, 프로젝트 폴더에 "项目GPT字典.txt(프로젝트 GPT 사전)"를 새로 만들 수 있습니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다. 기본 공통 사전은 중국어 번역용이므로 한국어 번역에서는 쓰지 마세요.
+프로그램 폴더의 `Dict` 폴더에 "공통GPT사전.txt"가 있고, 프로젝트 폴더에 "项目GPT字典.txt(프로젝트 GPT 사전, 파일 이름은 프로그램이 쓰는 그대로)"를 새로 만들 수 있습니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다.
 
 </summary>
 
@@ -304,7 +306,7 @@ $str20	$str20	player's codename, boy
 * GPT가 잘 모르는 단어(예: "大家さん")이고 뜻이 비교적 하나로 정해져 있다면 이렇게 공통 GPT 사전에 넣으면 됩니다. 설명은 꼭 필요하지 않습니다.
 * 둘째 줄은 번역에 여러 뜻 "나/나야"를 적고 설명에 "귀엽게 굴 때는 나야를 쓴다"고 적었습니다. GPT3.5는 그렇게 영리하지 않지만 GPT4는 대체로 잘 활용합니다.
 
-프로그램 폴더의 `Dict` 폴더에 "通用GPT字典.txt"가 있고, `sampleProject` 폴더에는 "项目GPT字典.txt"가 있습니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다.
+프로그램 폴더의 `Dict` 폴더에 "공통GPT사전.txt"가 있고, 프로젝트 폴더에는 "项目GPT字典.txt"를 둡니다. 보통 인명 정의는 프로젝트 사전에, 번역 품질을 전반적으로 높이는 어휘는 공통 사전에 씁니다.
 이번에 GPT에 보내는 이름과 문장에 그 단어가 있을 때만 그 단어의 설명이 이번 대화에 들어갑니다.
 **그렇다고 아무 단어나 넣지는 마세요.** ~~다 넣으면 오히려 해가 됩니다~~. **인물 설정**과 **늘 틀리게 번역하는 단어**만 쓰는 것을 권장합니다.
 

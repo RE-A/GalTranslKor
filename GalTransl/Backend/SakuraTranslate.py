@@ -170,9 +170,9 @@ class CSakuraTranslate(BaseTranslate):
         while True:  # 一直循环，直到得到数据
             self._check_stop_requested()
             if should_print_translation_logs(self.pj_config) and self.pj_config.active_workers == 1:
-                print(f"-> 字典输入: \n{gptdict}")
-                print(f"-> 翻译输入: \n{input_str}")
-                print("-> 输出: ")
+                print(f"-> 사전 입력: \n{gptdict}")
+                print(f"-> 번역 입력: \n{input_str}")
+                print("-> 출력: ")
 
             resp = ""
             resp,token = await self.ask_chatbot(
@@ -192,7 +192,7 @@ class CSakuraTranslate(BaseTranslate):
             error_message = ""
 
             if len(result_list) != len(trans_list):
-                error_message = f"翻译结果行数 与 原文行数 不一致"
+                error_message = f"번역 결과 줄 수가 원문 줄 수와 다름"
                 error_flag = True
 
             for line in result_list:
@@ -201,7 +201,7 @@ class CSakuraTranslate(BaseTranslate):
                 i += 1
                 # 本行输出不应为空
                 if trans_list[i].post_src != "" and line == "":
-                    error_message = f"第{i+1}句空白"
+                    error_message = f"{i+1}번째 문장이 비어 있음"
                     error_flag = True
                     break
 
@@ -249,7 +249,7 @@ class CSakuraTranslate(BaseTranslate):
 
                 if self.skipRetry:
                     self.reset_conversation()
-                    LOGGER.warning(f"[{filename}:{idx_tip}]解析出错但跳过本轮翻译")
+                    LOGGER.warning(f"[{filename}:{idx_tip}]해석 오류가 있지만 이번 번역 회차는 건너뜀")
                     i = self._append_parse_failure_fallback_results(
                         trans_list,
                         0 if i < 0 else i,
@@ -260,13 +260,13 @@ class CSakuraTranslate(BaseTranslate):
                         translate_problem_message="翻译失败",
                     )
                 else:
-                    LOGGER.warning(f"[{filename}:{idx_tip}]错误的输出：{error_message}")
+                    LOGGER.warning(f"[{filename}:{idx_tip}]잘못된 출력: {error_message}")
 
                     # 2次重试则对半拆
                     if retry_count == 2 and len(trans_list) > 1 and self.smartRetry:
                         retry_count -= 1
                         LOGGER.warning(
-                            f"[解析错误][{filename}:{idx_tip}]连续2次出错，尝试拆分重试"
+                            f"[해석 오류][{filename}:{idx_tip}]2회 연속 오류, 나눠서 다시 시도"
                         )
                         return await self.translate(
                             trans_list[: max(len(trans_list) // 3,1)],
@@ -278,7 +278,7 @@ class CSakuraTranslate(BaseTranslate):
                     # 5次重试则填充原文
                     if retry_count >= 5:
                         LOGGER.error(
-                            f"[{filename}:{idx_tip}]单句循环重试{retry_count}次出错，填充原文"
+                            f"[{filename}:{idx_tip}]한 문장 재시도 {retry_count}회 실패, 원문으로 채움"
                         )
                         i = self._append_parse_failure_fallback_results(
                             trans_list,
@@ -294,7 +294,7 @@ class CSakuraTranslate(BaseTranslate):
                     elif retry_count % 2 == 0:
                         self.last_translations[filename]=""
                         LOGGER.warning(
-                            f"[{filename}:{idx_tip}]单句循环重试{retry_count}次出错，重置会话"
+                            f"[{filename}:{idx_tip}]한 문장 재시도 {retry_count}회 실패, 세션 초기화"
                         )
                         self._check_stop_requested()
                         continue

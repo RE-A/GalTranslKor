@@ -96,7 +96,7 @@ def run(cmd: str, cwd: Path | None = None, check: bool = True) -> int:
     print(f"\033[36m> {cmd}\033[0m")
     result = subprocess.run(cmd, shell=True, cwd=cwd or ROOT)
     if check and result.returncode != 0:
-        print(f"\033[31m命令执行失败 (exit code {result.returncode})\033[0m")
+        print(f"\033[31m명령 실행 실패 (exit code {result.returncode})\033[0m")
         sys.exit(1)
     return result.returncode
 
@@ -229,12 +229,12 @@ def scan_agent_hidden_imports() -> list[str]:
 
 def clean():
     """清理旧构建产物"""
-    print(f"\033[33m清理旧产物: {RELEASE_DIR}\033[0m")
+    print(f"\033[33m이전 결과물 정리: {RELEASE_DIR}\033[0m")
     if RELEASE_DIR.exists():
         shutil.rmtree(RELEASE_DIR)
     tauri_target = TAURI_DIR / "target" / "release"
     if tauri_target.exists():
-        print("  清理 Tauri release target...")
+        print("  Tauri release target 정리...")
         shutil.rmtree(tauri_target)
     fe_dist = DESKTOP_DIR / "dist"
     if fe_dist.exists():
@@ -244,34 +244,34 @@ def clean():
         if p.exists():
             shutil.rmtree(p)
     if VENV_DIR.exists():
-        print(f"  清理构建虚拟环境: {VENV_DIR}")
+        print(f"  빌드 가상환경 정리: {VENV_DIR}")
         shutil.rmtree(VENV_DIR)
-    print("  清理完成")
+    print("  정리 완료")
 
 
 def build_frontend():
     """构建当前平台的 Tauri 前端 (需要 Rust 和对应系统依赖)"""
-    print("\n\033[32m═══ 构建前端 (Tauri Desktop) ═══\033[0m")
+    print("\n\033[32m═══ 프런트엔드 빌드 (Tauri Desktop) ═══\033[0m")
 
     if not (DESKTOP_DIR / "node_modules").exists():
-        print("  安装前端依赖...")
+        print("  프런트엔드 의존성 설치...")
         run("npm ci --no-audit --no-fund", cwd=DESKTOP_DIR)
 
-    print("  执行 tauri build（不生成安装包）...")
+    print("  tauri build 실행(설치 패키지 없이)...")
     run("npx tauri build --no-bundle --ci", cwd=DESKTOP_DIR)
 
     exe_path = find_frontend_exe()
     if not exe_path:
-        print("\033[31m前端可执行文件未找到: target/release 下不存在可识别产物\033[0m")
+        print("\033[31m프런트엔드 실행 파일 없음: target/release에 인식할 수 있는 결과물이 없습니다\033[0m")
         sys.exit(1)
 
-    print(f"\033[32m  前端构建成功: {exe_path}\033[0m")
+    print(f"\033[32m  프런트엔드 빌드 성공: {exe_path}\033[0m")
     return exe_path
 
 
 def build_backend(onefile: bool = False):
     """构建 Python 后端 (PyInstaller 打包，在虚拟环境中)"""
-    print("\n\033[32m═══ 构建后端 (PyInstaller) ═══\033[0m")
+    print("\n\033[32m═══ 백엔드 빌드 (PyInstaller) ═══\033[0m")
 
     # 虚拟环境 python 路径
     if sys.platform == "win32":
@@ -283,19 +283,19 @@ def build_backend(onefile: bool = False):
 
     # 创建虚拟环境（如果不存在）
     if not venv_python.exists():
-        print(f"  创建构建虚拟环境: {VENV_DIR}")
+        print(f"  빌드 가상환경 만들기: {VENV_DIR}")
         run(f'"{sys.executable}" -m venv "{VENV_DIR}"')
 
     # 安装依赖
     req_file = ROOT / "requirements.txt"
     if req_file.exists():
-        print("  安装项目依赖到虚拟环境...")
+        print("  가상환경에 프로젝트 의존성 설치...")
         run(f'"{venv_pip}" install -r "{req_file}"')
     else:
-        print("  未找到 requirements.txt，跳过依赖安装")
+        print("  requirements.txt가 없어 의존성 설치를 건너뜀")
 
     # 安装 PyInstaller
-    print("  安装 PyInstaller...")
+    print("  PyInstaller 설치...")
     run(f'"{venv_pip}" install pyinstaller --quiet')
 
     # 需要隐藏导入的模块列表
@@ -325,11 +325,11 @@ def build_backend(onefile: bool = False):
 
     auto_plugin_imports = scan_plugin_hidden_imports()
     if auto_plugin_imports:
-        print(f"  自动扫描插件依赖: {', '.join(auto_plugin_imports)}")
+        print(f"  플러그인 의존성 자동 검색: {', '.join(auto_plugin_imports)}")
 
     agent_imports = scan_agent_hidden_imports()
     if agent_imports:
-        print(f"  自动扫描 Agent 模块: {len(agent_imports)} 个")
+        print(f"  에이전트 모듈 자동 검색: {len(agent_imports)}개")
 
     hidden_imports.extend(plugin_runtime_imports)
     hidden_imports.extend(auto_plugin_imports)
@@ -357,20 +357,20 @@ def build_backend(onefile: bool = False):
 
     if not backend_exe or not backend_exe.exists():
         expected_path = ROOT / "dist" / BACKEND_DIST_NAME / backend_executable_name()
-        print(f"\033[31m后端可执行文件未找到: {expected_path}\033[0m")
+        print(f"\033[31m백엔드 실행 파일 없음: {expected_path}\033[0m")
         sys.exit(1)
 
     if not backend_exe.parent.exists():
-        print(f"\033[31m后端可执行文件未找到: {backend_exe}\033[0m")
+        print(f"\033[31m백엔드 실행 파일 없음: {backend_exe}\033[0m")
         sys.exit(1)
 
-    print(f"\033[32m  后端构建成功: {backend_exe}\033[0m")
+    print(f"\033[32m  백엔드 빌드 성공: {backend_exe}\033[0m")
     return backend_exe
 
 
 def assemble_release(frontend_exe: Path | None, backend_exe: Path):
     """组装发布目录"""
-    print("\n\033[32m═══ 组装发布包 ═══\033[0m")
+    print("\n\033[32m═══ 배포 패키지 조립 ═══\033[0m")
 
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
@@ -382,49 +382,49 @@ def assemble_release(frontend_exe: Path | None, backend_exe: Path):
         shutil.copy2(frontend_exe, dst_exe)
         if sys.platform != "win32":
             dst_exe.chmod(dst_exe.stat().st_mode | 0o111)
-        print(f"  复制前端可执行文件 -> {dst_exe}")
+        print(f"  프런트엔드 실행 파일 복사 -> {dst_exe}")
 
     # 2. 复制后端
     dst_backend_dir = BUILD_DIR / "backend"
     dst_backend_dir.mkdir(exist_ok=True)
     if backend_exe.parent.name == BACKEND_DIST_NAME:
         copy_dir_filtered(backend_exe.parent, dst_backend_dir)
-        print("  复制后端运行时目录 -> backend/")
+        print("  백엔드 런타임 폴더 복사 -> backend/")
     else:
         dst_name = backend_executable_name()
         shutil.copy2(backend_exe, dst_backend_dir / dst_name)
-        print(f"  复制后端 -> backend/{dst_name}")
+        print(f"  백엔드 복사 -> backend/{dst_name}")
 
     # 3. 复制插件
     if PLUGINS_DIR.exists():
         dst_plugins = BUILD_DIR / "plugins"
         copy_dir_filtered(PLUGINS_DIR, dst_plugins)
-        print(f"  复制插件目录 -> plugins/")
+        print(f"  플러그인 폴더 복사 -> plugins/")
 
     # 4. 复制字典
     if DICT_DIR.exists():
         dst_dict = BUILD_DIR / "Dict"
         copy_dir_filtered(DICT_DIR, dst_dict)
-        print("  复制字典目录 -> Dict/")
+        print("  사전 폴더 복사 -> Dict/")
 
     # 5. 复制翻译指南
     if GUIDELINES_DIR.exists():
         dst_guidelines = BUILD_DIR / "translation_guidelines"
         copy_dir_filtered(GUIDELINES_DIR, dst_guidelines)
-        print("  复制翻译指南目录 -> translation_guidelines/")
+        print("  번역 지침 폴더 복사 -> translation_guidelines/")
 
     # 6. 复制运行时资源
     if RES_DIR.exists():
         dst_res = BUILD_DIR / "res"
         copy_dir_filtered(RES_DIR, dst_res)
-        print("  复制运行时资源目录 -> res/")
+        print("  런타임 리소스 폴더 복사 -> res/")
 
-    print(f"\n\033[32m发布包组装完成: {BUILD_DIR}\033[0m")
+    print(f"\n\033[32m배포 패키지 조립 완료: {BUILD_DIR}\033[0m")
 
 
 def create_archive():
     """创建平台压缩包，Linux 使用 tar.gz 以保留可执行权限。"""
-    print("\n\033[32m═══ 创建压缩包 ═══\033[0m")
+    print("\n\033[32m═══ 압축 파일 만들기 ═══\033[0m")
     archive_path = RELEASE_DIR / ARCHIVE_NAME
     if archive_path.exists():
         archive_path.unlink()
@@ -437,22 +437,22 @@ def create_archive():
         root_dir=str(RELEASE_DIR),
         base_dir=BUILD_NAME,
     )
-    print(f"  压缩包已创建: {archive_path}")
+    print(f"  압축 파일 생성: {archive_path}")
 
 
 # ─── 主流程 ─────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="GalTransl 平台发布版构建脚本")
-    parser.add_argument("--skip-fe", action="store_true", help="跳过 Tauri 前端构建")
-    parser.add_argument("--skip-be", action="store_true", help="跳过后端构建")
-    parser.add_argument("--clean", action="store_true", help="构建前清理旧产物")
-    parser.add_argument("--no-archive", "--no-zip", dest="no_archive", action="store_true", help="不创建发布压缩包")
-    parser.add_argument("--onefile", action="store_true", help="将 Python 后端打包为单文件 sidecar")
+    parser = argparse.ArgumentParser(description="GalTransl 플랫폼별 배포판 빌드 스크립트")
+    parser.add_argument("--skip-fe", action="store_true", help="Tauri 프런트엔드 빌드 건너뛰기")
+    parser.add_argument("--skip-be", action="store_true", help="백엔드 빌드 건너뛰기")
+    parser.add_argument("--clean", action="store_true", help="빌드 전에 이전 결과물 정리")
+    parser.add_argument("--no-archive", "--no-zip", dest="no_archive", action="store_true", help="배포 압축 파일을 만들지 않음")
+    parser.add_argument("--onefile", action="store_true", help="Python 백엔드를 단일 파일 sidecar로 묶기")
     args = parser.parse_args()
 
-    print(f"\033[1mGalTransl v{VERSION} {PLATFORM_TAG} 发布版构建\033[0m")
-    print(f"输出目录: {RELEASE_DIR}\n")
+    print(f"\033[1mGalTransl v{VERSION} {PLATFORM_TAG} 배포판 빌드\033[0m")
+    print(f"출력 폴더: {RELEASE_DIR}\n")
 
     if args.clean:
         clean()
@@ -468,9 +468,9 @@ def main():
         candidate = find_frontend_exe()
         if candidate:
             frontend_exe = candidate
-            print(f"跳过前端构建，使用已有可执行文件: {frontend_exe}")
+            print(f"프런트엔드 빌드를 건너뛰고 기존 실행 파일 사용: {frontend_exe}")
         else:
-            print("跳过前端构建（无已有可执行文件，最终发布包将不含前端）")
+            print("프런트엔드 빌드 건너뜀(기존 실행 파일이 없어 최종 배포 패키지에 프런트엔드가 빠집니다)")
 
     # 后端构建
     if not args.skip_be:
@@ -479,9 +479,9 @@ def main():
         candidate = find_backend_executable()
         if candidate:
             backend_exe = candidate
-            print(f"跳过后端构建，使用已有: {backend_exe}")
+            print(f"백엔드 빌드를 건너뛰고 기존 파일 사용: {backend_exe}")
         else:
-            print("\033[31m跳过后端构建但未找到已有可执行文件\033[0m")
+            print("\033[31m백엔드 빌드를 건너뛰었지만 기존 실행 파일이 없습니다\033[0m")
             sys.exit(1)
 
     # 组装
@@ -491,14 +491,14 @@ def main():
     if not args.no_archive:
         create_archive()
 
-    print(f"\n\033[32m✅ 构建完成！发布包位于: {BUILD_DIR}\033[0m")
+    print(f"\n\033[32m✅ 빌드 완료! 배포 패키지 위치: {BUILD_DIR}\033[0m")
     if not args.no_archive:
-        print(f"   压缩包: {RELEASE_DIR / ARCHIVE_NAME}")
+        print(f"   압축 파일: {RELEASE_DIR / ARCHIVE_NAME}")
 
     # 清理构建临时目录
     dist_dir = ROOT / "dist"
     if dist_dir.exists():
-        print(f"\n清理临时目录: {dist_dir}")
+        print(f"\n임시 폴더 정리: {dist_dir}")
         shutil.rmtree(dist_dir)
 
 

@@ -308,7 +308,7 @@
     "formStack_setLocalError_enterProjectDirectory": "프로젝트 폴더를 입력하세요.",
     "formStack_setLocalError_chooseTranslation": "번역 템플릿을 선택하세요.",
     "field_message_projectDirectory": "프로젝트 폴더",
-    "field_placeholder_homeUserGalTranslSampleProject": "예: /home/user/GalTransl/sampleProject",
+    "field_placeholder_homeUserGalTranslSampleProject": "예: /home/user/GalTransl/projects/mygame",
     "field_message_configFile": "설정 파일 이름",
     "field_message_translation": "번역 템플릿",
     "field_message_empty": "사용할 수 있는 템플릿이 없습니다",

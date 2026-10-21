@@ -1,53 +1,53 @@
 Core:
-  Name: TXT/Markdown文本文件读取
+  Name: TXT/Markdown 텍스트 파일 읽기
   Type: file
   Module: file_plaintext_txt
-  Extensions: [".txt", ".md", ".markdown"] # 自动识别文件插件时按扩展名匹配
+  Extensions: [".txt", ".md", ".markdown"] # 파일 플러그인 자동 인식 때 확장자로 판별
 
 Documentation:
   Author: PiDanShouRouZhou
   Version: 1.2
-  Description: 可以直接处理.txt、.md和.markdown文本文件并逐行翻译。Markdown按纯文本处理，不保护Markdown语法、缩进或代码块；不应该用于翻译包含大量控制符的脚本。
+  Description: ".txt, .md, .markdown 텍스트 파일을 직접 줄 단위로 번역합니다. Markdown은 일반 텍스트로 처리하므로 Markdown 문법, 들여쓰기, 코드 블록이 보호되지 않습니다. 제어 코드가 많은 스크립트에는 쓰지 마세요."
   
-# 控制符是指任何游戏实际文本以外的内容，如控制立绘、音效、语音播放的脚本。示例如下：
+# 제어 코드는 실제 게임 텍스트 외의 모든 내용입니다. 예: 스탠딩 그림, 효과음, 음성 재생을 제어하는 스크립트.
 
-# 错误的脚本示例，包含大量控制符：
+# 잘못된 예(제어 코드가 많은 스크립트):
 
-# ;//背景：主人公自室_夜
+# ;//背景:主人公自室_夜
 # *seal107_27_0001|
 # [TR_IN_CG back_cg = bg_008b t_rule = mask_clock_rl time = 1500]
 
-# 正确的脚本示例，不包含控制符：
+# 올바른 예(제어 코드 없음):
 
-# 这是一段普通的文本。
-# 不包含任何控制符。
-# 只有纯粹的文本。
+# 평범한 텍스트입니다.
+# 제어 코드가 없습니다.
+# 순수한 텍스트만 있습니다.
 
-Settings: # 这里存放插件的设置
-  保存双语txt文件: false # 是否保存双语txt文件
-  上下双语1左右双语2: 1 # 1表示上下双语，2表示左右双语
-  txt读取编码: utf-8 # txt文件读取编码
-  txt写入编码: utf-8 # txt文件写入编码
+Settings: # 플러그인 설정
+  保存双语txt文件: false # 대역 txt 저장 여부
+  上下双语1左右双语2: 1 # 1은 위아래 대역, 2는 좌우 대역
+  txt读取编码: utf-8 # txt 읽기 인코딩
+  txt写入编码: utf-8 # txt 쓰기 인코딩
 
 SettingsSchema:
   保存双语txt文件:
-    label: 保存双语文本
-    description: 在输出文本中同时保存译文和原文。
+    label: 대역 텍스트 저장
+    description: 출력 텍스트에 번역문과 원문을 함께 남깁니다.
     advanced: false
   上下双语1左右双语2:
-    label: 双语排版
-    description: 双语输出时原文与译文的排列方式。
+    label: 대역 배치
+    description: 대역 출력에서 원문과 번역문을 배치하는 방식.
     advanced: false
     options:
     - value: 1
-      label: 上下排列
+      label: 위아래 배치
     - value: 2
-      label: 左右排列
+      label: 좌우 배치
   txt读取编码:
-    label: 原文编码
-    description: 读取 TXT/Markdown 文件的字符编码。乱码或读取失败时请检查源文件编码。
+    label: 원문 인코딩
+    description: TXT/Markdown 파일을 읽을 때의 문자 인코딩. 글자가 깨지거나 읽지 못하면 원본 파일 인코딩을 확인하세요.
     advanced: false
   txt写入编码:
-    label: 输出编码
-    description: 保存 TXT/Markdown 文件的字符编码，默认 UTF-8。
+    label: 출력 인코딩
+    description: TXT/Markdown 파일을 저장할 때의 문자 인코딩. 기본 UTF-8.
     advanced: false

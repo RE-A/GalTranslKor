@@ -1,9 +1,9 @@
 Core:
-  Name: 通用-文本常规修复
+  Name: 공통 - 일반 텍스트 수정
   Type: text
   Module: text_common_normalfix
 
 Documentation:
   Author: cx2333
   Version: 1.1
-  Description: 通用文本修复，包括1.修复首尾标点符号多加 2.修复\r\n换行符翻成\n的情况。
+  Description: "일반 텍스트 수정: 1. 앞뒤 문장부호 중복 수정 2. \\r\\n 줄바꿈이 \\n으로 바뀐 경우 수정."

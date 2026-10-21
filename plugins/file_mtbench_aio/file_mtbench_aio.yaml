@@ -1,15 +1,15 @@
 Core:
-  Name: 机器翻译质量评估
+  Name: 기계 번역 품질 평가
   Type: file
   Module: file_mtbench_aio
 
 Documentation:
   Author: cx2333
   Version: 2.0
-  Description: 用于机器翻译质量评估。输入文件为name(可选)-message格式json文件再加上ref字段，ref字段为参考译文。
+  Description: "기계 번역 품질을 평가합니다. 입력 파일은 ref 필드가 추가된 name(선택)-message json이며, ref에 참조 번역을 넣습니다."
 
-Settings: # 这里存放插件的设置
-  task: "chrf"  # 评估指标，目前支持chrf/comet/cutoff_rate
+Settings: # 플러그인 설정
+  task: "chrf"  # 평가 지표. chrf/comet/cutoff_rate 지원
   chrf_ngram: 4
   chrf_beta: 2
   comet_model_name: "Unbabel/wmt22-comet-da"
@@ -17,35 +17,35 @@ Settings: # 这里存放插件的设置
 
 SettingsSchema:
   task:
-    label: 评估指标
-    description: 选择译文质量评估方法；COMET 需要加载模型，截断率用于检查译文是否截断。
+    label: 평가 지표
+    description: "번역 품질 평가 방식을 고릅니다. COMET은 모델을 불러와야 하며, 잘림 비율은 번역이 잘렸는지 검사합니다."
     advanced: false
     options:
     - value: chrf
-      label: chrF 字符匹配
+      label: chrF 문자 일치
     - value: comet
-      label: COMET 模型评分
+      label: COMET 모델 점수
     - value: cutoff_rate
-      label: 截断率
+      label: 잘림 비율
   chrf_ngram:
-    label: chrF 最大 n-gram
-    description: chrF 计算使用的最大字符片段长度，仅在 chrF 模式生效。
+    label: chrF 최대 n-gram
+    description: chrF가 쓰는 최대 문자 n-gram 길이. chrF 모드에서만 적용됩니다.
     advanced: true
     min: 1
     step: 1
   chrf_beta:
-    label: chrF 召回率权重
-    description: chrF 中召回率的相对权重，值越大越重视召回率。
+    label: chrF 재현율 가중치
+    description: chrF에서 재현율의 상대 가중치. 값이 클수록 재현율을 중시합니다.
     advanced: true
     min: 0.1
     step: 0.1
   comet_model_name:
-    label: COMET 模型
-    description: COMET 使用的模型名称或路径，仅在 COMET 模式生效。
+    label: COMET 모델
+    description: COMET이 사용할 모델 이름 또는 경로. COMET 모드에서만 적용됩니다.
     advanced: true
   comet_batch_size:
-    label: COMET 批量大小
-    description: 每批评估的条目数，调大可能增加显存占用。
+    label: COMET 배치 크기
+    description: 배치당 평가할 항목 수. 값이 클수록 GPU 메모리를 더 쓸 수 있습니다.
     advanced: true
     min: 1
     step: 1

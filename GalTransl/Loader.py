@@ -18,28 +18,28 @@ def load_transList(json_path_or_list: Union[str, list]) -> Tuple[CTransList, lis
                 try:
                     json_list = loads(f.read())
                 except Exception as e:
-                    raise ValueError(f"无法解析JSON文件 {json_path_or_list}: {str(e)}")
+                    raise ValueError(f"JSON 파일을 해석할 수 없습니다 {json_path_or_list}: {str(e)}")
         else:
             # 如果是JSON字符串
             try:
                 json_list = loads(json_path_or_list)
             except Exception as e:
-                raise ValueError(f"无法解析JSON字符串: {str(e)}")
+                raise ValueError(f"JSON 문자열을 해석할 수 없습니다: {str(e)}")
     elif isinstance(json_path_or_list, list):
         json_list = json_path_or_list
     else:
-        raise TypeError("输入必须是字符串（文件路径或JSON字符串）或列表")
+        raise TypeError("입력은 문자열(파일 경로 또는 JSON 문자열)이나 목록이어야 합니다")
 
     if not isinstance(json_list, list):
-        raise ValueError("解析后的JSON不是列表格式")
+        raise ValueError("해석한 JSON이 목록 형식이 아닙니다")
 
     file_has_name = any(isinstance(item, dict) and ("name" in item or "names" in item) for item in json_list)
     for i, item in enumerate(json_list):
         if not isinstance(item, dict):
-            raise ValueError(f"JSON列表中的第{i+1}项不是字典格式")
+            raise ValueError(f"JSON 목록의 {i+1}번째 항목이 dict 형식이 아닙니다")
         
         if "message" not in item:
-            raise ValueError(f"JSON格式不正确，第{i+1}个item缺少message字段：{item}")
+            raise ValueError(f"JSON 형식이 잘못되었습니다. {i+1}번째 item에 message 필드가 없습니다: {item}")
 
         name = item.get("name", item.get("names", ""))
         pre_src = item["message"]

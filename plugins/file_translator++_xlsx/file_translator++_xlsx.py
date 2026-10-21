@@ -15,7 +15,7 @@ class file_plugin(GFilePlugin):
         self.pname = plugin_conf["Core"].get("Name", "")
         settings = plugin_conf["Settings"]
         LOGGER.debug(
-            f"[{self.pname}] 当前配置：是否自动识别名称:{settings.get('是否自动识别名称', True)}")
+            f"[{self.pname}] 현재 설정: 是否自动识别名称(이름 자동 인식):{settings.get('是否自动识别名称', True)}")
         # 读取配置文件中的设置，并保存到变量中。
         self.是否自动识别名称 = settings.get("是否自动识别名称", True)
         self.名称识别拼接方案 = settings.get("名称识别拼接方案", "{name}\n{message}")
@@ -90,7 +90,7 @@ class file_plugin(GFilePlugin):
 
             workbook.save(file_path)
         except Exception as e:
-            LOGGER.error(f"保存文件 {file_path} 时出错: {e}")
+            LOGGER.error(f"파일 {file_path} 저장 중 오류: {e}")
             raise e
 
 
@@ -104,18 +104,18 @@ class file_plugin(GFilePlugin):
         # 移除ANSI转义序列
         value_without_ansi = self.ANSI_ESCAPE.sub('', original_value)
         if value_without_ansi != original_value:
-            LOGGER.debug(f"[{self.pname}] 已移除ANSI转义序列: {original_value} -> {value_without_ansi}")
+            LOGGER.debug(f"[{self.pname}] ANSI 이스케이프 시퀀스 제거: {original_value} -> {value_without_ansi}")
         
         # 移除其他非法字符
         value_without_illegal = self.ILLEGAL_CHARACTERS_RE.sub('', value_without_ansi)
         if value_without_illegal != value_without_ansi:
-            LOGGER.debug(f"[{self.pname}] 已移除非法字符: {value_without_ansi} -> {value_without_illegal}")
+            LOGGER.debug(f"[{self.pname}] 허용되지 않는 문자 제거: {value_without_ansi} -> {value_without_illegal}")
         
         # 字符串长度不能超过32,767个字符
         # 如果需要，进行截断
         if len(value_without_illegal) > 32767:
             truncated_value = value_without_illegal[:32767]
-            LOGGER.debug(f"[{self.pname}] 字符串已截断: {len(value_without_illegal)} -> 32767")
+            LOGGER.debug(f"[{self.pname}] 문자열을 잘랐습니다: {len(value_without_illegal)} -> 32767")
         else:
             truncated_value = value_without_illegal
         

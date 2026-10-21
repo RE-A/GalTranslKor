@@ -87,14 +87,14 @@ class ProjectGuidelineTests(unittest.TestCase):
         apply_project_guideline_edit(self.project, mode="overwrite", content="哥哥")
         with self.assertRaises(ValueError) as ctx:
             apply_project_guideline_edit(self.project, mode="replace", old_text="没有这段", new_text="x")
-        self.assertIn("没有找到", str(ctx.exception))
+        self.assertIn("찾지 못했습니다", str(ctx.exception))
         # 改动后仍是原样
         self.assertEqual(read_project_guideline(self.project), "哥哥")
 
         apply_project_guideline_edit(self.project, mode="overwrite", content="哥哥 … 哥哥")
         with self.assertRaises(ValueError) as ctx:
             apply_project_guideline_edit(self.project, mode="replace", old_text="哥哥", new_text="兄长")
-        self.assertIn("2 次", str(ctx.exception))
+        self.assertIn("2번", str(ctx.exception))
         self.assertEqual(read_project_guideline(self.project), "哥哥 … 哥哥")
 
     def test_replace_without_file_raises(self) -> None:
@@ -129,7 +129,7 @@ class ProjectGuidelineTests(unittest.TestCase):
             apply_project_guideline_edit(
                 self.project, mode="replace", old_text="哥哥", new_text="兄长", dry_run=True
             )
-        self.assertIn("2 次", str(ctx.exception))
+        self.assertIn("2번", str(ctx.exception))
         self.assertEqual(read_project_guideline(self.project), "哥哥 … 哥哥")
 
     def test_bad_mode_and_empty_append_and_size_guard(self) -> None:

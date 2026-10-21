@@ -73,10 +73,10 @@ export function ContextMeter({ usage }: { usage: AgentContextUsage }) {
    不是操作按钮：点一下只是把这句话填进输入框（不直接发送），用户还能补两句再发。
    条目写成"能直接当第一条消息发出"的口气，所以文案本身就是提示词。 */
 export const AGENT_PROMPT_SUGGESTIONS = [
-  '做一下翻译前准备',
-  '通过子agent探索全文补齐字典',
-  '做一下译后流程',
-  '修一下问题',
+  '번역 전 준비를 해 줘',
+  '서브에이전트로 원문 전체를 살펴보고 사전을 보강해 줘',
+  '번역 후 작업을 진행해 줘',
+  '발견된 문제를 고쳐 줘',
 ];
 
 export function StatusPill({ status, running }: { status: string; running: boolean }) {

@@ -13,11 +13,11 @@ try:
     import ebooklib
     from ebooklib import epub
 except ImportError:
-    LOGGER.warning("缺少依赖包ebooklib, 请更新依赖")
+    LOGGER.warning("의존성 패키지 ebooklib이 없습니다. 의존성을 업데이트하세요")
 try:
     from bs4 import BeautifulSoup
 except ImportError:
-    LOGGER.warning("缺少依赖包beautifulsoup4, 请更新依赖")
+    LOGGER.warning("의존성 패키지 beautifulsoup4가 없습니다. 의존성을 업데이트하세요")
 
 class FilePlugin(GFilePlugin):
     def gtp_init(self, plugin_conf: dict, project_conf: dict):
@@ -83,7 +83,7 @@ class FilePlugin(GFilePlugin):
             if not file_path.endswith(".epub"):
                 raise TypeError("File type not supported.")
             if file_path.endswith(".epub") and self.是否拆分文件以支持单文件多线程:
-                raise TypeError("你开启了文件拆分，跳过epub文件本身。")
+                raise TypeError("파일 분할을 켰으므로 epub 파일 자체는 건너뜁니다.")
             return self.read_epub_to_json(file_path)
 
     def save_file(self, file_path: str, transl_json: list):
@@ -104,7 +104,7 @@ class FilePlugin(GFilePlugin):
         在所有文件翻译完成之后的动作,例如输出提示信息。
         """
         if self.是否拆分文件以支持单文件多线程:
-            LOGGER.info(f"[{self.pname}] 正在重建EPUB文件……")
+            LOGGER.info(f"[{self.pname}] EPUB 파일을 다시 만드는 중……")
             self.rebuild_epub()
 
     def read_html_xhtml_to_json(self, file_path: str) -> list:
@@ -442,4 +442,4 @@ class FilePlugin(GFilePlugin):
         for file in os.listdir(gt_input):
             if file.endswith((".xhtml", ".html")): 
                 os.remove(os.path.join(gt_input, file))
-        LOGGER.info("EPUB文件重建完成，缓存已经清理。")
+        LOGGER.info("EPUB 파일 재생성 완료, 캐시를 정리했습니다.")

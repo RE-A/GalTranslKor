@@ -432,7 +432,7 @@ class BaseTranslate:
             self._dynamic_num_per_request_success_streak = 0
             if next_value != current:
                 LOGGER.warning(
-                    f"[{filename}]动态句数调整：检测到解析异常，单次翻译句数 {current} -> {next_value}"
+                    f"[{filename}]동적 문장 수 조정: 해석 오류 발견, 요청당 문장 수 {current} -> {next_value}"
                 )
                 self._dynamic_num_per_request_current = next_value
             return
@@ -445,7 +445,7 @@ class BaseTranslate:
             ):
                 next_value = min(self.dynamic_num_per_request_max, current + 1)
                 LOGGER.info(
-                    f"[{filename}]动态句数调整：连续成功，单次翻译句数 {current} -> {next_value}"
+                    f"[{filename}]동적 문장 수 조정: 연속 성공, 요청당 문장 수 {current} -> {next_value}"
                 )
                 self._dynamic_num_per_request_current = next_value
                 self._dynamic_num_per_request_success_streak = 0
@@ -563,12 +563,12 @@ class BaseTranslate:
                 )
             except Exception as exc:
                 LOGGER.warning(
-                    "初始化 pyreqwest HttpxTransport 失败，回退 DefaultAioHttpClient: %s",
+                    "pyreqwest HttpxTransport 초기화 실패, DefaultAioHttpClient로 대체: %s",
                     exc,
                 )
         elif HttpxTransport is not None and proxy_kwargs:
             LOGGER.warning(
-                "检测到代理配置，当前回退到 DefaultAioHttpClient（pyreqwest transport 路径未启用代理注入）"
+                "프록시 설정이 있어 DefaultAioHttpClient로 대체합니다(pyreqwest transport 경로는 프록시를 지원하지 않음)"
             )
 
         return DefaultAioHttpClient(
@@ -638,7 +638,7 @@ class BaseTranslate:
                 for client, pair_token in self.client_list
             ]
             self._retired_clients.append(failed_client)
-            LOGGER.warning("连续网络错误，已刷新 API 客户端 [%s]", token.maskToken())
+            LOGGER.warning("네트워크 오류가 이어져 API 클라이언트를 새로 만들었습니다 [%s]", token.maskToken())
             return replacement
 
     @staticmethod
@@ -656,7 +656,7 @@ class BaseTranslate:
         """
         client_list = getattr(self, "client_list", None)
         if not client_list:
-            last_err = "没有可用的 API 令牌！"
+            last_err = "사용할 수 있는 API 토큰이 없습니다!"
             if getattr(self, "fail_fast", False):
                 raise TranslationRequestError(last_err)
             raise RuntimeError(last_err)
@@ -967,7 +967,7 @@ class BaseTranslate:
                 if isinstance(exc, JobCancelledError):
                     raise
                 LOGGER.error(
-                    f"[{filename}:{self._build_idx_tip(trans_list_split)}]批次翻译失败，跳过该批次：{exc}"
+                    f"[{filename}:{self._build_idx_tip(trans_list_split)}]배치 번역 실패, 이 배치를 건너뜀: {exc}"
                 )
                 try:
                     from GalTransl.server import record_runtime_error
@@ -1018,7 +1018,7 @@ class BaseTranslate:
                     if isinstance(exc, JobCancelledError):
                         raise
                     LOGGER.error(
-                        f"[{filename}:{self._build_idx_tip(trans_list_split)}]重试批次失败，跳过该批次：{exc}"
+                        f"[{filename}:{self._build_idx_tip(trans_list_split)}]배치 재시도 실패, 이 배치를 건너뜀: {exc}"
                     )
                     trans_result = []
                     self._append_parse_failure_fallback_results(
@@ -1466,7 +1466,7 @@ class BaseTranslate:
                                 if replacement is not None:
                                     client = replacement
                             except Exception:
-                                LOGGER.debug("刷新失败的 API 客户端时出错", exc_info=True)
+                                LOGGER.debug("실패한 API 클라이언트를 새로 만드는 중 오류", exc_info=True)
                             failure_counts.pop(client_key, None)
                 self._record_request_health(
                     time.monotonic() - request_started,
@@ -1488,7 +1488,7 @@ class BaseTranslate:
                     # 记录）只看得到这一句，不带上原因就还得回上游日志翻为什么
                     last_error = str(e).strip() or type(e).__name__
                     raise RuntimeError(
-                        f"API请求达到重试上限 ({max_retry_count})，最后一次错误：{last_error}"
+                        f"API 요청 재시도 상한({max_retry_count})에 도달. 마지막 오류: {last_error}"
                     ) from e
 
                 # gemini no_candidates
@@ -1508,7 +1508,7 @@ class BaseTranslate:
 
                 if is_rate_limited:
                     self.pj_config.bar.text(
-                        "-> 检测到频率限制(429 RateLimitError)，翻译仍在进行中但速度将受影响..."
+                        "-> 속도 제한(429 RateLimitError) 발생. 번역은 계속되지만 속도가 느려집니다..."
                     )
                 else:
                     if file_name != "" and file_name[:1] != "[":
@@ -1537,7 +1537,7 @@ class BaseTranslate:
                         pass
 
                     if api_error_text:
-                        error_parts.append(f"API返回: {api_error_text}")
+                        error_parts.append(f"API 응답: {api_error_text}")
 
                     message_text = " | ".join(part for part in error_parts if part)
                     message_text = f"{message_text} | sleeping {sleep_time:.3f}s"
@@ -1627,7 +1627,7 @@ class BaseTranslate:
         translist_unhit = list(trans_list)
 
         if self.skipH:
-            LOGGER.warning("skipH: 将跳过含有敏感词的句子")
+            LOGGER.warning("skipH: 민감어가 있는 문장을 건너뜁니다")
             h_words_list = globals().get("H_WORDS_LIST", [])
             translist_unhit = [
                 tran

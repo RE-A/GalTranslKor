@@ -84,7 +84,7 @@ def apply_project_guideline_edit(
     次数、长度上限）照走一遍——预览能出 diff 就意味着这一步真做也做得成。
     """
     if mode not in WRITE_MODES:
-        raise ValueError(f"mode 必须是 {'/'.join(WRITE_MODES)} 之一，收到：{mode!r}")
+        raise ValueError(f"mode는 {'/'.join(WRITE_MODES)} 중 하나여야 합니다. 받은 값: {mode!r}")
     if not project_dir:
         raise ValueError("project_dir is required")
 
@@ -96,28 +96,28 @@ def apply_project_guideline_edit(
         text = content
     elif mode == "append":
         if not content.strip():
-            raise ValueError("append 模式需要 content")
+            raise ValueError("append 모드에는 content가 필요합니다")
         if not current:
             text = content
         else:
             text = f"{current.rstrip()}\n\n{content.strip()}\n"
     else:  # replace
         if not old_text:
-            raise ValueError("replace 模式需要 old_text")
+            raise ValueError("replace 모드에는 old_text가 필요합니다")
         if not existed:
             # 文件都没有，谈不上替换；直接报错比"当成新建"清楚
-            raise ValueError(f"项目规范文件还不存在（{PROJECT_GUIDELINE_FILENAME}），请先用 overwrite 创建")
+            raise ValueError(f"프로젝트 지침 파일({PROJECT_GUIDELINE_FILENAME})이 아직 없습니다. 먼저 overwrite로 만드세요")
         hits = current.count(old_text)
         if hits == 0:
-            raise ValueError("old_text 在项目规范里没有找到，请原样粘贴要改的那段（含前后文）")
+            raise ValueError("프로젝트 지침에서 old_text를 찾지 못했습니다. 바꿀 부분을 앞뒤 문맥과 함께 그대로 붙여 넣으세요")
         if hits > 1:
-            raise ValueError(f"old_text 在项目规范里出现了 {hits} 次，请带上更多前后文只圈定一处")
+            raise ValueError(f"old_text가 프로젝트 지침에 {hits}번 나옵니다. 앞뒤 문맥을 더 넣어 한 곳만 지정하세요")
         text = current.replace(old_text, new_text, 1)
 
     if len(text) > MAX_PROJECT_GUIDELINE_CHARS:
         raise ValueError(
-            f"项目规范过长（{len(text)} 字符，上限 {MAX_PROJECT_GUIDELINE_CHARS}）——"
-            "规范全文每次请求都会进 prompt，请精简后再写"
+            f"프로젝트 지침이 너무 깁니다({len(text)}자, 상한 {MAX_PROJECT_GUIDELINE_CHARS}). "
+            "지침 전체가 매 요청 prompt에 들어가므로 줄여서 다시 쓰세요"
         )
 
     if dry_run:
@@ -143,5 +143,5 @@ def apply_project_guideline_edit(
         "created": not existed,
         "length": len(text),
         # 提醒调用方（尤其 Agent）：改完不会影响正在跑的任务，下次启动翻译才生效
-        "takes_effect": "下次启动翻译时生效",
+        "takes_effect": "다음 번역을 시작할 때 적용됨",
     }

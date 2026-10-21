@@ -568,10 +568,12 @@ export function ProjectTranslatePage({ ctx }: { ctx: ProjectPageContext }) {
       : 0),
     [runtimeMatchesProject, runtime?.retransl_stats],
   );
-  const statusTone = runtimeStage === '检查模型可用性' ? 'checking-availability' : (currentJob?.status ?? 'pending');
+  // The backend stage text is Korean in this fork; the Chinese value is kept for older backends.
+  const checkingAvailability = runtimeStage === '检查模型可用性' || runtimeStage === '모델 가용성 확인';
+  const statusTone = checkingAvailability ? 'checking-availability' : (currentJob?.status ?? 'pending');
   // 后端报了阶段就直接显示阶段：只写「翻译中」看不出任务跑到哪一步（GenDic 的分词/人名/提取/审校尤其明显）
   const statusLabel = runtimeStage
-    ? (runtimeStage === '检查模型可用性' ? translate("projects:projectTranslatePage.statusLabel_message_model") : runtimeStage)
+    ? (checkingAvailability ? translate("projects:projectTranslatePage.statusLabel_message_model") : runtimeStage)
     : getStatusLabel(currentJob?.status);
   const currentJobError = currentJob?.error?.trim() ?? '';
   const cancelledToastTitle = currentJob?.translator === 'GenDic' ? translate("projects:projectTranslatePage.cancelledToastTitle_message_genDicDoneStop") : translate("projects:projectTranslatePage.cancelledToastTitle_message_jobDoneCancel");

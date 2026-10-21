@@ -76,7 +76,7 @@ class PluginSettingsSchemaTests(unittest.TestCase):
     def test_plugin_api_exposes_schema_without_changing_settings(self):
         plugins = {p["name"]: p for p in _scan_plugins()}
         msgtool = plugins["file_msgtool_script"]
-        self.assertIn("直接读取和写入 galgame 脚本文件", msgtool["description"])
+        self.assertIn("갈게임 스크립트 파일을 직접 읽고 씁니다", msgtool["description"])
         self.assertEqual(msgtool["settings"]["script_type"], "")
         self.assertIn("bgi", [o["value"] for o in msgtool["settings_schema"]["script_type"]["options"]])
         self.assertTrue(msgtool["settings_schema"]["msg_tool_path"]["advanced"])

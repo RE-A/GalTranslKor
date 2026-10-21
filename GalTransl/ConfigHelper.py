@@ -279,7 +279,7 @@ class CProxyPool:
             LOGGER.debug("we got exception in testing proxy %s", proxy.addr)
             return False, proxy
         except:
-            LOGGER.error("代理 %s 无法连接", proxy.addr)
+            LOGGER.error("프록시 %s에 연결할 수 없습니다", proxy.addr)
             return False, proxy
         finally:
             et = time()
@@ -303,7 +303,7 @@ class CProxyPool:
         rounds: int = 0
         while True:
             if rounds > 10:
-                raise RuntimeError("CProxyPool::getProxy: 没有可用的代理！")
+                raise RuntimeError("CProxyPool::getProxy: 사용할 수 있는 프록시가 없습니다!")
             available, proxy = choice(self.proxies)
             if not available:
                 rounds += 1

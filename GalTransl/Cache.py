@@ -99,7 +99,7 @@ def cleanup_stale_cache_temp_files(cache_dir: str) -> int:
             os.remove(path)
             removed += 1
         except OSError as exc:  # 被占用等：留着，下次再说
-            LOGGER.warning(f"[cache]清理残留临时文件失败：{path}: {exc}")
+            LOGGER.warning(f"[cache]남은 임시 파일 정리 실패: {path}: {exc}")
     return removed
 
 
@@ -305,7 +305,7 @@ async def compact_cache_append_logs(cache_dir: str) -> int:
             await _compact_cache_from_append(cache_file_path, append_file_path)
             compacted_count += 1
         except Exception as e:
-            LOGGER.warning(f"[cache]压缩append缓存失败：{append_file_path}: {e}")
+            LOGGER.warning(f"[cache]append 캐시 압축 실패: {append_file_path}: {e}")
 
     return compacted_count
 
@@ -355,7 +355,7 @@ async def save_transCache_to_json(trans_list: CTransList, cache_file_path, post_
                     os.remove(append_file_path)
                 except Exception as e:
                     if _is_windows_file_lock_error(e):
-                        warn_msg = f"[cache]清理append缓存文件失败(被占用，稍后自动恢复)：{append_file_path}"
+                        warn_msg = f"[cache]append 캐시 파일 정리 실패(사용 중, 잠시 뒤 자동 복구): {append_file_path}"
                         LOGGER.warning(warn_msg)
                         _record_runtime_cache_error(
                             project_dir,
@@ -371,7 +371,7 @@ async def save_transCache_to_json(trans_list: CTransList, cache_file_path, post_
                     await _write_append_entries_with_retry(append_file_path, append_entries)
                 except Exception as e:
                     if _is_windows_file_lock_error(e):
-                        warn_msg = f"[cache]增量缓存写入失败(文件被占用，已跳过本次写入)：{append_file_path}"
+                        warn_msg = f"[cache]증분 캐시 쓰기 실패(파일 사용 중, 이번 쓰기 건너뜀): {append_file_path}"
                         LOGGER.warning(warn_msg)
                         _record_runtime_cache_error(
                             project_dir,
@@ -381,7 +381,7 @@ async def save_transCache_to_json(trans_list: CTransList, cache_file_path, post_
                         return
                     raise
     except Exception as e:
-        LOGGER.error(f"[cache]保存缓存失败：{str(e)}")
+        LOGGER.error(f"[cache]캐시 저장 실패: {str(e)}")
         
         # 清理临时文件
         if os.path.exists(temp_file_path):
@@ -465,7 +465,7 @@ async def get_transCache_from_json(
                 else:
                     cache_dict[cache_key] = cache_obj
         except Exception as e:
-            LOGGER.warning(f"[cache]读取append缓存失败：{append_file_path}: {e}")
+            LOGGER.warning(f"[cache]append 캐시 읽기 실패: {append_file_path}: {e}")
 
 
     for tran in trans_list:
@@ -504,9 +504,9 @@ async def get_transCache_from_json(
         if cache_key not in cache_dict:
             _mark_cache_miss(tran, MISS_KEY_NOT_FOUND)
             translist_unhit.append(tran)
-            LOGGER.debug(f"[cache]message未命中缓存: {line_now}")
+            LOGGER.debug(f"[cache]캐시에 없는 message: {line_now}")
             if "rebuild" in eng_type:
-                LOGGER.error(f"[cache]message未命中缓存: {line_now}")
+                LOGGER.error(f"[cache]캐시에 없는 message: {line_now}")
             continue
 
         # 有校对稿就等于有最终稿：既然校对过，原文后来改没改都不再影响这条的译文，
@@ -522,9 +522,9 @@ async def get_transCache_from_json(
                 if tran.post_src != _cache_get(cache_dict[cache_key], "post_src"):
                     _mark_cache_miss(tran, MISS_POST_SRC_CHANGED)
                     translist_unhit.append(tran)
-                    LOGGER.debug(f"[cache]post_src被改变: \npost_src_before{_cache_get(cache_dict[cache_key], 'post_src')}\npost_src_now{tran.post_src}")
+                    LOGGER.debug(f"[cache]post_src 변경됨: \npost_src_before{_cache_get(cache_dict[cache_key], 'post_src')}\npost_src_now{tran.post_src}")
                     if "rebuild" in eng_type:
-                        LOGGER.error(f"[cache]post_src被改变: \npost_src_before: {_cache_get(cache_dict[cache_key], 'post_src')}\npost_src_now: {tran.post_src}")
+                        LOGGER.error(f"[cache]post_src 변경됨: \npost_src_before: {_cache_get(cache_dict[cache_key], 'post_src')}\npost_src_now: {tran.post_src}")
                     continue
             # pre_dst为空
             if tran.post_src != "":
@@ -534,9 +534,9 @@ async def get_transCache_from_json(
                 ):
                     _mark_cache_miss(tran, MISS_PRE_DST_EMPTY)
                     translist_unhit.append(tran)
-                    LOGGER.debug(f"[cache]pre_dst为空: {line_now}")
+                    LOGGER.debug(f"[cache]pre_dst가 비어 있음: {line_now}")
                     if "rebuild" in eng_type:
-                        LOGGER.error(f"[cache]pre_dst为空: {line_now}")
+                        LOGGER.error(f"[cache]pre_dst가 비어 있음: {line_now}")
                     continue
             # 重试失败的（走到这里的本来就已经是"没校对稿"的了）
             if (

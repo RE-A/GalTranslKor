@@ -151,7 +151,7 @@ class CNormalDic:
     def load_dic(self, dic_path: str):
         """加载一个字典txt到这个对象的内存"""
         if not path.exists(dic_path):
-            LOGGER.warning(f"{dic_path}不存在，请检查路径。")
+            LOGGER.warning(f"{dic_path}이(가) 없습니다. 경로를 확인하세요.")
             return
         with open(dic_path, encoding="utf8") as f:
             dic_lines = f.readlines()
@@ -201,17 +201,17 @@ class CNormalDic:
                 self.dic_list.append(CBasicDicElement(sp[0], sp[1], dic_name=dic_name))
                 normalDic_count += 1
         LOGGER.info(
-            "载入 普通字典："
+            "일반 사전 불러옴: "
             + path.basename(dic_path)
             + "  "
-            + (str(normalDic_count) + "普通词条 " if normalDic_count != 0 else "")
+            + (str(normalDic_count) + "개 일반 항목 " if normalDic_count != 0 else "")
             + (
-                str(conditionaDic_count) + "条件词条 "
+                str(conditionaDic_count) + "개 조건 항목 "
                 if conditionaDic_count != 0
                 else ""
             )
             + (
-                str(situationsDic_count) + "场景词条 "
+                str(situationsDic_count) + "개 장면 항목 "
                 if situationsDic_count != 0
                 else ""
             )
@@ -248,7 +248,7 @@ class CNormalDic:
                     case "post_dst" | "post_zh":
                         find_ifword_text = input_tran.post_dst
                     case _:
-                        raise ValueError(f"不支持的条件字典关键字{dic.special_key}")
+                        raise ValueError(f"지원하지 않는 조건 사전 키워드 {dic.special_key}")
                 # 遍历if_word_list
                 for if_word in dic.if_word_list:
                     # 因为如果有stratwith的话需要修改word，所以要新建一份副本
@@ -341,7 +341,7 @@ class CGptDict:
     def load_dic(self, dic_path: str):
         """加载一个字典txt到这个对象的内存"""
         if not path.exists(dic_path):
-            LOGGER.warning(f"{dic_path}不存在，请检查路径。")
+            LOGGER.warning(f"{dic_path}이(가) 없습니다. 경로를 확인하세요.")
             return
         with open(dic_path, encoding="utf8") as f:
             dic_lines = f.readlines()
@@ -373,7 +373,7 @@ class CGptDict:
             for d in self._dic_list:
                 if d.search_word == search_word and d.replace_word == replace_word:
                     if d.note and d.note == note:
-                        LOGGER.warning(f"重复的GPT字典词条 {search_word} -> {replace_word} 已忽略")
+                        LOGGER.warning(f"중복된 GPT 사전 항목 {search_word} -> {replace_word} 무시함")
                         redundant_flag = True
                         break
             if redundant_flag:
@@ -384,7 +384,7 @@ class CGptDict:
             self._dic_list.append(dic)
             normalDic_count += 1
         LOGGER.info(
-            f"载入 GPT字典: {path.basename(dic_path)} {normalDic_count}普通词条"
+            f"GPT 사전 불러옴: {path.basename(dic_path)} 일반 항목 {normalDic_count}개"
         )
 
     def gen_prompt(self, trans_list: CTransList, type="gpt"):
@@ -472,7 +472,7 @@ class CGptDict:
 
             if not flag:
                 problem_list.append(
-                    f"{dic.dic_name}未使用：{dic.search_word}---{dic.replace_word}"
+                    f"{dic.dic_name} 미사용: {dic.search_word}---{dic.replace_word}"
                 )
 
         return ", ".join(problem_list)

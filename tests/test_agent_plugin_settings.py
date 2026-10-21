@@ -117,7 +117,7 @@ class PluginSettingsAgentTests(unittest.TestCase):
         jis = fields["plugin.file_msgtool_script.jis_substitution"]
         self.assertIs(jis["value"], False)
         self.assertFalse(jis["overridden"])
-        self.assertEqual(jis["schema"]["label"], "JIS 替换")
+        self.assertEqual(jis["schema"]["label"], "JIS 치환")
         enc = fields["plugin.file_msgtool_script.patched_encoding"]
         self.assertEqual(enc["value"], "utf8")
         self.assertEqual(enc["default"], "")

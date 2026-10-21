@@ -482,9 +482,9 @@ class NameConsistencyTests(unittest.IsolatedAsyncioTestCase):
 
                 async def fake_ask(prompt, label, index, session=None):
                     phases.append(label)
-                    if label == "人名批次":
+                    if label == "이름 배치":
                         return "クローディア\t克罗迪娅\t人名，女性"
-                    if label == "分片":
+                    if label == "조각":
                         return "NULL\tNULL\tNULL"
                     if stop:
                         raise JobCancelledError()
@@ -500,7 +500,7 @@ class NameConsistencyTests(unittest.IsolatedAsyncioTestCase):
                         self.assertTrue(engine.pj_config.gendic_partial_saved)
                     else:
                         self.assertTrue(await engine.batch_translate([]))
-                self.assertEqual(phases, ["人名批次", "分片", "审校批次"])
+                self.assertEqual(phases, ["이름 배치", "조각", "검토 배치"])
                 saved = engine._load_existing_generated_terms(os.path.join(tmp, "项目GPT字典-生成.txt"))
                 expected_note = "人名，女性" if stop else "人名，女性，主角"
                 self.assertEqual(saved["クローディア"], ("克罗迪娅", expected_note))
@@ -781,7 +781,7 @@ class NameStepAndTriageTests(unittest.IsolatedAsyncioTestCase):
 
             async def fake_ask(prompt, label, index, session=None):
                 nonlocal active, peak, calls
-                if label == "人名批次":
+                if label == "이름 배치":
                     calls += 1
                     active += 1
                     peak = max(peak, active)
@@ -793,7 +793,7 @@ class NameStepAndTriageTests(unittest.IsolatedAsyncioTestCase):
                         return "\n".join(f"{line.split(chr(9))[0]}\t译名\t人名" for line in rows.splitlines())
                     finally:
                         active -= 1
-                if label == "分片":
+                if label == "조각":
                     return "NULL\tNULL\tNULL"
                 rows = prompt.split("## 候选词条\n", 1)[1].split("\n\n## 输出要求", 1)[0]
                 return "\n".join(f"{line.split(chr(9))[0]}\t译名\t人名" for line in rows.splitlines())
@@ -805,7 +805,7 @@ class NameStepAndTriageTests(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(await engine.batch_translate([]))
             self.assertEqual(calls, 8)  # 固定 60 个/批时只有 2 个请求
             self.assertEqual(peak, 8)
-            first_name_update = next(u for u in updates if u.get("stage") == "GenDic 人名翻译中")
+            first_name_update = next(u for u in updates if u.get("stage") == "GenDic 이름 번역 중")
             self.assertEqual(first_name_update["workers_active"], 8)
             saved = engine._load_existing_generated_terms(os.path.join(tmp, "项目GPT字典-生成.txt"))
             self.assertEqual(set(saved), set(names))

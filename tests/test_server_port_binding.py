@@ -113,8 +113,8 @@ class ServerPortBindingTests(unittest.TestCase):
                         )
                         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                         self.assertIn(str(port), result.stdout)
-                        self.assertIn("[错误]", result.stdout)
-                        self.assertTrue("已被占用" in result.stdout or "独占" in result.stdout, result.stdout)
+                        self.assertIn("[오류]", result.stdout)
+                        self.assertTrue("이미 사용 중" in result.stdout or "독점" in result.stdout, result.stdout)
                         self.assertNotIn("listening at", result.stdout + result.stderr)
                         self.assertNotIn("Traceback", result.stderr)
 
@@ -167,11 +167,11 @@ class ServerPortBindingTests(unittest.TestCase):
 
     def test_bind_errors_are_reported_without_success_message(self):
         for code, expected in (
-            (errno.EADDRINUSE, "已被占用"),
-            (10048, "已被占用"),
-            (errno.EACCES, "系统限制访问"),
-            (10013, "系统限制访问"),
-            (errno.EADDRNOTAVAIL, "无法绑定"),
+            (errno.EADDRINUSE, "이미 사용 중"),
+            (10048, "이미 사용 중"),
+            (errno.EACCES, "접근을 제한"),
+            (10013, "접근을 제한"),
+            (errno.EADDRNOTAVAIL, "바인딩할 수 없음"),
         ):
             with self.subTest(code=code):
                 output = io.StringIO()

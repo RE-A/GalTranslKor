@@ -198,7 +198,7 @@ class MsgToolJisTests(unittest.TestCase):
         dst = Path(plugin.output_dir) / "one.ks"
         config = self.config(plugin)
         with patch.object(plugin, "_run") as run:
-            with self.assertRaisesRegex(RuntimeError, "JIS 替换字典未覆盖"):
+            with self.assertRaisesRegex(RuntimeError, "JIS 치환 사전에 없는 문자"):
                 plugin.save_file(str(dst), [{"message": "🙂"}])
             run.assert_not_called()
         self.assertEqual(dst.read_bytes(), b"patched")

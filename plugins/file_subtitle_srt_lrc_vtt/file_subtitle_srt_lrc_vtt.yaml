@@ -1,29 +1,29 @@
 Core:
-  Name: srt,lrc,vtt字幕文件读取
+  Name: "srt, lrc, vtt 자막 파일 읽기"
   Type: file
   Module: file_subtitle_srt_lrc_vtt
-  Extensions: [".srt", ".lrc", ".vtt"] # 自动识别文件插件时按扩展名匹配
+  Extensions: [".srt", ".lrc", ".vtt"] # 파일 플러그인 자동 인식 때 확장자로 판별
 
 Documentation:
   Author: cx2333, PiDanShouRouZhou
   Version: 1.0
-  Description: 可以直接处理.srt|.lrc|.vtt字幕文件并翻译。
+  Description: ".srt, .lrc, .vtt 자막 파일을 직접 번역합니다."
 
-Settings: # 这里存放插件的设置
-  保存双语字幕: false # 是否保存双语字幕[true|false]
-  上下双语1左右双语2: 1 # 双语字幕类型，1表示上下双语，2表示左右双语
+Settings: # 플러그인 설정
+  保存双语字幕: false # 대역 자막 저장 여부[true|false]
+  上下双语1左右双语2: 1 # 대역 자막 형식. 1은 위아래, 2는 좌우
 
 SettingsSchema:
   保存双语字幕:
-    label: 保存双语字幕
-    description: 在同一字幕条目中保留原文与译文。
+    label: 대역 자막 저장
+    description: 같은 자막 항목에 원문과 번역문을 함께 둡니다.
     advanced: false
   上下双语1左右双语2:
-    label: 双语排版
-    description: 双语字幕中原文与译文的排列方式。
+    label: 대역 배치
+    description: 대역 자막에서 원문과 번역문을 배치하는 방식.
     advanced: false
     options:
     - value: 1
-      label: 上下排列
+      label: 위아래 배치
     - value: 2
-      label: 左右排列
+      label: 좌우 배치

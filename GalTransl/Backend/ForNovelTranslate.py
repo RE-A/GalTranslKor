@@ -97,9 +97,9 @@ class ForNovelTranslate(MultiTurnTranslate):
 
             if self.pj_config.active_workers == 1:
                 LOGGER.info(
-                    f"->{'翻译输入' if not proofread else '校对输入'}：\n{gptdict}\n{input_src}\n"
+                    f"->{'번역 입력' if not proofread else '교정 입력'}:\n{gptdict}\n{input_src}\n"
                 )
-                LOGGER.info("->输出：")
+                LOGGER.info("->출력:")
             parsed_result_trans_list = []
             stream_parse_error_message = ""
             stream_cursor = {"i": -1, "success_count": 0}
@@ -152,7 +152,7 @@ class ForNovelTranslate(MultiTurnTranslate):
             error_message = ""
 
             if result_text == "":
-                error_message = "输出为空/被拦截"
+                error_message = "출력이 비어 있거나 차단됨"
                 error_flag = True
 
             if self._get_chatbot_state()[0]:
@@ -192,13 +192,13 @@ class ForNovelTranslate(MultiTurnTranslate):
                         break
 
             if error_message or stream_parse_error_message or success_count != len(trans_list):
-                self._raise_parse_error_for_auto(error_message or stream_parse_error_message or f"译文缺句：{success_count}/{len(trans_list)}")
+                self._raise_parse_error_for_auto(error_message or stream_parse_error_message or f"번역문 문장 누락: {success_count}/{len(trans_list)}")
 
             if success_count > 0 and not stream_parse_error_message:
                 error_flag = False  # 部分解析
 
             if not error_flag and success_count <= 0 and not result_trans_list:
-                error_message = "未解析到有效句子"
+                error_message = "해석된 올바른 문장이 없음"
                 error_flag = True
 
             if error_flag:
@@ -218,7 +218,7 @@ class ForNovelTranslate(MultiTurnTranslate):
                     pass
 
                 LOGGER.warning(
-                    f"[解析错误][{filename}:{idx_tip}]解析结果出错：{error_message}"
+                    f"[해석 오류][{filename}:{idx_tip}]결과 해석 오류: {error_message}"
                 )
                 retry_count += 1
                 self._check_stop_requested()
@@ -230,7 +230,7 @@ class ForNovelTranslate(MultiTurnTranslate):
                 if retry_count == 2 and len(trans_list) > 1 and self.smartRetry:
                     retry_count -= 1
                     LOGGER.warning(
-                        f"[解析错误][{filename}:{idx_tip}]连续2次出错，尝试拆分重试"
+                        f"[해석 오류][{filename}:{idx_tip}]2회 연속 오류, 나눠서 다시 시도"
                     )
                     return await self.translate(
                         trans_list[: max(len(trans_list) // 3,1)],
@@ -242,13 +242,13 @@ class ForNovelTranslate(MultiTurnTranslate):
                 if retry_count == 3 and self.smartRetry:
                     self.reset_conversation(filename)
                     LOGGER.warning(
-                        f"[解析错误][{filename}:{idx_tip}]连续3次出错，尝试清空上文"
+                        f"[해석 오류][{filename}:{idx_tip}]3회 연속 오류, 앞 문맥을 비우고 시도"
                     )
                 # 重试中止
                 if retry_count >= 4:
                     self.reset_conversation(filename)
                     LOGGER.error(
-                        f"[解析错误][{filename}:{idx_tip}]解析反复出错，跳过本轮翻译"
+                        f"[해석 오류][{filename}:{idx_tip}]해석 오류가 반복되어 이번 번역 회차를 건너뜀"
                     )
                     i = self._append_parse_failure_fallback_results(
                         trans_list,
@@ -265,7 +265,7 @@ class ForNovelTranslate(MultiTurnTranslate):
                 continue
             elif error_flag == False and error_message:
                 LOGGER.warning(
-                    f"[{filename}:{idx_tip}]解析了{len(trans_list)}句中的{success_count}句，存在问题：{error_message}"
+                    f"[{filename}:{idx_tip}]{len(trans_list)}문장 중 {success_count}문장 해석, 문제: {error_message}"
                 )
 
             # 翻译完成，收尾
@@ -290,22 +290,22 @@ class ForNovelTranslate(MultiTurnTranslate):
     ):
         line_sp = line.split("\t")
         if len(line_sp) != 2:
-            return False, f"无法解析行：{line}"
+            return False, f"해석할 수 없는 줄: {line}"
 
         cursor["i"] += 1
         i = cursor["i"]
         if i > len(trans_list) - 1:
-            return False, f"无法解析行：{line}"
+            return False, f"해석할 수 없는 줄: {line}"
 
         line_id = line_sp[1]
         if str(trans_list[i].index) not in line_id:
-            return False, f"{line_id}句id未对应{trans_list[i].index}"
+            return False, f"{line_id}번 문장 id가 {trans_list[i].index}와 맞지 않음"
 
         line_dst = line_sp[0]
         if trans_list[i].post_src != "" and line_dst == "":
-            return False, f"第{line_id}句空白"
+            return False, f"{line_id}번째 문장이 비어 있음"
         if "�" in line_dst:
-            return False, f"第{line_id}句包含乱码：{line_dst}"
+            return False, f"{line_id}번째 문장에 깨진 문자가 있음: {line_dst}"
 
         line_dst = self._normalize_parsed_translation_text(
             line_dst, trans_list[i], n_symbol

@@ -199,8 +199,8 @@ class AutoTranslateTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(event['filename'] == 'chapter.json' for event in events))
         self.assertTrue(all(call.args == ('test-project',) for call in report.call_args_list))
         self.assertIn('ForGal-tool', events[0]['message'])
-        self.assertIn('切换 ForGal-markdown', events[0]['message'])
-        self.assertIn('标记翻译失败', events[-1]['message'])
+        self.assertIn('ForGal-markdown(으)로 전환', events[0]['message'])
+        self.assertIn('번역 실패로 표시', events[-1]['message'])
 
     async def test_error_reporting_failure_does_not_interrupt_retry(self):
         from unittest.mock import patch

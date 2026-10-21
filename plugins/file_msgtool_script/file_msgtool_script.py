@@ -75,10 +75,10 @@ class file_plugin(GFilePlugin):
         self._jis_targets = set()
         if self.jis_substitution:
             if self.jis_unmapped not in ("error", "space"):
-                raise ValueError("jis_unmapped 必须为 error 或 space")
+                raise ValueError("jis_unmapped는 error 또는 space여야 합니다")
             if self._has_extra_option("-p", "--patched-encoding", "-P", "--patched-code-page"):
                 raise ValueError(
-                    "JIS 替换固定使用 CP932，请移除 extra_args 中的输出编码参数 "
+                    "JIS 치환은 항상 CP932를 쓰므로 extra_args에서 출력 인코딩 인수를 지우세요 "
                     "-p/--patched-encoding/-P/--patched-code-page"
                 )
             with open(self._jis_resource("subs_cn_jp.json"), encoding="utf-8") as resource:
@@ -160,8 +160,8 @@ class file_plugin(GFilePlugin):
     def _run(self, args: list) -> str:
         if not os.path.isfile(self.msg_tool):
             raise RuntimeError(
-                f"找不到 msg-tool 可执行文件：{self.msg_tool}"
-                f"（可修改插件配置 msg_tool_path）"
+                f"msg-tool 실행 파일을 찾을 수 없습니다: {self.msg_tool}"
+                f"(플러그인 설정 msg_tool_path로 바꿀 수 있습니다)"
             )
         # -x/-X：让 msg-tool 在任务失败时返回非 0 退出码，便于这里判断成败
         cmd = [self.msg_tool, "-x", "1", "-X", "2"] + args
@@ -169,10 +169,10 @@ class file_plugin(GFilePlugin):
             proc = subprocess.run(cmd, capture_output=True, timeout=self.timeout)
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(
-                f"msg-tool 执行超时（{self.timeout}s）：{' '.join(cmd)}"
+                f"msg-tool 실행 시간 초과({self.timeout}s): {' '.join(cmd)}"
             ) from exc
         except OSError as exc:
-            raise RuntimeError(f"启动 msg-tool 失败：{exc}") from exc
+            raise RuntimeError(f"msg-tool 시작 실패: {exc}") from exc
 
         stdout = proc.stdout.decode("utf-8", errors="replace")
         stderr = proc.stderr.decode("utf-8", errors="replace")
@@ -188,7 +188,7 @@ class file_plugin(GFilePlugin):
         if args and args[0] == "import" and (proc.returncode != 0 or encoding_warning) and encoding_error:
             encoding = self._encoding_codec(encoding_error.group(1))
             samples = []
-            source_path = args[-3] if len(args) >= 4 else "（未知文件）"
+            source_path = args[-3] if len(args) >= 4 else "(알 수 없는 파일)"
             if encoding and len(args) >= 4:
                 try:
                     with open(args[-2], encoding="utf-8") as resource:
@@ -201,13 +201,13 @@ class file_plugin(GFilePlugin):
             ))
         if proc.returncode != 0:
             raise RuntimeError(
-                f"msg-tool 执行失败（exit={proc.returncode}）：{diagnostic or '(无输出)'}"
+                f"msg-tool 실행 실패(exit={proc.returncode}): {diagnostic or '(출력 없음)'}"
             )
         if encoding_warning:
             if not args or args[0] != "import":
-                raise RuntimeError("msg-tool 导出文本时发生编码丢失：\n" + diagnostic[:4000])
+                raise RuntimeError("msg-tool이 텍스트를 내보내는 중 인코딩 손실 발생:\n" + diagnostic[:4000])
             raise RuntimeError(self._encoding_failure(
-                args[-3] if len(args) >= 4 else "（未知文件）", "工具指定编码", [],
+                args[-3] if len(args) >= 4 else "(알 수 없는 파일)", "도구 지정 인코딩", [],
                 diagnostic=diagnostic[:4000],
             ))
         if re.search(r"(?im)^\s*Warning:", diagnostic):
@@ -293,7 +293,7 @@ class file_plugin(GFilePlugin):
         for index, row in enumerate(rows, 1):
             if not isinstance(row, dict):
                 continue
-            for field, label in (("name", "人名"), ("message", "正文")):
+            for field, label in (("name", "이름"), ("message", "본문")):
                 text = row.get(field)
                 if not isinstance(text, str):
                     continue
@@ -311,37 +311,37 @@ class file_plugin(GFilePlugin):
                         if len(bad) == 8:
                             break
                     if bad:
-                        samples.append(f"第 {index} 条{label}（{field}）：" + "、".join(bad))
+                        samples.append(f"{index}번째 {label}({field}): " + ", ".join(bad))
                         if len(samples) == 5:
                             return samples
         return samples
 
     def _encoding_failure(self, source_path: str, encoding: str, samples: list[str], *,
                           preflight: bool = False, diagnostic: str = "") -> str:
-        label = {"cp932": "CP932 / Shift-JIS", "gbk": "GBK（msg-tool 的 gb2312）"}.get(encoding, encoding)
+        label = {"cp932": "CP932 / Shift-JIS", "gbk": "GBK(msg-tool의 gb2312)"}.get(encoding, encoding)
         lines = [
-            f"{'回填前编码检查未通过' if preflight else '脚本回填编码失败'}：{source_path}",
-            f"输出编码 {label} 无法表示待写入的部分字符，已阻止写出，原脚本和已有输出未修改。",
+            f"{'되쓰기 전 인코딩 검사 실패' if preflight else '스크립트 되쓰기 인코딩 실패'}: {source_path}",
+            f"출력 인코딩 {label}로 쓸 문자 일부를 표현할 수 없어 쓰기를 막았습니다. 원본 스크립트와 기존 출력은 바뀌지 않았습니다.",
         ]
         if samples:
-            lines.append("无法编码的字符示例（最多 5 处，每处 8 种字符）：")
+            lines.append("인코딩할 수 없는 문자 예(최대 5곳, 곳마다 8종):")
             lines.extend(samples)
         if encoding == "cp932" and not self.jis_substitution:
             lines.append(
-                "游戏需要保持日文编码时：在「Galgame脚本文件」插件设置中开启「JIS 替换」"
-                "（jis_substitution），并配合生成的 uif_config.json 与 UIF 或对应替换字体还原显示。"
+                "게임이 일본어 인코딩을 유지해야 하면 “갈게임 스크립트 파일” 플러그인 설정에서 “JIS 치환”"
+                "(jis_substitution)을 켜고, 생성된 uif_config.json과 UIF 또는 대응 치환 글꼴로 표시를 복원하세요."
             )
         elif self.jis_substitution:
-            lines.append("当前已开启 JIS 替换；请检查上述字符、脚本保留内容及额外工具参数是否仍引入不可编码字符。")
+            lines.append("JIS 치환이 켜져 있습니다. 위 문자, 스크립트에 남긴 내용, 추가 도구 인수가 인코딩할 수 없는 문자를 넣는지 확인하세요.")
         lines.extend([
-            "游戏支持其他编码时：修改插件的「输出编码」（patched_encoding），例如简体中文 GB2312"
-            "（gb2312）或 UTF-8（utf8），需与游戏支持的编码一致。",
-            "仅修改「原文编码」（source_encoding）不会改变回填编码；若 extra_args 中设置了 "
-            "-p/--patched-encoding 或 -P/--patched-code-page，请同步修改或移除。",
-            "也可修改提示中的字符。保存设置或译文后重新构建结果即可，无需重新翻译。",
+            "게임이 다른 인코딩을 지원하면 플러그인의 “출력 인코딩”(patched_encoding)을 바꾸세요. 예: 중국어 간체 GB2312"
+            "(gb2312) 또는 UTF-8(utf8). 게임이 지원하는 인코딩과 같아야 합니다.",
+            "“원문 인코딩”(source_encoding)만 바꾸면 되쓰기 인코딩은 바뀌지 않습니다. extra_args에 "
+            "-p/--patched-encoding 또는 -P/--patched-code-page가 있으면 함께 고치거나 지우세요.",
+            "안내된 문자를 고쳐도 됩니다. 설정이나 번역문을 저장한 뒤 결과를 다시 만들면 되며 다시 번역할 필요는 없습니다.",
         ])
         if diagnostic:
-            lines.append("原始诊断：\n" + diagnostic)
+            lines.append("원본 진단:\n" + diagnostic)
         return "\n".join(lines)
 
     # ------------------------------------------------------------------ #
@@ -379,8 +379,8 @@ class file_plugin(GFilePlugin):
                 row[key] = "".join(converted)
         if remain and self.jis_unmapped == "error":
             raise RuntimeError(
-                "JIS 替换字典未覆盖以下字符，已阻止写出：" + "".join(sorted(remain))
-                + "。请修改译文，或将 jis_unmapped 设置为 space（替换为全角空格）。"
+                "JIS 치환 사전에 없는 문자가 있어 쓰기를 막았습니다: " + "".join(sorted(remain))
+                + ". 번역문을 고치거나 jis_unmapped를 space(전각 공백으로 대체)로 설정하세요."
             )
         return {"used": used, "remain": remain, "repeat": repeat}
 
@@ -400,7 +400,7 @@ class file_plugin(GFilePlugin):
                 sources = substitution.get("source_characters", "")
                 targets = substitution.get("target_characters", "")
                 if len(sources) != len(targets):
-                    raise RuntimeError(f"UIF 字符替换映射长度不一致：{config_path}")
+                    raise RuntimeError(f"UIF 문자 치환 매핑 길이가 맞지 않습니다: {config_path}")
                 previous = {
                     "used": dict(zip(targets, sources)),
                     "remain": set(substitution.get("remain", [])),
@@ -412,7 +412,7 @@ class file_plugin(GFilePlugin):
                 remain.update(entry["remain"])
                 repeat.update(entry["repeat"])
             if len(set(used.values())) != len(used):
-                raise RuntimeError(f"已有 UIF 映射与 JIS 替换字典冲突：{config_path}")
+                raise RuntimeError(f"기존 UIF 매핑이 JIS 치환 사전과 충돌합니다: {config_path}")
             characters = sorted(used)
             substitution.update({
                 "enable": True,
@@ -443,13 +443,13 @@ class file_plugin(GFilePlugin):
                     os.unlink(temporary)
         if stats["remain"]:
             LOGGER.warning(
-                f"[{self.pname}] JIS 替换未匹配字符已替换为全角空格："
-                + "".join(sorted(stats["remain"])) + f"；详见 {config_path} 中的 remain"
+                f"[{self.pname}] JIS 치환에 없는 문자를 전각 공백으로 바꿨습니다: "
+                + "".join(sorted(stats["remain"])) + f"; 자세한 내용은 {config_path}의 remain"
             )
         if stats["repeat"]:
             LOGGER.warning(
-                f"[{self.pname}] 原文/译文含有 JIS 替换目标字符，请检查游戏内显示："
-                + "".join(sorted(stats["repeat"])) + f"；详见 {config_path} 中的 repeat"
+                f"[{self.pname}] 원문/번역문에 JIS 치환 대상 문자가 있습니다. 게임 화면을 확인하세요: "
+                + "".join(sorted(stats["repeat"])) + f"; 자세한 내용은 {config_path}의 repeat"
             )
 
     # ------------------------------------------------------------------ #
@@ -503,7 +503,7 @@ class file_plugin(GFilePlugin):
                     payload = json.load(cache)
                 if (not force_reload and isinstance(payload, dict) and payload.get("fingerprint") == fingerprint
                         and self._valid_cached_rows(payload.get("rows"))):
-                    LOGGER.debug(f"[{self.pname}] 提取缓存命中：{file_path}")
+                    LOGGER.debug(f"[{self.pname}] 추출 캐시 적중: {file_path}")
                     return payload["rows"]
             except (OSError, ValueError):
                 pass  # 缺失、损坏或不可读的缓存均重新提取。
@@ -522,7 +522,7 @@ class file_plugin(GFilePlugin):
                     json.dump({"fingerprint": fingerprint, "rows": rows}, cache, ensure_ascii=False)
                 os.replace(temporary, cache_path)
             except OSError as exc:
-                LOGGER.debug(f"[{self.pname}] 无法写入提取缓存：{exc}")
+                LOGGER.debug(f"[{self.pname}] 추출 캐시를 쓸 수 없음: {exc}")
             finally:
                 if temporary and os.path.exists(temporary):
                     try:
@@ -538,7 +538,7 @@ class file_plugin(GFilePlugin):
     def load_file(self, file_path: str, force_reload: bool = False) -> list:
         """默认复用持久化提取缓存，每次返回独立列表供翻译流程修改。"""
         if not os.path.isfile(file_path):
-            raise TypeError(f"文件不存在：{file_path}")
+            raise TypeError(f"파일이 없습니다: {file_path}")
         rows = self._load_cached(file_path, force_reload=force_reload)
         out_path = self._output_path_for(file_path)
         if out_path:
@@ -550,7 +550,7 @@ class file_plugin(GFilePlugin):
         加载脚本文件，返回 [{message, index, org_message, name?}, ...]。
         """
         if not os.path.isfile(file_path):
-            raise TypeError(f"文件不存在：{file_path}")
+            raise TypeError(f"파일이 없습니다: {file_path}")
 
         export_type = "json"
         with tempfile.TemporaryDirectory(prefix="gt_msgtool_") as tmp_dir:
@@ -560,21 +560,21 @@ class file_plugin(GFilePlugin):
             )
             if not os.path.isfile(out_json):
                 # msg-tool 判定该脚本不含任何文本（Ignored），视为空文件
-                LOGGER.warning(f"[{self.pname}] {file_path} 未提取到任何文本，跳过")
+                LOGGER.warning(f"[{self.pname}] {file_path} 에서 추출한 텍스트가 없어 건너뜀")
                 return []
             with open(out_json, "r", encoding="utf-8") as f:
                 raw_list = json.load(f)
 
         if not isinstance(raw_list, list):
-            raise RuntimeError(f"msg-tool 导出的 {export_type} 不是列表：{file_path}")
+            raise RuntimeError(f"msg-tool이 내보낸 {export_type}이(가) 목록이 아닙니다: {file_path}")
 
         result = []
         for i, item in enumerate(raw_list):
             if not isinstance(item, dict):
-                raise RuntimeError(f"msg-tool 导出的第 {i + 1} 项不是对象：{item!r}")
+                raise RuntimeError(f"msg-tool이 내보낸 {i + 1}번째 항목이 객체가 아닙니다: {item!r}")
             message = item.get("message")
             if not isinstance(message, str):
-                raise RuntimeError(f"msg-tool 导出的第 {i + 1} 项缺少 message 字段：{item!r}")
+                raise RuntimeError(f"msg-tool이 내보낸 {i + 1}번째 항목에 message 필드가 없습니다: {item!r}")
             row = {"message": message, "index": i + 1, "org_message": message}
             name = item.get("name")
             if isinstance(name, str) and name:
@@ -592,14 +592,14 @@ class file_plugin(GFilePlugin):
         source_path = self._source_path_for(output_path)
         if not source_path:
             raise RuntimeError(
-                f"找不到 {file_path} 对应的原始脚本（gt_input），无法回填；"
-                f"当前 project_dir={self.project_dir or '(空)'}"
+                f"{file_path}에 대응하는 원본 스크립트(gt_input)를 찾을 수 없어 되쓸 수 없습니다. "
+                f"현재 project_dir={self.project_dir or '(비어 있음)'}"
             )
 
         rows = []
         for item in transl_json:
             if not isinstance(item, dict):
-                raise RuntimeError(f"待回填的数据项不是对象：{item!r}")
+                raise RuntimeError(f"되쓸 데이터 항목이 객체가 아닙니다: {item!r}")
             message = item.get("message")
             if not isinstance(message, str):
                 message = "" if message is None else str(message)
@@ -636,7 +636,7 @@ class file_plugin(GFilePlugin):
             self._run(import_args)
 
             if not os.path.isfile(patched_path):
-                raise RuntimeError(f"msg-tool 未生成回填后的脚本：{source_path}")
+                raise RuntimeError(f"msg-tool이 되쓴 스크립트를 만들지 않았습니다: {source_path}")
 
             out_dir = os.path.dirname(output_path)
             if out_dir:

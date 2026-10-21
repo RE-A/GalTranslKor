@@ -55,6 +55,13 @@ class _ServerStatusFilter(logging.Filter):
         "翻译开始时间",
         "开始时间已到",
         "当前使用",
+        # Korean messages of this fork
+        ">>> 번역 시작",
+        "+++ 결과 저장",
+        "총 소요 시간",
+        "번역 시작 시각",
+        "시작 시각 도달",
+        "현재 Sakura worker",
     )
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -102,7 +109,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
             return str(get_plugins_dir() / name / f"{name}.yaml")
 
     def print_plugin_list(plugin_manager: PluginManager):
-        LOGGER.info("插件列表:")
+        LOGGER.info("플러그인 목록:")
         for candidate in plugin_manager.getPluginCandidates():
             plug_path = os.path.dirname(candidate[1])
             plug_name = os.path.basename(plug_path)
@@ -119,22 +126,22 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
 
             LOGGER.info(f"  > {plug_name} ({plug_type} Plugin)")
             LOGGER.info(
-                f"    名称：{plug_info.name} v{plug_info.version} by {plug_info.author}"
+                f"    이름: {plug_info.name} v{plug_info.version} by {plug_info.author}"
             )
-            LOGGER.info(f"    描述: {plug_info.description}")
-            LOGGER.info(f"    路径: {plug_path}")
+            LOGGER.info(f"    설명: {plug_info.description}")
+            LOGGER.info(f"    경로: {plug_path}")
             if plug_settings:
-                LOGGER.info(f"    设置: ")
+                LOGGER.info(f"    설정: ")
                 for key, value in plug_settings.items():
                     LOGGER.info(f"     - {key}: {value}")
             LOGGER.info("---------------------------------")
-        LOGGER.info("* 要修改插件的设置，可以进入插件路径，编辑其中的.yaml文件。")
+        LOGGER.info("* 플러그인 설정을 바꾸려면 플러그인 경로의 .yaml 파일을 편집하세요.")
 
     start_time = time.time()
     _raise_if_stop_requested(stop_event)
 
     if translator not in TRANSLATOR_SUPPORTED.keys():
-        raise Exception(f"不支持的翻译器: {translator}")
+        raise Exception(f"지원하지 않는 번역기: {translator}")
 
     # 日志初始化 — 添加当前 job 的 handler（不再全局 clear，避免并发 job 互相干扰）
     _job_handlers: list[logging.Handler] = []
@@ -166,7 +173,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
     try:
         start_time_text = cfg.getCommonConfigSection().get("start_time", "")
         if start_time_text:
-            LOGGER.info(f"翻译开始时间: {start_time_text}")
+            LOGGER.info(f"번역 시작 시각: {start_time_text}")
             start_transl_time = datetime.datetime.strptime(start_time_text, "%H:%M")
             while True:
                 _raise_if_stop_requested(stop_event)
@@ -175,7 +182,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
                     now.hour == start_transl_time.hour
                     and now.minute == start_transl_time.minute
                 ):
-                    LOGGER.info("开始时间已到，开始翻译...")
+                    LOGGER.info("시작 시각 도달, 번역을 시작합니다...")
                     break
                 time.sleep(1)
 
@@ -187,7 +194,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
         ]:
             _raise_if_stop_requested(stop_event)
             if not isPathExists(dir_path):
-                LOGGER.info("%s 文件夹不存在，让我们创建它...", dir_path)
+                LOGGER.info("%s 폴더가 없어 새로 만듭니다...", dir_path)
                 mkdir(dir_path)
         # 插件初始化
         plugin_manager = PluginManager(
@@ -206,7 +213,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
             if candidate:
                 new_candidates.append(candidate)
             else:
-                LOGGER.warning(f"未找到文本插件: {tname}，跳过该插件")
+                LOGGER.warning(f"텍스트 플러그인을 찾지 못함: {tname}, 건너뜀")
         fname = cfg.getFilePlugin()
         if is_auto_file_plugin(fname):
             # 自动识别：按输入目录里实际出现的文件类型加载所需的全部文件插件
@@ -214,14 +221,14 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
             fnames = sorted({n for n in detected.values() if n})
             unknown = [os.path.basename(p) for p, n in detected.items() if not n]
             if unknown:
-                LOGGER.warning(f"自动识别文件插件：以下文件无法识别格式，将被跳过: {unknown[:20]}")
-            LOGGER.info(f"自动识别文件插件: {fnames or '无'}")
+                LOGGER.warning(f"파일 플러그인 자동 인식: 다음 파일은 형식을 알 수 없어 건너뜀: {unknown[:20]}")
+            LOGGER.info(f"파일 플러그인 자동 인식: {fnames or '없음'}")
         else:
             fnames = [fname] if fname else []
         for fname in fnames:
             info_path = get_pluginInfo_path(fname)
             candidate = plugin_manager.getPluginCandidateByInfoPath(info_path)
-            assert candidate, f"未找到文件插件: {fname}，请检查设置"
+            assert candidate, f"파일 플러그인을 찾지 못함: {fname}, 설정을 확인하세요"
             new_candidates.append(candidate)
 
         plugin_manager.setPluginCandidates(new_candidates)
@@ -258,7 +265,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
             _raise_if_stop_requested(stop_event)
             await proxyPool.checkAvailablity()
             if not proxyPool.proxies:
-                raise Exception("没有可用的代理，请检查代理设置")
+                raise Exception("사용할 수 있는 프록시가 없습니다. 프록시 설정을 확인하세요")
         if not proxyPool:
             #LOGGER.warning("不使用代理")
             pass
@@ -278,10 +285,10 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
         # 检查更新
         if new_version and new_version[0] != GALTRANSL_VERSION:
             LOGGER.info(
-                f"\033[32m检测到新版本: {new_version[0]}\033[0m  当前版本: {GALTRANSL_VERSION}"
+                f"\033[32m새 버전 발견: {new_version[0]}\033[0m  현재 버전: {GALTRANSL_VERSION}"
             )
             LOGGER.info(
-                f"\033[32m更新地址：https://github.com/xd2333/GalTransl/releases\033[0m"
+                f"\033[32m업데이트 주소: https://github.com/xd2333/GalTransl/releases\033[0m"
             )
 
         if project_conf.get("splitFile", "no") in ["Num","Equal"]:
@@ -294,12 +301,12 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
                 splitFileNum = int(project_conf.get("workersPerProject", -1))
 
             if val == "Num":
-                assert splitFileNum > 10, "DictionaryCountSplitter下分割数量必须大于10"
+                assert splitFileNum > 10, "DictionaryCountSplitter의 분할 수는 10보다 커야 합니다"
                 input_splitter = DictionaryCountSplitter(splitFileNum, cross_num)
             elif val == "Equal":
                 input_splitter = EqualPartsSplitter(splitFileNum, cross_num)
             else:
-                raise Exception(f"不支持的分割方法: {val}")
+                raise Exception(f"지원하지 않는 분할 방식: {val}")
             # 默认的输出合并器
             output_combiner = DictionaryCombiner()
         else:
@@ -322,7 +329,7 @@ async def run_galtransl(cfg: CProjectConfig, translator: str, stop_event=None):
             plugin.plugin_object.gtp_final()
 
         end_time = time.time()
-        LOGGER.info(f"总耗时: {end_time-start_time:.3f}s")
+        LOGGER.info(f"총 소요 시간: {end_time-start_time:.3f}s")
     finally:
         finalize_problem_plugins(cfg)
         # 移除当前 job 添加的 handler，不影响其他并发 job

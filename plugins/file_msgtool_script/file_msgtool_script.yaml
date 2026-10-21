@@ -1,70 +1,70 @@
 Core:
-  Name: Galgame脚本文件
+  Name: 갈게임 스크립트 파일
   Type: file
   Module: file_msgtool_script
-  # 只登记不会与其他文件插件冲突的脚本后缀。
-  # .txt / .bin / .mes 这类后缀在多个引擎间存在歧义（且 .txt 与 file_plaintext_txt 冲突），
-  # 故意不登记；需要时请在项目 config.yaml 里显式写 filePlugin: file_msgtool_script
-  # 并用 Settings.script_type 指定引擎。
+  # 다른 파일 플러그인과 겹치지 않는 스크립트 확장자만 등록합니다.
+  # .txt / .bin / .mes 같은 확장자는 엔진마다 뜻이 달라(그리고 .txt는 file_plaintext_txt와 겹쳐)
+  # 일부러 등록하지 않습니다. 필요하면 프로젝트 config.yaml에 filePlugin: file_msgtool_script를 직접 쓰고
+  # Settings.script_type으로 엔진을 지정하세요.
   Extensions: [".ast", ".asb", ".iet", "._bp", "._bsi", ".cst", ".cstl", ".srcxml", ".csx", ".rld", ".hcb", ".ks", ".soc", ".scn", ".tjs", ".pbd", ".sc", ".s", ".src", ".ws2", ".ybn"]
 
 Documentation:
   Author: cx2333
   Version: 1.1
   Description: >-
-    通过 res/msg_tool.exe（lifegpc/msg-tool）直接读取和写入 galgame 脚本文件。
-    msg-tool 的 json 输出即为 GalTransl 的 [{"name"?, "message"}] 格式，因此无需中间转换。
-    支持 kirikiri、BGI/Ethornell、Yu-Ris、Artemis、CatSystem2、Circus、Musica、QLIE、
-    Softpal、WillPlus/AdvHD、ExHibit、Favorite、Escu:de、Entis GLS 等引擎。
-    可启用 SExtractor 兼容的 JIS 替换，并在输出目录生成 uif_config.json。
+    res/msg_tool.exe(lifegpc/msg-tool)로 갈게임 스크립트 파일을 직접 읽고 씁니다.
+    msg-tool의 json 출력이 이미 GalTransl의 [{"name"?, "message"}] 형식이라 중간 변환이 필요 없습니다.
+    kirikiri, BGI/Ethornell, Yu-Ris, Artemis, CatSystem2, Circus, Musica, QLIE,
+    Softpal, WillPlus/AdvHD, ExHibit, Favorite, Escu:de, Entis GLS 등 여러 엔진을 지원합니다.
+    SExtractor 호환 JIS 치환을 켤 수 있으며 출력 폴더에 uif_config.json을 생성합니다.
 
-Settings: # 这里存放插件的设置
-  msg_tool_path: "" # msg-tool 可执行文件路径，留空则使用程序目录下的 res/msg_tool.exe
-  script_type: "" # 同 -t；留空时 .ks 使用 kirikiri，其他格式由 msg-tool 自动探测
-  source_encoding: "" # 同 -e；留空时 kirikiri 自动探测，其余使用工具默认值；可指定 cp932/utf8/gb2312
-  patched_encoding: "" # 同 -p；留空使用引擎默认回填编码（不跟随 source_encoding）；日文编码无法写入部分中文时可启用 JIS 替换，或选择游戏支持的 utf8/gb2312
-  jis_substitution: false # 使用 SExtractor 字典替换 CP932 不支持的字符；开启后输出编码固定为 CP932，并生成 uif_config.json
-  jis_unmapped: error # 字典未覆盖的字符：error 阻止写出；space 与 SExtractor 一致，替换为全角空格并记录 remain
-  extra_args: [] # 追加给 msg-tool 的额外参数，例如 ["--bgi-disable-append"]；放在文件路径参数之前
-  keep_bilingual: false # 回填时是否把原文一并写回脚本（译文 + 分隔符 + 原文）
-  bilingual_sep: "\n" # keep_bilingual 为 true 时，译文与原文之间的分隔符
-  timeout: 300 # 单个文件的处理超时时间（秒）
-  read_cache: true # 持久缓存提取结果；源文件/解析配置/工具/同目录依赖变化时失效。extra_args 非空时绕过缓存
+Settings: # 플러그인 설정
+  msg_tool_path: "" # msg-tool 실행 파일 경로. 비우면 프로그램 폴더의 res/msg_tool.exe
+  script_type: "" # -t와 같음. 비우면 .ks는 kirikiri, 다른 형식은 msg-tool이 자동 판별
+  source_encoding: "" # -e와 같음. 비우면 kirikiri는 자동 판별, 나머지는 도구 기본값. cp932/utf8/gb2312 지정 가능
+  patched_encoding: "" # -p와 같음. 비우면 엔진 기본 되쓰기 인코딩(source_encoding을 따르지 않음). 일본어 인코딩으로 쓸 수 없는 문자가 있으면 JIS 치환을 켜거나 게임이 지원하는 utf8/gb2312 선택
+  jis_substitution: false # SExtractor 사전으로 CP932가 지원하지 않는 문자를 치환. 켜면 출력 인코딩은 CP932로 고정되고 uif_config.json 생성
+  jis_unmapped: error # 사전에 없는 문자: error는 쓰기 차단, space는 SExtractor처럼 전각 공백으로 바꾸고 remain에 기록
+  extra_args: [] # msg-tool에 추가로 넘길 인수. 예: ["--bgi-disable-append"]. 파일 경로 인수 앞에 들어감
+  keep_bilingual: false # 되쓸 때 원문도 함께 쓸지(번역문 + 구분자 + 원문)
+  bilingual_sep: "\n" # keep_bilingual이 true일 때 번역문과 원문 사이 구분자
+  timeout: 300 # 파일 하나의 처리 제한 시간(초)
+  read_cache: true # 추출 결과를 계속 캐시. 원본 파일/해석 설정/도구/같은 폴더 의존 파일이 바뀌면 무효. extra_args가 있으면 캐시를 쓰지 않음
 
 SettingsSchema:
   msg_tool_path:
-    label: 工具路径
-    description: 留空使用程序自带的 msg_tool.exe。仅在需要更换工具版本时填写可执行文件路径。
+    label: 도구 경로
+    description: 비워 두면 함께 제공되는 msg_tool.exe를 사용합니다. 다른 버전의 도구가 필요할 때만 실행 파일 경로를 입력하세요.
     advanced: true
   script_type:
-    label: 脚本引擎
-    description: 通常选择自动识别。无后缀 BGI 可选择 BGI / Ethornell；手动选择会应用于此插件处理的所有脚本。
+    label: 스크립트 엔진
+    description: "보통 자동 인식이 맞습니다. 확장자 없는 BGI 파일은 BGI / Ethornell을 고를 수 있으며, 직접 고르면 이 플러그인이 처리하는 모든 스크립트에 적용됩니다."
     advanced: false
     options:
     - value: ''
-      label: 自动识别（推荐）
+      label: 자동 인식 (권장)
     - value: bgi
-      label: BGI / Ethornell（含无后缀脚本）
+      label: BGI / Ethornell (확장자 없는 스크립트 포함)
     - value: bgi-bsi
       label: BGI BSI（._bsi）
     - value: bgi-bp
       label: BGI BP（._bp）
     - value: kirikiri
-      label: 吉里吉里 KAG（.ks）
+      label: KiriKiri KAG (.ks)
     - value: kirikiri-scn
-      label: 吉里吉里 SCN（.scn）
+      label: KiriKiri SCN (.scn)
     - value: kirikiri-simple-crypt
-      label: 吉里吉里 SimpleCrypt 文本
+      label: KiriKiri SimpleCrypt 텍스트
     - value: kirikiri-tjs2
-      label: 吉里吉里编译 TJS2
+      label: KiriKiri 컴파일된 TJS2
     - value: kirikiri-tjs-ns0
-      label: 吉里吉里 TJS NS0
+      label: KiriKiri TJS NS0
     - value: artemis
       label: Artemis AST
     - value: artemis-asb
       label: Artemis ASB / IET
     - value: artemis-txt
-      label: Artemis 通用 TXT
+      label: Artemis 일반 TXT
     - value: artemis-panmimisoft-txt
       label: Artemis ぱんみみそふと TXT
     - value: cat-system
@@ -80,7 +80,7 @@ SettingsSchema:
     - value: escude
       label: Escu:de BIN
     - value: escude-list
-      label: Escu:de 列表脚本
+      label: "Escu:de 목록 스크립트"
     - value: ex-hibit
       label: ExHibit RLD
     - value: favorite
@@ -102,76 +102,76 @@ SettingsSchema:
     - value: yaneurao-itufuru
       label: Yaneurao Itufuru
     - value: yuris-txt
-      label: Yu-Ris 场景 TXT
+      label: Yu-Ris 시나리오 TXT
     - value: yuris-ystb
-      label: Yu-Ris 编译脚本 YSTB
+      label: Yu-Ris 컴파일된 스크립트 YSTB
     - value: yuris-yscm
-      label: Yu-Ris 操作码元数据 YSCM
+      label: Yu-Ris opcode 메타데이터 YSCM
     - value: yuris-yser
-      label: Yu-Ris 错误信息 YSER
+      label: Yu-Ris 오류 정보 YSER
     - value: yuris-yscfg
-      label: Yu-Ris 配置 YSCFG
+      label: Yu-Ris 설정 YSCFG
     - value: yuris-ystl
-      label: Yu-Ris 文件列表 YSTL
+      label: Yu-Ris 파일 목록 YSTL
     - value: yuris-yslb
-      label: Yu-Ris 标签 YSLB
+      label: Yu-Ris 라벨 YSLB
     - value: yuris-ysvr
-      label: Yu-Ris 变量 YSVR
+      label: Yu-Ris 변수 YSVR
     - value: yuris-ystd
-      label: Yu-Ris 计数 YSTD
+      label: Yu-Ris 개수 YSTD
   source_encoding:
-    label: 原文编码
-    description: 读取源脚本使用的编码，不改变回填编码。默认对 KAG 脚本自动探测，其他引擎使用工具默认值；出现乱码时再指定。
+    label: 원문 인코딩
+    description: 원본 스크립트를 읽을 때 쓰는 인코딩이며 다시 쓸 때의 인코딩은 바뀌지 않습니다. KAG 스크립트는 기본으로 자동 인식하고 다른 엔진은 도구 기본값을 씁니다. 글자가 깨질 때만 설정하세요.
     advanced: false
     options: &id001
     - value: ''
-      label: 使用默认编码
+      label: 기본 인코딩 사용
     - value: auto
-      label: 自动探测
+      label: 자동 인식
     - value: utf8
       label: UTF-8
     - value: cp932
-      label: 日文 Shift-JIS（CP932）
+      label: 일본어 Shift-JIS (CP932)
     - value: gb2312
-      label: 简体中文 GB2312
+      label: 중국어 간체 GB2312
   patched_encoding:
-    label: 输出编码
-    description: 留空使用引擎默认回填编码，不跟随原文编码。CP932 无法表示部分中文；游戏需要日文编码时可开启 JIS 替换，支持其他编码时可选择 GB2312 或 UTF-8。回填前会检查可确定的编码，失败时提示字符和处理方式。开启 JIS 替换后此项不生效。
+    label: 출력 인코딩
+    description: "비워 두면 엔진의 기본 쓰기 인코딩을 사용하며, 원문 인코딩을 따르지 않습니다. CP932는 일부 문자를 표현할 수 없습니다. 게임이 일본어 인코딩을 요구하면 JIS 치환을 켜고, 다른 인코딩을 지원하면 GB2312나 UTF-8을 고르세요. 쓰기 전에 인코딩을 검사하며 실패하면 해당 문자와 처리 방식을 알려 줍니다. JIS 치환을 켜면 이 설정은 무시됩니다."
     advanced: false
     options: *id001
   jis_substitution:
-    label: JIS 替换
-    description: 使用 SExtractor 字典将 CP932 无法表示的中文替换为日文字符，以 CP932 回填，并在输出根目录生成 uif_config.json。需配合 UIF 或对应替换字体还原显示。
+    label: JIS 치환
+    description: "SExtractor 사전으로 CP932가 표현하지 못하는 한자를 일본어 문자로 바꿔 CP932로 쓰고, 출력 루트에 uif_config.json을 생성합니다. 화면 표시를 복원하려면 UIF나 대응하는 치환 글꼴이 필요합니다."
     advanced: false
   jis_unmapped:
-    label: JIS 未匹配字符处理
-    description: 仅在 JIS 替换开启时生效。默认阻止写出；选择全角空格与 SExtractor 行为一致，并将丢失的字符记录到 uif_config.json 的 remain 中。
+    label: JIS 매핑 불가 문자 처리
+    description: JIS 치환을 켰을 때만 적용됩니다. 기본은 쓰기를 막습니다. 전각 공백을 고르면 SExtractor와 같이 동작하며 잃은 문자를 uif_config.json의 remain에 기록합니다.
     advanced: true
     options:
     - value: error
-      label: 报错并停止写出（推荐）
+      label: 오류를 알리고 쓰기 중지 (권장)
     - value: space
-      label: 替换为全角空格并记录
+      label: 전각 공백으로 바꾸고 기록
   extra_args:
-    label: 额外工具参数
-    description: 传给 msg-tool 的命令行参数，每行一个参数或参数值。填写后会绕过读取缓存。
+    label: 추가 도구 인수
+    description: msg-tool에 넘길 명령줄 인수. 한 줄에 인수 또는 인수 값 하나. 입력하면 캐시 읽기를 건너뜁니다.
     advanced: true
   keep_bilingual:
-    label: 保留原文
-    description: 回填时在译文后追加原文。游戏可能有字数和排版限制，启用后请检查游戏内显示。
+    label: 원문 유지
+    description: 다시 쓸 때 번역문 뒤에 원문을 붙입니다. 게임에 길이·배치 제한이 있을 수 있으니 켠 뒤 게임 화면을 확인하세요.
     advanced: false
   bilingual_sep:
-    label: 双语分隔符
-    description: 译文与原文之间的分隔内容，仅在保留原文时生效。默认是一处换行。
+    label: 대역 구분자
+    description: 번역문과 원문 사이의 구분자. 원문을 유지할 때만 적용되며 기본은 줄바꿈 하나입니다.
     advanced: true
     multiline: true
   timeout:
-    label: 处理超时（秒）
-    description: 单个文件调用工具的最长等待时间，超时会停止该次处理。大型脚本可适当增加。
+    label: 처리 제한 시간(초)
+    description: 파일 하나에 도구를 호출할 때 기다리는 최대 시간. 초과하면 해당 실행을 중지합니다. 큰 스크립트는 더 큰 값이 필요할 수 있습니다.
     advanced: true
     min: 1
     step: 1
   read_cache:
-    label: 启用读取缓存
-    description: 复用已提取的文本以加快浏览和重复读取。源文件、配置或工具变化后自动重新提取。
+    label: 읽기 캐시 사용
+    description: "추출한 텍스트를 재사용해 보기와 반복 읽기를 빠르게 합니다. 원본 파일, 설정, 도구가 바뀌면 자동으로 다시 추출합니다."
     advanced: true

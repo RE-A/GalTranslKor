@@ -95,7 +95,7 @@ def _discover_problem_types(project_dir):
             ):
                 raise TypeError("GProblemPlugin.get_problem_types must return a list of name/description objects")
         except Exception:
-            LOGGER.exception("问题插件 %s 读取问题类型失败", plugin.name)
+            LOGGER.exception("문제 플러그인 %s의 문제 종류를 읽지 못함", plugin.name)
             continue
         for item in types:
             name = item["name"].strip()
@@ -133,7 +133,7 @@ def load_problem_plugins(project_config):
         if candidate and candidate not in candidates:
             candidates.append(candidate)
         elif not candidate:
-            LOGGER.warning("未找到问题插件: %s，跳过该插件", name)
+            LOGGER.warning("문제 플러그인을 찾지 못함: %s, 건너뜀", name)
     manager.setPluginCandidates(candidates)
     manager.loadPlugins()
     project_conf = copy.deepcopy(getattr(project_config, "getCommonConfigSection", lambda: {})())
@@ -147,10 +147,10 @@ def load_problem_plugins(project_config):
             plugin_conf = copy.deepcopy(plugin.yaml_dict)
             module = plugin_conf["Core"]["Module"]
             plugin_conf["Settings"] = resolve_plugin_settings(plugin_conf, config_data, module)
-            LOGGER.info("加载问题插件: %s", plugin.name)
+            LOGGER.info("문제 플러그인 불러오는 중: %s", plugin.name)
             plugin.plugin_object.gtp_init(plugin_conf, copy.deepcopy(project_conf))
         except Exception:
-            LOGGER.exception("问题插件 %s 初始化失败", plugin.name)
+            LOGGER.exception("문제 플러그인 %s 초기화 실패", plugin.name)
             continue
         plugins.append(plugin)
     project_config.pPlugins = plugins
@@ -163,7 +163,7 @@ def finalize_problem_plugins(project_config):
         try:
             plugin.plugin_object.gtp_final()
         except Exception:
-            LOGGER.exception("问题插件 %s 结束处理失败", plugin.name)
+            LOGGER.exception("문제 플러그인 %s 종료 처리 실패", plugin.name)
     project_config.pPlugins = None
 
 
@@ -192,7 +192,7 @@ def find_problems(
                         existing.add(item)
                         additions.append(item)
             except Exception:
-                LOGGER.exception("问题插件 %s 执行失败 (index=%s)", plugin.name, tran.index)
+                LOGGER.exception("문제 플러그인 %s 실행 실패 (index=%s)", plugin.name, tran.index)
         if additions:
             extra = ", ".join(additions)
             tran.problem = f"{tran.problem}, {extra}" if tran.problem else extra

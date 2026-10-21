@@ -29,7 +29,7 @@ fn ensure_backend_ready_inner(resource_dir: Option<PathBuf>, hide_console: bool,
                 return Ok(BackendConnection { url: format!("http://{address}") });
             }
             if Instant::now() >= deadline {
-                return Err("未连接到开发后端，请先运行 run_desktop_dev.bat 或启动 run_backend.py".to_string());
+                return Err("개발용 백엔드에 연결되지 않았습니다. 먼저 run_desktop_dev.bat을 실행하거나 run_backend.py를 시작하세요".to_string());
             }
             std::thread::sleep(Duration::from_millis(100));
         }
@@ -44,7 +44,7 @@ async fn ensure_backend_ready(app: tauri::AppHandle, hide_console: Option<bool>,
         ensure_backend_ready_inner(resource_dir, hide_console.unwrap_or(true), timeout_ms)
     })
     .await
-    .map_err(|e| format!("后端启动任务失败: {e}"))?
+    .map_err(|e| format!("백엔드 시작 작업 실패: {e}"))?
 }
 
 /// 「隐藏服务端控制台」这个偏好的落盘位置。
@@ -98,7 +98,7 @@ fn windows_shell_open(path: &str) -> Result<(), String> {
         let pidl = ILCreateFromPathW(PCWSTR(wide.as_ptr()));
         if pidl.is_null() {
             CoUninitialize();
-            return Err(format!("无法解析路径: {}", win_path));
+            return Err(format!("경로를 해석할 수 없습니다: {}", win_path));
         }
 
         let hr = SHOpenFolderAndSelectItems(pidl, None, 0);
@@ -107,7 +107,7 @@ fn windows_shell_open(path: &str) -> Result<(), String> {
         CoUninitialize();
 
         if let Err(e) = hr {
-            return Err(format!("打开 Explorer 失败: {}", e));
+            return Err(format!("Explorer를 열지 못했습니다: {}", e));
         }
     }
     Ok(())
@@ -123,7 +123,7 @@ fn windows_explorer_select(path: &str) -> Result<(), String> {
         .arg(&win_path)
         .creation_flags(CREATE_NO_WINDOW)
         .spawn()
-        .map_err(|e| format!("定位文件失败: {}", e))?;
+        .map_err(|e| format!("파일 위치를 찾지 못했습니다: {}", e))?;
     Ok(())
 }
 
@@ -141,21 +141,21 @@ fn open_folder(path: String) -> Result<(), String> {
             .arg(&win_path)
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
-            .map_err(|e| format!("打开文件夹失败: {}", e))?;
+            .map_err(|e| format!("폴더를 열지 못했습니다: {}", e))?;
     }
     #[cfg(target_os = "macos")]
     {
         std::process::Command::new("open")
             .arg(&path)
             .spawn()
-            .map_err(|e| format!("打开文件夹失败: {}", e))?;
+            .map_err(|e| format!("폴더를 열지 못했습니다: {}", e))?;
     }
     #[cfg(target_os = "linux")]
     {
         std::process::Command::new("xdg-open")
             .arg(&path)
             .spawn()
-            .map_err(|e| format!("打开文件夹失败: {}", e))?;
+            .map_err(|e| format!("폴더를 열지 못했습니다: {}", e))?;
     }
     Ok(())
 }
@@ -166,7 +166,7 @@ fn reveal_file(path: String) -> Result<(), String> {
     {
         if let Err(shell_error) = windows_shell_open(&path) {
             windows_explorer_select(&path)
-                .map_err(|fallback_error| format!("{}；备用方式也失败: {}", shell_error, fallback_error))?;
+                .map_err(|fallback_error| format!("{}; 대체 방법도 실패: {}", shell_error, fallback_error))?;
         }
         return Ok(());
     }
@@ -176,7 +176,7 @@ fn reveal_file(path: String) -> Result<(), String> {
             .arg("-R")
             .arg(&path)
             .spawn()
-            .map_err(|e| format!("定位文件失败: {}", e))?;
+            .map_err(|e| format!("파일 위치를 찾지 못했습니다: {}", e))?;
     }
     #[cfg(target_os = "linux")]
     {
@@ -187,7 +187,7 @@ fn reveal_file(path: String) -> Result<(), String> {
         std::process::Command::new("xdg-open")
             .arg(&parent)
             .spawn()
-            .map_err(|e| format!("定位文件失败: {}", e))?;
+            .map_err(|e| format!("파일 위치를 찾지 못했습니다: {}", e))?;
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -197,25 +197,25 @@ fn reveal_file(path: String) -> Result<(), String> {
 
 #[tauri::command]
 fn create_dir(path: String) -> Result<(), String> {
-    std::fs::create_dir_all(&path).map_err(|e| format!("创建目录失败: {}", e))
+    std::fs::create_dir_all(&path).map_err(|e| format!("폴더를 만들지 못했습니다: {}", e))
 }
 
 #[tauri::command]
 fn write_text_file(path: String, content: String) -> Result<(), String> {
-    std::fs::write(&path, content).map_err(|e| format!("写入文件失败: {}", e))
+    std::fs::write(&path, content).map_err(|e| format!("파일을 쓰지 못했습니다: {}", e))
 }
 
 #[tauri::command]
 fn copy_files(sources: Vec<String>, destination_dir: String) -> Result<(), String> {
-    std::fs::create_dir_all(&destination_dir).map_err(|e| format!("创建目录失败: {}", e))?;
+    std::fs::create_dir_all(&destination_dir).map_err(|e| format!("폴더를 만들지 못했습니다: {}", e))?;
     for src in &sources {
         let file_name = std::path::Path::new(src)
             .file_name()
-            .ok_or_else(|| format!("无效的文件路径: {}", src))?
+            .ok_or_else(|| format!("잘못된 파일 경로: {}", src))?
             .to_string_lossy()
             .to_string();
         let dest = std::path::Path::new(&destination_dir).join(&file_name);
-        std::fs::copy(src, &dest).map_err(|e| format!("复制文件失败: {} → {} ({})", src, dest.display(), e))?;
+        std::fs::copy(src, &dest).map_err(|e| format!("파일 복사 실패: {} → {} ({})", src, dest.display(), e))?;
     }
     Ok(())
 }

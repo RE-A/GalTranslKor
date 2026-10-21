@@ -247,9 +247,9 @@ async def run_job_async(
         try:
             stale = cleanup_stale_cache_temp_files(cfg.getCachePath())
             if stale:
-                LOGGER.info(f"[cache]启动前清理了 {stale} 个残留临时文件（*.json.tmp）")
+                LOGGER.info(f"[cache]시작 전 남은 임시 파일 {stale}개 정리(*.json.tmp)")
         except Exception as ex:  # noqa: BLE001 - 清理失败不该挡住翻译
-            LOGGER.warning(f"[cache]清理残留临时文件失败：{str(ex)}")
+            LOGGER.warning(f"[cache]남은 임시 파일 정리 실패: {str(ex)}")
         await run_galtransl(cfg, spec.translator, stop_event=stop_event)
         current_state.status = "completed"
         current_state.success = True
@@ -265,11 +265,11 @@ async def run_job_async(
             current_state.gendic_added_entries = added_entries
             current_state.gendic_duplicated_entries = duplicated_entries
             if partial_saved:
-                current_state.error = f"已停止 GenDic，已使用当前结果生成字典，新增{added_entries}条，重复{duplicated_entries}条"
+                current_state.error = f"GenDic을 중지하고 현재 결과로 사전을 만들었습니다. 추가 {added_entries}개, 중복 {duplicated_entries}개"
             else:
-                current_state.error = "用户请求停止翻译"
+                current_state.error = "사용자가 번역 중지를 요청함"
         else:
-            current_state.error = "用户请求停止翻译"
+            current_state.error = "사용자가 번역 중지를 요청함"
     except KeyboardInterrupt:
         current_state.status = "cancelled"
         current_state.error = get_text("goodbye", GT_LANG)
@@ -310,9 +310,9 @@ async def run_job_async(
             try:
                 compacted = await compact_cache_append_logs(cfg.getCachePath())
                 if compacted > 0:
-                    LOGGER.info(f"[cache]停止翻译后已合并 {compacted} 个增量缓存文件")
+                    LOGGER.info(f"[cache]번역 중지 후 증분 캐시 파일 {compacted}개 병합")
             except Exception as ex:
-                LOGGER.warning(f"[cache]停止翻译后合并增量缓存失败：{str(ex)}")
+                LOGGER.warning(f"[cache]번역 중지 후 증분 캐시 병합 실패: {str(ex)}")
         current_state.finished_at = _utcnow_text()
         update_runtime_status(spec.project_dir, workers_active=0)
 

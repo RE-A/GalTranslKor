@@ -550,8 +550,8 @@ class GenDic(BaseTranslate):
         self.progress_done = 0
         self.progress_started_at = time.monotonic()
         self._update_runtime(
-            stage="GenDic 术语提取中",
-            current_file="准备提取任务",
+            stage="GenDic 용어 추출 중",
+            current_file="추출 작업 준비",
             workers_active=0,
             workers_configured=int(self.wokers or 1),
             file_totals={self.progress_display_name: int(total_tasks)},
@@ -578,7 +578,7 @@ class GenDic(BaseTranslate):
         entry = {
             "__cache_key": cache_key,
             "pre_dst": "OK" if success else "(Failed)",
-            "problem": "" if success else (message or "GenDic 任务失败"),
+            "problem": "" if success else (message or "GenDic 작업 실패"),
         }
         line = json.dumps(entry, ensure_ascii=False)
         with self.progress_lock:
@@ -657,7 +657,7 @@ class GenDic(BaseTranslate):
                 if isinstance(e, JobCancelledError):
                     raise
                 error_message = (
-                    f"GenDic {task_label} {task_index} LLM请求失败，已重试{self.gendic_max_api_retries}次，放弃: {e}"
+                    f"GenDic {task_label} {task_index} LLM 요청 실패, {self.gendic_max_api_retries}회 재시도 후 포기: {e}"
                 )
                 LOGGER.error(error_message)
                 self._record_runtime_error(
@@ -680,7 +680,7 @@ class GenDic(BaseTranslate):
                     session.add_turn(prompt, content, reasoning)
                 return content
 
-        warning_message = f"GenDic {task_label} {task_index} 返回空响应，放弃"
+        warning_message = f"GenDic {task_label} {task_index} 빈 응답, 포기"
         LOGGER.warning(warning_message)
         self._record_runtime_error(
             kind="parse",
@@ -714,7 +714,7 @@ class GenDic(BaseTranslate):
         prompt = GENDIC_NAME_PROMPT.format(
             fixed="\n".join(fixed_rows[:60]) if fixed_rows else "无", input="\n".join(rows)
         )
-        rsp = await self._ask_gendic(prompt, "人名批次", batch_index)
+        rsp = await self._ask_gendic(prompt, "이름 배치", batch_index)
         if rsp is None:
             return False
 
@@ -737,7 +737,7 @@ class GenDic(BaseTranslate):
                 self._record_runtime_success(index=batch_index, source_preview=src, translation_preview=f"{dst}｜{note}")
 
         if decided == 0:
-            warning_message = f"GenDic 人名批次 {batch_index} 未解析到有效结果，这些名字按原流程处理"
+            warning_message = f"GenDic 이름 배치 {batch_index}에서 올바른 결과를 해석하지 못해 이 이름들은 원래 흐름대로 처리"
             LOGGER.warning(warning_message)
             self._record_runtime_error(kind="parse", message=warning_message, task_index=batch_index, level="warning")
             return False
@@ -780,7 +780,7 @@ class GenDic(BaseTranslate):
         if session is not None and session.turns > 0:
             prompt = GENDIC_FOLLOWUP_PROMPT.format(input=text, hint=hint)
             if session.has_room(len(prompt)):
-                rsp = await self._ask_gendic(prompt, "分片", task_index, session)
+                rsp = await self._ask_gendic(prompt, "조각", task_index, session)
             if rsp is not None:
                 hinted.update(appeared)
                 hinted.update(name_hit)
@@ -790,7 +790,7 @@ class GenDic(BaseTranslate):
                 return await self.llm_gen_dic(text, name_list, task_index, session)
         else:
             prompt = GENDIC_PROMPT.format(input=text, hint=hint)
-            rsp = await self._ask_gendic(prompt, "分片", task_index, session)
+            rsp = await self._ask_gendic(prompt, "조각", task_index, session)
             if rsp is not None and session is not None:
                 hinted.update(appeared)
                 hinted.update(name_hit)
@@ -821,7 +821,7 @@ class GenDic(BaseTranslate):
         if not valid_entries:
             if got_null:
                 return True
-            warning_message = f"GenDic 分片 {task_index} 未解析到有效词条，放弃该分片"
+            warning_message = f"GenDic 조각 {task_index}에서 올바른 항목을 해석하지 못해 이 조각을 포기"
             LOGGER.warning(warning_message)
             self._record_runtime_error(
                 kind="parse",
@@ -938,7 +938,7 @@ class GenDic(BaseTranslate):
         if session is not None and session.turns > 0:
             prompt = GENDIC_REVIEW_FOLLOWUP_PROMPT.format(**prompt_args)
             if session.has_room(len(prompt)):
-                rsp = await self._ask_gendic(prompt, "审校批次", batch_index, session)
+                rsp = await self._ask_gendic(prompt, "검토 배치", batch_index, session)
             if rsp is None:
                 session.reset()
                 return await self._review_batch(
@@ -947,7 +947,7 @@ class GenDic(BaseTranslate):
                 )
         else:
             prompt = GENDIC_REVIEW_PROMPT.format(**prompt_args)
-            rsp = await self._ask_gendic(prompt, "审校批次", batch_index, session)
+            rsp = await self._ask_gendic(prompt, "검토 배치", batch_index, session)
         if rsp is None:
             return False
         hinted.update(fixed_srcs)
@@ -984,7 +984,7 @@ class GenDic(BaseTranslate):
                     previews.append((src, dst, note))
 
         if invalid or set(decisions) != batch_srcs:
-            warning_message = f"GenDic 审校批次 {batch_index} 未完整返回有效结果，该批保留原结果或按规则筛选，需复核"
+            warning_message = f"GenDic 검토 배치 {batch_index}가 올바른 결과를 모두 반환하지 않아 원래 결과를 유지하거나 규칙으로 걸렀습니다. 다시 확인이 필요합니다"
             LOGGER.warning(warning_message)
             self._record_runtime_error(
                 kind="parse",
@@ -1114,12 +1114,12 @@ class GenDic(BaseTranslate):
         workers = max(1, int(self.wokers or 1))
         sem = asyncio.Semaphore(workers)
         LOGGER.info(
-            f"术语提取完成，{len(direct)}条直接保留，{len(to_review)}条分{len(batches)}批联合终审"
-            f"（术语筛选与译名一致性一次完成，并发{min(workers, len(batches))}）"
+            f"용어 추출 완료: {len(direct)}개 바로 유지, {len(to_review)}개를 {len(batches)}개 배치로 최종 검토"
+            f"(용어 선별과 번역어 일관성 검토를 한 번에, 동시 {min(workers, len(batches))})"
         )
         self._update_runtime(
-            stage="GenDic 联合终审中",
-            current_file=f"终审 0/{len(batches)}",
+            stage="GenDic 최종 검토 중",
+            current_file=f"최종 검토 0/{len(batches)}",
             workers_active=min(workers, len(batches)),
             file_totals={self.progress_display_name: self.progress_done + len(batches)},
         )
@@ -1132,16 +1132,16 @@ class GenDic(BaseTranslate):
                         batch, index, all_text, line_starts, speakers, review_ref,
                         catalog=catalog, protected_names=protected_names,
                     )
-                    return index, ok, "" if ok else "联合终审未完成"
+                    return index, ok, "" if ok else "최종 검토 미완료"
                 except (asyncio.CancelledError, JobCancelledError):
                     raise
                 except Exception as exc:
-                    LOGGER.error(f"联合终审时出错: {exc}")
+                    LOGGER.error(f"최종 검토 중 오류: {exc}")
                     return index, False, str(exc)
 
         tasks = [asyncio.create_task(review_one(i, batch)) for i, batch in enumerate(batches)]
         with terminal_progress(
-            should_print_translation_logs(self.pj_config), title="联合终审中……", total=len(batches)
+            should_print_translation_logs(self.pj_config), title="최종 검토 중……", total=len(batches)
         ) as bar:
             self.pj_config.bar = bar
             completed = 0
@@ -1152,7 +1152,7 @@ class GenDic(BaseTranslate):
                     completed += 1
                     self._append_runtime_progress(f"gendic-review-{index}", ok, error_message)
                     self._update_runtime(
-                        current_file=f"终审 {completed}/{len(batches)}",
+                        current_file=f"최종 검토 {completed}/{len(batches)}",
                         workers_active=min(workers, len(batches) - completed),
                     )
                     bar()
@@ -1183,8 +1183,8 @@ class GenDic(BaseTranslate):
 
         try:
             self._raise_if_stop_requested()
-            self._update_runtime(stage="GenDic 分词处理中", current_file="准备分词")
-            with terminal_progress(should_print_translation_logs(self.pj_config), title="载入分词……") as bar:
+            self._update_runtime(stage="GenDic 형태소 분석 중", current_file="형태소 분석 준비")
+            with terminal_progress(should_print_translation_logs(self.pj_config), title="형태소 분석기 불러오는 중……") as bar:
                 # get tmp dir
                 import tempfile
 
@@ -1202,7 +1202,7 @@ class GenDic(BaseTranslate):
                     tokenizer = vaporetto.Vaporetto(model, predict_tags=True)
                 except Exception as e:
                     LOGGER.error(e)
-                    LOGGER.error("载入分词模型失败，请尝试重启程序")
+                    LOGGER.error("형태소 분석 모델을 불러오지 못했습니다. 프로그램을 다시 시작해 보세요")
                     os.remove(model_path)
                     return False
                 bar()
@@ -1218,7 +1218,7 @@ class GenDic(BaseTranslate):
                     line_starts.append(offset)
                     offset += len(line) + 1
                 segment_list = _split_segments(lines, _SEGMENT_MAX_LEN)
-                bar.title = "处理分词……"
+                bar.title = "형태소 분석 중……"
 
                 # 收集已有 GPT 字典翻译（排除当前生成文件），用于提示与最终结果去重
                 existing_dict_map = self._load_existing_gpt_terms()
@@ -1288,11 +1288,11 @@ class GenDic(BaseTranslate):
             sem = asyncio.Semaphore(workers)
             if name_batches:
                 LOGGER.info(
-                    f"先翻译{len(pending_names)}个说话人名，分{len(name_batches)}批"
-                    f"（每批最多{max(map(len, name_batches))}个，并发{min(workers, len(name_batches))}）"
+                    f"먼저 화자 이름 {len(pending_names)}개를 {len(name_batches)}개 배치로 번역"
+                    f"(배치당 최대 {max(map(len, name_batches))}개, 동시 {min(workers, len(name_batches))})"
                 )
                 self._update_runtime(
-                    stage="GenDic 人名翻译中", current_file=f"人名 0/{len(name_batches)}",
+                    stage="GenDic 이름 번역 중", current_file=f"이름 0/{len(name_batches)}",
                     workers_active=min(workers, len(name_batches)),
                 )
 
@@ -1308,7 +1308,7 @@ class GenDic(BaseTranslate):
                         except Exception as e:
                             if isinstance(e, JobCancelledError):
                                 raise
-                            LOGGER.error(f"翻译人名时出错: {e}")
+                            LOGGER.error(f"이름 번역 중 오류: {e}")
                             return batch_index, False, str(e)
 
                 name_tasks = [asyncio.create_task(name_item_async(i, b)) for i, b in enumerate(name_batches)]
@@ -1320,8 +1320,8 @@ class GenDic(BaseTranslate):
                         self._append_runtime_progress(f"gendic-name-{batch_index}", ok, error_message)
                         completed_names += 1
                         self._update_runtime(
-                            stage="GenDic 人名翻译中",
-                            current_file=f"人名 {completed_names}/{len(name_tasks)}",
+                            stage="GenDic 이름 번역 중",
+                            current_file=f"이름 {completed_names}/{len(name_tasks)}",
                             workers_active=min(int(self.wokers or 1), len(name_tasks) - completed_names),
                         )
                 except BaseException:
@@ -1336,8 +1336,8 @@ class GenDic(BaseTranslate):
             # 之后每轮只发新片段并要求只输出新词，减少重复思考与重复输出
             session_plans = _plan_sessions(index_list, int(self.wokers or 1))
             LOGGER.info(
-                f"启动{self.wokers}个工作线程，{len(index_list)}个分片分{len(session_plans)}个会话提取"
-                f"（每会话最多{_SESSION_MAX_TURNS}轮）"
+                f"작업 스레드 {self.wokers}개로 조각 {len(index_list)}개를 세션 {len(session_plans)}개에서 추출"
+                f"(세션당 최대 {_SESSION_MAX_TURNS}턴)"
             )
             completed_tasks = 0
 
@@ -1363,7 +1363,7 @@ class GenDic(BaseTranslate):
 
                             if isinstance(e, JobCancelledError):
                                 raise
-                            LOGGER.error(f"处理任务时出错: {e}")
+                            LOGGER.error(f"작업 처리 중 오류: {e}")
                             results.append((idx, False, str(e)))
                     return results
 
@@ -1371,13 +1371,13 @@ class GenDic(BaseTranslate):
 
             with terminal_progress(
                 should_print_translation_logs(self.pj_config),
-                title="生成中……",
+                title="생성 중……",
                 total=len(index_list),
             ) as bar:
                 self.pj_config.bar = bar
                 self._update_runtime(
-                    stage="GenDic 术语提取中",
-                    current_file=f"提取 0/{len(index_list)}",
+                    stage="GenDic 용어 추출 중",
+                    current_file=f"추출 0/{len(index_list)}",
                     workers_active=int(self.wokers or 1),
                 )
                 try:
@@ -1388,8 +1388,8 @@ class GenDic(BaseTranslate):
                             self._append_runtime_progress(f"gendic-task-{int(idx)}", ok, error_message)
                             remaining = len(index_list) - completed_tasks
                             self._update_runtime(
-                                stage="GenDic 术语提取中",
-                                current_file=f"提取 {completed_tasks}/{len(index_list)}",
+                                stage="GenDic 용어 추출 중",
+                                current_file=f"추출 {completed_tasks}/{len(index_list)}",
                                 workers_active=min(int(self.wokers or 1), remaining),
                             )
                             bar()
@@ -1410,12 +1410,12 @@ class GenDic(BaseTranslate):
 
         except JobCancelledError as ex:
             cancelled_error = ex
-            self._update_runtime(stage="GenDic 停止处理中", current_file="整理当前结果", workers_active=0)
+            self._update_runtime(stage="GenDic 중지 처리 중", current_file="현재 결과 정리", workers_active=0)
         finally:
             self._cleanup_runtime_progress()
 
         if cancelled_error is None:
-            self._update_runtime(stage="GenDic 生成字典中", current_file="汇总结果并写入字典", workers_active=0)
+            self._update_runtime(stage="GenDic 사전 생성 중", current_file="결과를 모아 사전에 기록", workers_active=0)
         if candidates is None:
             candidates, duplicates = self._collect_candidates(
                 all_text, set(known_map), name_set, character_names, tokenizer
@@ -1428,11 +1428,11 @@ class GenDic(BaseTranslate):
 
         if cancelled_error is not None:
             setattr(self.pj_config, "gendic_partial_saved", True)
-            LOGGER.info(f"GenDic 已停止，使用当前结果生成字典，新增{added_count}条，重复{duplicates}条，保存到{result_path}")
+            LOGGER.info(f"GenDic 중지, 현재 결과로 사전 생성: 추가 {added_count}개, 중복 {duplicates}개, 저장 위치 {result_path}")
             self._update_runtime(stage="", current_file="", workers_active=0)
             raise cancelled_error
 
-        LOGGER.info(f"字典生成完成，新增{added_count}条，重复{duplicates}条，保存到{result_path}")
+        LOGGER.info(f"사전 생성 완료: 추가 {added_count}개, 중복 {duplicates}개, 저장 위치 {result_path}")
         self._update_runtime(stage="", current_file="", workers_active=0)
         return True
 

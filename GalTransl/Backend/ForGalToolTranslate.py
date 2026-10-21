@@ -141,7 +141,7 @@ class ForGalToolTranslate(ForGalJsonTranslate):
         token = None
         missing_tool_retries = 0
         no_progress_calls = 0
-        failure_reason = "工具调用轮数达到上限"
+        failure_reason = "도구 호출 횟수 상한 도달"
 
         def progress_instruction():
             remaining = [key for key in expected if key not in results]
@@ -178,9 +178,9 @@ class ForGalToolTranslate(ForGalJsonTranslate):
                 tool_choice=tool_choice, tool_response_holder=response, reasoning_holder=reasoning, **kwargs,
             )
             if response.get("finish_reason") in ("length", "content_filter"):
-                failure_reason = f"响应结束原因为 {response['finish_reason']}，未执行本次工具调用"
+                failure_reason = f"응답 종료 이유가 {response['finish_reason']}이라 이번 도구 호출을 실행하지 않음"
                 self._raise_parse_error_for_auto(failure_reason)
-                LOGGER.warning("[ForGal-tool][%s] %s；正文=%r", kwargs.get("file_name", ""), failure_reason, content)
+                LOGGER.warning("[ForGal-tool][%s] %s; 본문=%r", kwargs.get("file_name", ""), failure_reason, content)
                 break  # 截断的工具调用绝不能应用
             calls = response.get("tool_calls", [])
             # 部分兼容接口在指定 function 的请求里省略返回的 function.name。
@@ -195,7 +195,7 @@ class ForGalToolTranslate(ForGalJsonTranslate):
                     and function.get("name") in (None, "")
                 ):
                     LOGGER.warning(
-                        "[ForGal-tool][%s][%s] 接口返回的工具名为空，按本轮指定工具补齐为 %s",
+                        "[ForGal-tool][%s][%s] API가 빈 도구 이름을 반환해 이번 회차 지정 도구 %s(으)로 채움",
                         kwargs.get("file_name", ""), call.get("id", ""), next_tool,
                     )
                     call = {**call, "function": {**function, "name": next_tool}}
@@ -203,10 +203,10 @@ class ForGalToolTranslate(ForGalJsonTranslate):
             calls = normalized_calls
             if not calls:
                 missing_tool_retries += 1
-                failure_reason = f"缺少工具调用，等待 {next_tool}；已写入 {len(results)}/{len(expected)} 句"
+                failure_reason = f"도구 호출 없음, {next_tool} 대기 중; {len(results)}/{len(expected)}문장 기록함"
                 self._raise_parse_error_for_auto(failure_reason)
                 LOGGER.warning(
-                    "[ForGal-tool][%s] %s；finish_reason=%s；正文=%r；保留上下文重试 %s/3",
+                    "[ForGal-tool][%s] %s; finish_reason=%s; 본문=%r; 문맥 유지하고 다시 시도 %s/3",
                     kwargs.get("file_name", ""), failure_reason, response.get("finish_reason"), content, missing_tool_retries,
                 )
                 if missing_tool_retries >= 3:
@@ -233,7 +233,7 @@ class ForGalToolTranslate(ForGalJsonTranslate):
                 function = call.get("function", {})
                 name, arguments = function.get("name"), function.get("arguments", "")
                 log_label = f"[{getattr(self, 'eng_type', 'ForGal-tool')}][{kwargs.get('file_name', '')}][{getattr(token, 'model_name', '')}][{call['id']}][{name}]"
-                print(f"{log_label} LLM工具调用：\n{arguments}", flush=True)
+                print(f"{log_label} LLM 도구 호출:\n{arguments}", flush=True)
                 output = ""
                 previous_count = len(results)
                 try:
@@ -250,7 +250,7 @@ class ForGalToolTranslate(ForGalJsonTranslate):
                     payload = args.get("patch")
                     if not isinstance(payload, str):
                         raise ValueError("工具参数 patch 必须为字符串")
-                    print(f"{log_label} 工具输入：\n{payload}", flush=True)
+                    print(f"{log_label} 도구 입력:\n{payload}", flush=True)
                     pending = {}
                     count = apply_translation_patch(payload, expected, pending)
                     for key, text in pending.items():
@@ -286,21 +286,21 @@ class ForGalToolTranslate(ForGalJsonTranslate):
                     output = f"补丁应用失败：{exc}"
                 no_progress_calls = 0 if len(results) > previous_count else no_progress_calls + 1
                 output += "\n" + progress_instruction()
-                print(f"{log_label} 工具返回：\n{output}", flush=True)
+                print(f"{log_label} 도구 반환:\n{output}", flush=True)
                 messages.append({"role": "tool", "tool_call_id": call["id"], "content": output})
                 if len(results) == len(expected):
                     # 最后一份 patch 成功即完成本批，不再请求模型生成结尾。
                     self._clear_chatbot_state()
                     return formatted_results(), token
             if no_progress_calls >= 3 and len(results) < len(expected):
-                failure_reason = "连续 3 次工具调用未新增译文"
+                failure_reason = "도구 호출 3회 연속 새 번역문 없음"
                 break
         partial = formatted_results()
         self._raise_parse_error_for_auto(failure_reason)
         LOGGER.warning(
-            "[ForGal-tool][%s] 未完成本批工具翻译：%s；%s",
+            "[ForGal-tool][%s] 이번 배치의 도구 번역 미완료: %s; %s",
             kwargs.get("file_name", ""), failure_reason,
-            "保留已完成的连续译文，后续从未完成位置继续" if partial else "无连续译文，按解析失败策略重试",
+            "완료된 연속 번역문을 유지하고 미완료 위치부터 이어서 진행" if partial else "연속 번역문이 없어 해석 실패 규칙대로 다시 시도",
         )
         self._clear_chatbot_state()
         return partial, token

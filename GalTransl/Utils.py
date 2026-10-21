@@ -228,7 +228,7 @@ def decompress_file_lzma(input_filepath, output_filepath=None):
             output_filepath = input_filepath[:-3]
         else:
             print(
-                "错误: 输入文件名不以 '.xz' 结尾，无法自动确定输出文件名。请指定 output_filepath。"
+                "오류: 입력 파일 이름이 '.xz'로 끝나지 않아 출력 파일 이름을 정할 수 없습니다. output_filepath를 지정하세요."
             )
             return
 
@@ -243,9 +243,9 @@ def decompress_file_lzma(input_filepath, output_filepath=None):
                 f_out.write(chunk)
         # print(f"文件 '{input_filepath}' 已成功解压缩为 '{output_filepath}'")
     except FileNotFoundError:
-        print(f"错误: 文件 '{input_filepath}' 未找到。")
+        print(f"오류: 파일 '{input_filepath}'을(를) 찾을 수 없습니다.")
     except Exception as e:
-        print(f"解压缩文件时发生错误: {e}")
+        print(f"압축 해제 중 오류: {e}")
 
 
 if __name__ == "__main__":

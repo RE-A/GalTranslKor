@@ -247,7 +247,7 @@ class COpenAITokenPool:
                 if limit_key not in create_kwargs or not _rejects_max_tokens(exc):
                     raise
                 LOGGER.warning(
-                    "可用性检测：provider 不接受 %s=%s（%s），改为不带该参数重试",
+                    "가용성 확인: 제공자가 %s=%s을(를) 받지 않음(%s), 이 매개변수 없이 다시 시도",
                     limit_key,
                     create_kwargs[limit_key],
                     str(exc).strip()[:120],
@@ -261,7 +261,7 @@ class COpenAITokenPool:
             else:
                 message = type(e).__name__
             runtime_message = (
-                f"检查模型可用性请求失败 [{token.maskToken()}]: {message}"
+                f"모델 가용성 확인 요청 실패 [{token.maskToken()}]: {message}"
             )
             LOGGER.error(runtime_message)
             self._record_runtime_error(
@@ -296,7 +296,7 @@ class COpenAITokenPool:
                 return is_available, token
             else:
                 # wait for some time before retrying, you can add some delay here
-                LOGGER.warning(f"可用性检查失败，正在重试 {retry_count + 1} 次...")
+                LOGGER.warning(f"가용성 확인 실패, {retry_count + 1}번째 다시 시도 중...")
                 await self._interruptible_sleep(0.3)
 
         # If all retries fail, return the result from the last attempt
@@ -393,7 +393,7 @@ class COpenAITokenPool:
         rounds: int = 0
         while True:
             if rounds > 20:
-                raise RuntimeError("COpenAITokenPool::getToken: 可用的API key耗尽！")
+                raise RuntimeError("COpenAITokenPool::getToken: 사용할 수 있는 API key가 모두 소진되었습니다!")
             try:
                 available, token = choice(self.tokens)
                 if not available:
@@ -402,7 +402,7 @@ class COpenAITokenPool:
                     return token
                 rounds += 1
             except IndexError:
-                raise RuntimeError("没有可用的 API key！")
+                raise RuntimeError("사용할 수 있는 API key가 없습니다!")
 
     def get_available_token(self) -> list[COpenAIToken]:
         """
@@ -432,5 +432,5 @@ async def init_sakura_endpoint_queue(projectConfig: CProjectConfig) -> Optional[
     for _ in range(repeated):
         for endpoint in endpoints:
             await sakura_endpoint_queue.put(endpoint)
-    LOGGER.info(f"当前使用 {workersPerProject} 个Sakura worker引擎")
+    LOGGER.info(f"현재 Sakura worker 엔진 {workersPerProject}개 사용")
     return sakura_endpoint_queue

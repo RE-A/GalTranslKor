@@ -1,20 +1,20 @@
 Core:
-  Name: 常规问题检测
+  Name: 공통 문제 검사
   Type: problem
   Module: problem_common
 
 Documentation:
   Author: GalTransl
   Version: 1.0
-  Description: 检测残留日文、标点、换行、字典使用等问题，检测项与阈值使用项目的 problemAnalyze 配置。
+  Description: 일본어 잔류, 문장부호, 줄바꿈, 사전 적용 등의 문제를 검사합니다. 검사 항목과 기준값은 프로젝트의 problemAnalyze 설정을 따릅니다.
 
 Settings:
   avgSentenceLengthThreshold: 17
 
 SettingsSchema:
   avgSentenceLengthThreshold:
-    label: 长句判定阈值
-    description: 平均分句长度超过此值时标记单句过长，建议 15～25；需启用单句过长检测。
+    label: 긴 문장 기준값
+    description: 구간 평균 길이가 이 값을 넘으면 긴 문장으로 표시합니다. 권장 범위 15–25. 긴 문장 검사를 켜야 합니다.
     min: 1
     step: 1
     legacy_path: problemAnalyze.avgSentenceLengthThreshold

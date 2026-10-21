@@ -1,52 +1,52 @@
 Core:
-  Name: Epub 文件
+  Name: Epub 파일
   Type: file
   Module: file_epub_epub
-  Extensions: [".epub", ".html", ".xhtml"] # 自动识别文件插件时按扩展名匹配（html/xhtml 是拆分模式解出来的章节）
+  Extensions: [".epub", ".html", ".xhtml"] # 파일 플러그인 자동 인식 때 확장자로 판별(html/xhtml은 분할 모드에서 풀린 장)
 
 Documentation:
   Author: PiDanShouRouZhou
   Version: 1.0
-  Description: 翻译 Epub 文件, 支持自动识别名称、双语显示、缩小比例、拆分文件以支持单文件多线程翻译等功能。部分代码和正则来自Ainiee。
+  Description: "Epub 파일을 번역합니다. 이름 자동 인식, 대역 표시, 글자 크기 축소, 파일 분할(한 파일을 여러 스레드로 번역)을 지원합니다. 일부 코드와 정규식은 Ainiee에서 가져왔습니다."
 
-Settings: # 这里存放插件的设置
-  是否自动识别名称: False  # 默认关闭自动识别名称
-  名称识别正则表达式: ^(?P<name>.*?)「(?P<message>.*?)」$ # 用于识别名称的正则表达式，两个part分别标识name和message
-  名称识别拼接方案: "{name}\n「{message}」" # 用于拼接名称的格式化字符串（f-string），{name}和{message}分别表示name和message
-  双语显示: True  # 默认开启双语显示
-  原文颜色: "#808080" #默认灰色
-  缩小比例: 0.8  # 默认缩小到原始大小的80%
-  是否拆分文件以支持单文件多线程: False  # 单文件拆分功能，用于支持单文件多线程翻译，默认关闭。
+Settings: # 플러그인 설정
+  是否自动识别名称: False  # 이름 자동 인식, 기본 꺼짐
+  名称识别正则表达式: ^(?P<name>.*?)「(?P<message>.*?)」$ # 이름 인식 정규식. 두 그룹이 각각 name과 message
+  名称识别拼接方案: "{name}\n「{message}」" # 이름 결합 형식(f-string). {name}은 이름, {message}는 본문
+  双语显示: True  # 대역 표시, 기본 켜짐
+  原文颜色: "#808080" # 기본 회색
+  缩小比例: 0.8  # 기본은 원래 크기의 80%
+  是否拆分文件以支持单文件多线程: False  # 한 파일을 나눠 여러 스레드로 번역. 기본 꺼짐.
 
 SettingsSchema:
   是否自动识别名称:
-    label: 自动识别人名
-    description: 从段落中按正则表达式提取说话人和正文。
+    label: 이름 자동 인식
+    description: 정규식으로 문단에서 화자와 본문을 추출합니다.
     advanced: false
   名称识别正则表达式:
-    label: 人名识别规则
-    description: 正则表达式需包含 name 和 message 两个命名分组，分别匹配人名和正文。
+    label: 이름 인식 규칙
+    description: "정규식에는 이름과 본문에 각각 대응하는 name, message 두 이름 그룹이 있어야 합니다."
     advanced: true
   名称识别拼接方案:
-    label: 人名与正文拼接格式
-    description: 将识别后的人名和译文重新拼接；{name} 表示人名，{message} 表示正文。
+    label: 이름과 본문 결합 형식
+    description: "인식한 이름과 번역문을 다시 합칩니다. {name}은 이름, {message}는 본문입니다."
     advanced: true
     multiline: true
   双语显示:
-    label: 双语显示
-    description: 在输出电子书中同时显示译文和原文。
+    label: 대역 표시
+    description: 출력 전자책에 번역문과 원문을 함께 표시합니다.
     advanced: false
   原文颜色:
-    label: 原文颜色
-    description: '双语显示时原文的 CSS 颜色，例如 #808080 为灰色。'
+    label: 원문 색상
+    description: '대역 모드에서 원문의 CSS 색상. 예: 회색은 #808080.'
     advanced: true
   缩小比例:
-    label: 原文字号比例
-    description: 双语显示时原文字号相对于正常字号的比例，0.8 表示 80%。
+    label: 원문 크기 비율
+    description: "대역 모드에서 일반 크기 대비 원문 크기. 0.8은 80%."
     advanced: true
     min: 0.1
     step: 0.1
   是否拆分文件以支持单文件多线程:
-    label: 拆分章节并发翻译
-    description: 将 EPUB 拆分为章节以便并发处理，完成后合并为电子书。
+    label: 장 단위로 나눠 병렬 번역
+    description: "EPUB을 장 단위로 나눠 동시에 처리하고, 끝나면 다시 전자책으로 합칩니다."
     advanced: true

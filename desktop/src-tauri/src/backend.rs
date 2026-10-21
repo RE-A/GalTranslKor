@@ -38,10 +38,10 @@ impl RuntimeDirectory {
             match std::fs::create_dir(&path) {
                 Ok(()) => return Ok(Self(path)),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
-                Err(e) => return Err(format!("创建后端启动目录失败: {e}")),
+                Err(e) => return Err(format!("백엔드 시작 폴더를 만들지 못했습니다: {e}")),
             }
         }
-        Err("无法创建独立的后端启动目录".to_string())
+        Err("독립된 백엔드 시작 폴더를 만들 수 없습니다".to_string())
     }
 
     fn ready_file(&self) -> PathBuf {
@@ -79,9 +79,9 @@ impl ManagedBackend {
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status()
-                .map_err(|e| format!("停止本实例后端失败: {e}"))?;
+                .map_err(|e| format!("이 창의 백엔드를 멈추지 못했습니다: {e}"))?;
             if !status.success() && self.child.try_wait().map_err(|e| e.to_string())?.is_none() {
-                return Err(format!("停止本实例后端失败（PID {}）", self.child.id()));
+                return Err(format!("이 창의 백엔드를 멈추지 못했습니다(PID {})", self.child.id()));
             }
         }
         #[cfg(unix)]
@@ -129,7 +129,7 @@ impl BackendManager {
                 .find(|candidate| candidate.is_file())
                 .ok_or_else(|| {
                     format!(
-                        "未找到可用的服务端可执行文件 {}",
+                        "사용할 수 있는 서버 실행 파일 {}을(를) 찾지 못했습니다",
                         backend_executable_name()
                     )
                 })?;
@@ -158,9 +158,9 @@ impl BackendManager {
     ) -> Result<BackendConnection, String> {
         // Serialize prewarming and frontend retries inside this desktop process.
         // Other desktop processes have separate managers and separate children.
-        let mut slot = self.managed.lock().map_err(|_| "后端进程状态锁定失败")?;
+        let mut slot = self.managed.lock().map_err(|_| "백엔드 프로세스 상태를 잠그지 못했습니다")?;
         if self.shutting_down.load(Ordering::SeqCst) {
-            return Err("桌面窗口正在关闭，已取消后端启动".to_string());
+            return Err("데스크톱 창이 닫히는 중이라 백엔드 시작을 취소했습니다".to_string());
         }
         if let Some(managed) = slot.as_mut() {
             if managed
@@ -195,7 +195,7 @@ impl BackendManager {
         }
         let child = command
             .spawn()
-            .map_err(|e| format!("启动服务端失败: {e}"))?;
+            .map_err(|e| format!("서버 시작 실패: {e}"))?;
         let mut managed = ManagedBackend {
             child,
             runtime_dir,
@@ -204,19 +204,19 @@ impl BackendManager {
         let deadline = Instant::now() + timeout;
         loop {
             if self.shutting_down.load(Ordering::SeqCst) {
-                return Err("桌面窗口正在关闭，已取消后端启动".to_string());
+                return Err("데스크톱 창이 닫히는 중이라 백엔드 시작을 취소했습니다".to_string());
             }
             if let Some(status) = managed.child.try_wait().map_err(|e| e.to_string())? {
                 return Err(format!(
-                    "本地后端在启动完成前退出（{status}），请检查后端控制台"
+                    "로컬 백엔드가 시작을 마치기 전에 종료되었습니다({status}). 백엔드 콘솔을 확인하세요"
                 ));
             }
             match std::fs::read(managed.runtime_dir.ready_file()) {
                 Ok(bytes) => {
                     let ready: ReadyInfo = serde_json::from_slice(&bytes)
-                        .map_err(|e| format!("后端返回的启动信息无效: {e}"))?;
+                        .map_err(|e| format!("백엔드가 보낸 시작 정보가 올바르지 않습니다: {e}"))?;
                     if ready.host != HOST || ready.port == 0 {
-                        return Err("后端返回了无效的本地监听地址".to_string());
+                        return Err("백엔드가 올바르지 않은 로컬 주소를 보냈습니다".to_string());
                     }
                     managed.connection.url = format!("http://{}:{}", ready.host, ready.port);
                     let connection = managed.connection.clone();
@@ -224,12 +224,12 @@ impl BackendManager {
                     return Ok(connection);
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                Err(e) => return Err(format!("读取后端启动信息失败: {e}")),
+                Err(e) => return Err(format!("백엔드 시작 정보를 읽지 못했습니다: {e}")),
             }
             if Instant::now() >= deadline {
                 // ManagedBackend's Drop stops this child even on timeout/error.
                 return Err(format!(
-                    "等待本地后端启动超时（{} ms）",
+                    "로컬 백엔드 시작 대기 시간 초과({} ms)",
                     timeout.as_millis()
                 ));
             }
@@ -240,7 +240,7 @@ impl BackendManager {
     pub fn shutdown(&self) -> Result<(), String> {
         // Signal first so closing during startup interrupts the readiness wait.
         self.shutting_down.store(true, Ordering::SeqCst);
-        let mut slot = self.managed.lock().map_err(|_| "后端进程状态锁定失败")?;
+        let mut slot = self.managed.lock().map_err(|_| "백엔드 프로세스 상태를 잠그지 못했습니다")?;
         if let Some(managed) = slot.as_mut() {
             managed.stop()?;
         }
@@ -490,7 +490,7 @@ mod tests {
                 Ok(command)
             })
             .unwrap_err();
-        assert!(error.contains("启动完成前退出"), "{error}");
+        assert!(error.contains("시작을 마치기 전에 종료"), "{error}");
         let connection = manager
             .ensure_with(true, Duration::from_secs(20), backend_command)
             .unwrap();
@@ -520,7 +520,7 @@ mod tests {
         let error = manager
             .ensure_with(true, Duration::from_secs(2), || stalled_command(&probe))
             .unwrap_err();
-        assert!(error.contains("超时"), "{error}");
+        assert!(error.contains("시간 초과"), "{error}");
         assert!(
             TcpStream::connect_timeout(&probe_address(&probe), Duration::from_millis(250)).is_err()
         );
@@ -540,7 +540,7 @@ mod tests {
                 std::thread::sleep(POLL_INTERVAL);
             }
             manager.shutdown().unwrap();
-            assert!(startup.join().unwrap().unwrap_err().contains("已取消"));
+            assert!(startup.join().unwrap().unwrap_err().contains("취소했습니다"));
         });
         assert!(
             TcpStream::connect_timeout(&probe_address(&probe), Duration::from_millis(250)).is_err()

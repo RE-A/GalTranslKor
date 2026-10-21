@@ -308,7 +308,7 @@
     "formStack_setLocalError_enterProjectDirectory": "Enter the project directory.",
     "formStack_setLocalError_chooseTranslation": "Select a translation template.",
     "field_message_projectDirectory": "Project directory",
-    "field_placeholder_homeUserGalTranslSampleProject": "e.g. /home/user/GalTransl/sampleProject",
+    "field_placeholder_homeUserGalTranslSampleProject": "e.g. /home/user/GalTransl/projects/mygame",
     "field_message_configFile": "Configuration file name",
     "field_message_translation": "Translation template",
     "field_message_empty": "No template available yet",

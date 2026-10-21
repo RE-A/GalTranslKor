@@ -163,7 +163,7 @@ class AutoTranslate(BaseTranslate):
             )
             engine = self._get_engine(mode)
             engine._active_token_index = token_index
-            LOGGER.info("[auto-translate][%s:%s] %s，尝试 %s/%s", filename, self._build_idx_tip(current), mode, attempt + 1, MAX_RETRIES + 1)
+            LOGGER.info("[auto-translate][%s:%s] %s, 시도 %s/%s", filename, self._build_idx_tip(current), mode, attempt + 1, MAX_RETRIES + 1)
             context = state["contexts"].setdefault(mode, {"sessions": {}, "context": {}})
             session_scope = engine._session_scope()
             session_token = session_scope.set(context)
@@ -183,7 +183,7 @@ class AutoTranslate(BaseTranslate):
                     glossary = state["gpt_dic"].gen_prompt(current, style)
                 count, translated = await engine.translate(working, glossary, proofread=proofread, filename=filename)
                 if count != len(current) or len(translated) != len(current):
-                    raise TranslationParseError(f"译文缺句：{count}/{len(current)}")
+                    raise TranslationParseError(f"번역문 문장 누락: {count}/{len(current)}")
                 for original, result in zip(current, translated):
                     original.__dict__.update({key: value for key, value in result.__dict__.items() if key not in ("prev_tran", "next_tran")})
                 # 会话连续性按正式句子对象判断，替换临时副本引用。
@@ -198,7 +198,7 @@ class AutoTranslate(BaseTranslate):
                 if self._preferred_modes.get(file_key, 0) == index:
                     self._preferred_modes[file_key] = (index + 1) % len(modes)
                 next_mode = modes[self._preferred_modes[file_key]]
-                action = f"保持 {mode}" if len(modes) == 1 else f"切换 {next_mode}"
+                action = f"{mode} 유지" if len(modes) == 1 else f"{next_mode}(으)로 전환"
 
                 token_action = ""
                 if num_tokens > 1:
@@ -215,14 +215,14 @@ class AutoTranslate(BaseTranslate):
 
                     if next_token_index < len(client_list):
                         next_token_obj = client_list[next_token_index][1]
-                        token_action = f"，切换令牌为 [{next_token_obj.maskToken()}]"
+                        token_action = f", 토큰을 [{next_token_obj.maskToken()}](으)로 전환"
 
                 retry_size = max(1, len(current) // 2)
                 exhausted = attempt == MAX_RETRIES
                 action_desc = f"{action}{token_action}"
                 detail = (
-                    "共 5 次请求（4 次重试）仍失败，标记翻译失败"
-                    if exhausted else f"{action_desc}，缩小为 {retry_size} 句重试（{attempt + 1}/4）"
+                    "요청 5회(재시도 4회) 모두 실패, 번역 실패로 표시"
+                    if exhausted else f"{action_desc}, {retry_size}문장으로 줄여 다시 시도({attempt + 1}/4)"
                 )
                 try:
                     from GalTransl.server import record_runtime_error
@@ -230,7 +230,7 @@ class AutoTranslate(BaseTranslate):
                     record_runtime_error(
                         getattr(self.pj_config, "runtime_project_dir", None) or self.pj_config.getProjectDir(),
                         kind="parse" if isinstance(exc, (TranslationParseError, ValueError)) else "api",
-                        message=f"[auto-translate][{mode}] {type(exc).__name__}: {exc}；{detail}",
+                        message=f"[auto-translate][{mode}] {type(exc).__name__}: {exc}; {detail}",
                         filename=filename,
                         index_range=self._build_idx_tip(current),
                         retry_count=attempt,
@@ -239,9 +239,9 @@ class AutoTranslate(BaseTranslate):
                         level="error" if exhausted else "warning",
                     )
                 except Exception:
-                    LOGGER.debug("自动翻译错误写入运行时记录失败", exc_info=True)
+                    LOGGER.debug("자동 번역 오류를 실행 기록에 쓰지 못함", exc_info=True)
                 if attempt == MAX_RETRIES:
-                    LOGGER.error("[auto-translate][%s:%s] 共 5 次请求（4 次重试）仍失败：%s", filename, self._build_idx_tip(current), exc)
+                    LOGGER.error("[auto-translate][%s:%s] 요청 5회(재시도 4회) 모두 실패: %s", filename, self._build_idx_tip(current), exc)
                     failed = []
                     self._append_parse_failure_fallback_results(
                         current, 0, failed, mode, proofread=proofread,
@@ -249,7 +249,7 @@ class AutoTranslate(BaseTranslate):
                     )
                     return len(failed), failed
                 current = current[:retry_size]
-                LOGGER.warning("[auto-translate][%s] %s 出错：%s；%s，缩小为 %s 句重试（%s/4）", filename, mode, exc, action_desc, len(current), attempt + 1)
+                LOGGER.warning("[auto-translate][%s] %s 오류: %s; %s, %s문장으로 줄여 다시 시도(%s/4)", filename, mode, exc, action_desc, len(current), attempt + 1)
                 await self._interruptible_sleep(1)
             finally:
                 session_scope.reset(session_token)

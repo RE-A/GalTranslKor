@@ -41,7 +41,7 @@ class file_plugin(GFilePlugin):
         """
         if not file_path.endswith(".json"):
             # 检查不支持的文件类型并抛出TypeError
-            raise TypeError("请检查filePlugin的配置并选择合适的文件插件.")
+            raise TypeError("filePlugin 설정을 확인하고 알맞은 파일 플러그인을 고르세요.")
         with open(file_path, "r", encoding="utf-8") as f:
             json_list = orjson.loads(f.read())
         
@@ -128,24 +128,24 @@ class file_plugin(GFilePlugin):
             for file_path, stats in self.chrf_file_stats.items():
                 file_score = calculator.compute_f_score(stats)
                 file_name=os.path.basename(file_path)
-                LOGGER.info(f"[chrF翻译评估] {file_name} 的 chrF 分数为 {file_score:.2f}")
+                LOGGER.info(f"[chrF 번역 평가] {file_name}의 chrF 점수: {file_score:.2f}")
             
             # 使用所有统计数据计算总体分数
             total_avg_chrf_score = calculator.compute_f_score(self.chrf_all_stats)
-            LOGGER.info(f"[chrF翻译评估] 总体 chrF 分数为 {total_avg_chrf_score:.2f}")
+            LOGGER.info(f"[chrF 번역 평가] 전체 chrF 점수: {total_avg_chrf_score:.2f}")
         
         if "comet" in self.task:
             for file_path, avg_comet_score in self.comet_file_stats.items():
                 file_name=os.path.basename(file_path)
-                LOGGER.info(f"[COMET翻译评估] {file_name} 的 COMET 分数为 {avg_comet_score:.2f}")
+                LOGGER.info(f"[COMET 번역 평가] {file_name}의 COMET 점수: {avg_comet_score:.2f}")
             
             # 总平均分
             total_avg_comet_score = sum(self.comet_file_stats.values()) / len(self.comet_file_stats)
-            LOGGER.info(f"[COMET翻译评估] 总体 COMET 分数为 {total_avg_comet_score:.2f}")
+            LOGGER.info(f"[COMET 번역 평가] 전체 COMET 점수: {total_avg_comet_score:.2f}")
         
         if "cutoff_rate" in self.task:
             cutoff_rate=self.cutoff_count/self.line_count * 1000
-            LOGGER.info(f"[Cutoff翻译评估] 千句截断字符数为 {cutoff_rate:.2f}")
+            LOGGER.info(f"[Cutoff 번역 평가] 1000문장당 잘린 글자 수: {cutoff_rate:.2f}")
 
 
 
@@ -242,7 +242,7 @@ class comet_calculator:
     
     def get_comet_score_batch(self,src_list,mt_list: list, ref_list: list,batch_size:int) -> list:
         if len(src_list) != len(mt_list) or len(src_list) != len(ref_list):
-            raise ValueError("输入列表长度不一致")
+            raise ValueError("입력 목록 길이가 서로 다릅니다")
         
 
         data = []

@@ -1,40 +1,40 @@
 Core:
-  Name: BGI 修复 ruby 标签插件
+  Name: BGI 루비 태그 수정
   Type: text
   Module: text_bgi_fixruby
 
 Documentation:
   Author: lifegpc
   Version: 1.0
-  Description: 支持移除不正确的 ruby 标签和自动修正着重符号（・）数量
+  Description: 잘못된 루비 태그 제거와 강조점(・) 개수 자동 보정을 지원합니다
 
-Settings: # 这里存放插件的设置
-  # 移除不正确的 ruby 标签
+Settings: # 플러그인 설정
+  # 잘못된 루비 태그 제거
   remove_incorrect: true
-  # 自动修正着重符号（・）数量
+  # 강조점(・) 개수 자동 보정
   auto_correct: true
-  # 修改过的文本输出时的日志级别
+  # 수정한 텍스트를 로그로 남길 때의 수준
   process_log_level: debug
 
 SettingsSchema:
   remove_incorrect:
-    label: 移除错误注音标签
-    description: 清理译文中不完整、未配对或内容为空的 BGI ruby 注音标签。
+    label: 잘못된 루비 태그 제거
+    description: 번역문에서 불완전하거나 짝이 맞지 않거나 비어 있는 BGI 루비 태그를 정리합니다.
     advanced: false
   auto_correct:
-    label: 修正着重符号数量
-    description: 将注音位置的着重符号（・或…）修正为与正文长度一致的点号。
+    label: 강조점 개수 보정
+    description: 루비 위치의 강조점(・ 또는 …)을 본문 길이와 같은 개수로 맞춥니다.
     advanced: false
   process_log_level:
-    label: 修复日志级别
-    description: 每条被修改文本的日志级别；通常保留调试，排查问题时可改为信息。
+    label: 수정 로그 수준
+    description: "수정한 텍스트마다 남길 로그 수준. 보통 debug를 유지하고, 문제를 조사할 때 info를 쓸 수 있습니다."
     advanced: true
     options:
     - value: debug
-      label: 调试
+      label: 디버그
     - value: info
-      label: 信息
+      label: 정보
     - value: warning
-      label: 警告
+      label: 경고
     - value: error
-      label: 错误
+      label: 오류

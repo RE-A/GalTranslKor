@@ -93,7 +93,7 @@ class OutputCacheNameHttpTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, 409)
         payload = json.load(ctx.exception)
         self.assertEqual(payload["candidates"], ["chapter/scene", "chapter/scene.json"])
-        self.assertIn("你是不是想读取", payload["error"])
+        self.assertIn("읽으려던 건가요", payload["error"])
         self.assertEqual(self._read("chapter/scene.json")["filename"], "chapter/scene.json")
 
     def test_missing_output_does_not_fall_back_to_input(self):
@@ -113,7 +113,7 @@ class OutputCacheNameHttpTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             self._read("quest_flags.ks.json")
         self.assertEqual(ctx.exception.code, 404)
-        self.assertEqual(json.load(ctx.exception)["error"], "gt_output 是空的，请用rebuild重建结果。")
+        self.assertEqual(json.load(ctx.exception)["error"], "gt_output이 비어 있습니다. rebuild로 결과를 다시 만드세요.")
 
     def test_nonempty_output_keeps_missing_filename_error(self):
         self._write_output("chapter/other.json")

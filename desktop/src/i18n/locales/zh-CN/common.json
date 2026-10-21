@@ -308,7 +308,7 @@
     "formStack_setLocalError_enterProjectDirectory": "请输入项目目录。",
     "formStack_setLocalError_chooseTranslation": "请选择翻译模板。",
     "field_message_projectDirectory": "项目目录",
-    "field_placeholder_homeUserGalTranslSampleProject": "例如：/home/user/GalTransl/sampleProject",
+    "field_placeholder_homeUserGalTranslSampleProject": "例如：/home/user/GalTransl/projects/mygame",
     "field_message_configFile": "配置文件名",
     "field_message_translation": "翻译模板",
     "field_message_empty": "暂无可用模板",

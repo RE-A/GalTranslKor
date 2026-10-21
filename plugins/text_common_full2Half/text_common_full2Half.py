@@ -13,10 +13,10 @@ class text_common_fullWidthFix(GTextPlugin):
         self.反向替换 = settings.get("反向替换", False)
         self.自定义替换表 = settings.get("自定义替换表", {})
 
-        LOGGER.info(f"[{self.pname}] 全角半角转换功能已启用。")
-        LOGGER.info(f"[{self.pname}] 当前是否转换标点: {self.是否替换标点}")
-        LOGGER.info(f"[{self.pname}] 当前替换时机: {self.替换时机}")
-        LOGGER.info(f"[{self.pname}] 当前是否反向替换: {self.反向替换}")
+        LOGGER.info(f"[{self.pname}] 전각/반각 변환 기능 사용.")
+        LOGGER.info(f"[{self.pname}] 문장부호 변환: {self.是否替换标点}")
+        LOGGER.info(f"[{self.pname}] 변환 시점: {self.替换时机}")
+        LOGGER.info(f"[{self.pname}] 반대 방향 변환: {self.反向替换}")
 
         self.conversion_dict = self.create_conversion_dict()
 

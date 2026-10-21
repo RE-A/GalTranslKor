@@ -204,7 +204,7 @@ def load_name_table(
                         src_name_col_idx = header.index("JP_Name")
                         dst_name_col_idx = header.index("CN_Name")
                     except ValueError:
-                        LOGGER.warning(f"name替换表 {path} 缺少 'SRC_Name'/'DST_Name' (或旧版 'JP_Name'/'CN_Name') 列")
+                        LOGGER.warning(f"name替换表 {path}에 'SRC_Name'/'DST_Name'(또는 옛 'JP_Name'/'CN_Name') 열이 없습니다")
                         return {}, [], False
 
                 for row_idx, row in enumerate(sheet.iter_rows(min_row=2), start=2):
@@ -227,7 +227,7 @@ def load_name_table(
                     try:
                         header = next(reader)
                     except StopIteration:
-                        LOGGER.warning(f"CSV name替换表 {path} 为空或无法读取表头")
+                        LOGGER.warning(f"CSV name替换表 {path}이(가) 비어 있거나 머리글을 읽을 수 없습니다")
                         return {}, [], False
                     try:
                         src_name_col_idx = header.index("SRC_Name")
@@ -238,7 +238,7 @@ def load_name_table(
                             dst_name_col_idx = header.index("CN_Name")
                         except ValueError:
                             LOGGER.warning(
-                                f"CSV name替换表 {path} 缺少 'SRC_Name'/'DST_Name' (或旧版 'JP_Name'/'CN_Name') 列"
+                                f"CSV name替换表 {path}에 'SRC_Name'/'DST_Name'(또는 옛 'JP_Name'/'CN_Name') 열이 없습니다"
                             )
                             return {}, [], False
 
@@ -255,20 +255,20 @@ def load_name_table(
                                     name_table_internal[src_name_str] = str(dst_name)
                         else:
                             LOGGER.warning(
-                                f"CSV name替换表 {path} 中发现格式不正确的行 (行号 {row_idx}): {row}"
+                                f"CSV name替换表 {path}에 형식이 잘못된 줄이 있습니다(줄 {row_idx}): {row}"
                             )
                 file_loaded_successfully_internal = True
             else:
                 LOGGER.warning(
-                    f"不支持的 name替换表 文件格式: {file_extension}. 请使用 .xlsx 或 .csv 文件。"
+                    f"지원하지 않는 name替换表 파일 형식: {file_extension}. .xlsx나 .csv 파일을 쓰세요."
                 )
                 return {}, [], False
 
         except FileNotFoundError:
-            LOGGER.warning(f"name替换表文件未找到: {path}")
+            LOGGER.warning(f"name替换表 파일을 찾지 못함: {path}")
             return {}, [], False
         except Exception as e:
-            LOGGER.error(f"载入name替换表 '{path}' 时出错: {e}")
+            LOGGER.error(f"name替换表 '{path}'을(를) 불러오는 중 오류: {e}")
             return {}, [], False
 
         return (
@@ -286,12 +286,12 @@ def load_name_table(
     # Check for missing DST_Names after the first attempt
     if file_loaded_successfully and missing_cn_names and firstime_load:
         LOGGER.warning(
-            f"\n\n(这个提示只会在首次显示)\n\n'{table_base_name}' 中有name的翻译未补齐，可以现在编辑并补齐对应翻译，或以后编辑并通过刷新结果来补全name字段的翻译。\n\n配置文件中usePostDictInName, useGPTDictInName也可将译后、GPT字典用于刷写name字段。"
+            f"\n\n(이 안내는 처음 한 번만 표시됩니다)\n\n'{table_base_name}'에 번역이 비어 있는 name이 있습니다. 지금 편집해 번역을 채우거나, 나중에 편집한 뒤 결과를 다시 만들어 name 필드 번역을 채울 수 있습니다.\n\n설정 파일의 usePostDictInName, useGPTDictInName으로 번역 후 사전이나 GPT 사전을 name 필드에 적용할 수도 있습니다."
         )
         if not proj_config.non_interactive:
             print()
             try:
-                input("按 Enter 继续，或ctrl+c暂时返回...")
+                input("Enter를 누르면 계속, Ctrl+C를 누르면 잠시 돌아갑니다...")
             except EOFError:
                 raise KeyboardInterrupt
             # Second attempt to load after user edit
@@ -299,15 +299,15 @@ def load_name_table(
                 name_table_path
             )
         else:
-            LOGGER.info("非交互模式，跳过等待用户编辑name替换表")
+            LOGGER.info("비대화형 모드이므로 name替换表 편집을 기다리지 않습니다")
 
     # Log final status
     if file_loaded_successfully:
-        LOGGER.info(f"{table_base_name} 载入 {len(name_table)} 条name替换表")
+        LOGGER.info(f"{table_base_name}에서 name 치환 항목 {len(name_table)}개를 불러옴")
         # Check again after reload
         if missing_cn_names:
             LOGGER.warning(
-                f"'{table_base_name}' 中name翻译有缺失。程序将继续，但这些名字不会被替换。"
+                f"'{table_base_name}'에 빠진 name 번역이 있습니다. 계속 진행하지만 그 이름은 바뀌지 않습니다."
             )
 
     name_counter = {}
@@ -326,7 +326,7 @@ def load_name_table(
             if pre_dic.get_dst(name)!= "":
                 name_table[name] = pre_dic.get_dst(name)
                 count += 1
-        LOGGER.info(f"usePreDictInName: 使用译前字典载入 {count} 条name替换表")
+        LOGGER.info(f"usePreDictInName: 번역 전 사전으로 name 치환 항목 {count}개를 불러옴")
 
     if useGPTDictInName:
         count = 0
@@ -334,7 +334,7 @@ def load_name_table(
             if gpt_dic.get_dst(name) != "":
                 name_table[name] = gpt_dic.get_dst(name)
                 count += 1
-        LOGGER.info(f"useGPTDictInName: 使用GPT字典载入 {count} 条name替换表")
+        LOGGER.info(f"useGPTDictInName: GPT 사전으로 name 치환 항목 {count}개를 불러옴")
 
     if usePostDictInName:
         count = 0
@@ -342,7 +342,7 @@ def load_name_table(
             if post_dic.get_dst(name) != "":
                 name_table[name] = post_dic.get_dst(name)
                 count += 1
-        LOGGER.info(f"usePostDictInName: 使用译后字典载入 {count} 条name替换表")
+        LOGGER.info(f"usePostDictInName: 번역 후 사전으로 name 치환 항목 {count}개를 불러옴")
 
     return name_table
 
@@ -363,7 +363,7 @@ async def dump_name_table_from_chunks(
 
     name_dict = dict(sorted(name_dict.items(), key=lambda item: item[1], reverse=True))
 
-    LOGGER.debug(f"共发现 {len(name_dict)} 个人名，按出现次数排序如下：")
+    LOGGER.debug(f"인물 이름 {len(name_dict)}개 발견, 등장 횟수순:")
     for name, count in name_dict.items():
         LOGGER.debug(f"{name}: {count}")
 
@@ -371,24 +371,24 @@ async def dump_name_table_from_chunks(
     existing_dst = _load_existing_dst_names(proj_dir)
     if existing_dst:
         preserved = sum(1 for n in name_dict if n in existing_dst)
-        LOGGER.info(f"保留已有翻译 {preserved} 条")
+        LOGGER.info(f"기존 번역 {preserved}개 유지")
 
     # Ask user for export format
     if proj_config.non_interactive:
-        LOGGER.info("非交互模式，自动使用 CSV 格式导出name替换表")
+        LOGGER.info("비대화형 모드이므로 name替换表를 CSV 형식으로 내보냅니다")
         export_format = "csv"
     else:
         try:
             export_format = await inquirer.select(
-                message="请选择导出 name替换表 的格式 (这个替换表可以刷写结果文件中的name字段):",
+                message="name替换表 내보내기 형식을 고르세요(이 표로 결과 파일의 name 필드를 바꿀 수 있습니다):",
                 choices=[
-                    Choice(value="csv", name="CSV (默认)"),
+                    Choice(value="csv", name="CSV (기본값)"),
                     Choice(value="xlsx", name="Excel (.xlsx)"),
                 ],
                 default="csv",
             ).execute_async()
         except Exception as e:
-            LOGGER.warning(f"无法获取用户输入，将默认使用 CSV 格式: {e}")
+            LOGGER.warning(f"사용자 입력을 받을 수 없어 CSV 형식을 씁니다: {e}")
             export_format = "csv"  # Default to csv if inquirer fails
 
     file_extension = f".{export_format}"
@@ -398,7 +398,7 @@ async def dump_name_table_from_chunks(
         if export_format == "csv":
             write_name_table_csv(output_path, name_dict, existing_dst)
             LOGGER.info(
-                f"name已保存到'{output_path}' (CSV格式)，填入DST_Name后可用于后续翻译name字段。"
+                f"name을 '{output_path}'(CSV 형식)에 저장했습니다. DST_Name을 채우면 name 필드 번역에 쓰입니다."
             )
         elif export_format == "xlsx":
             workbook = openpyxl.Workbook()
@@ -420,8 +420,8 @@ async def dump_name_table_from_chunks(
 
             workbook.save(output_path)
             LOGGER.info(
-                f"name已保存到'{output_path}' (Excel格式)，填入DST_Name后可用于后续翻译name字段。"
+                f"name을 '{output_path}'(Excel 형식)에 저장했습니다. DST_Name을 채우면 name 필드 번역에 쓰입니다."
             )
 
     except Exception as e:
-        LOGGER.error(f"保存name替换表到 {export_format.upper()} 时出错: {e}")
+        LOGGER.error(f"name替换表를 {export_format.upper()}(으)로 저장하는 중 오류: {e}")

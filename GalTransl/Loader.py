@@ -46,6 +46,8 @@ def load_transList(json_path_or_list: Union[str, list]) -> Tuple[CTransList, lis
         index = item.get("index", i + 1)
         tmp_tran = CSentense(pre_src, name, index)
         tmp_tran.source_file_has_name = file_has_name
+        if item.get("scene_break"):  # set by file plugins that know scene boundaries
+            tmp_tran.scene_break = True
         
         # 链接上下文
         if trans_list:

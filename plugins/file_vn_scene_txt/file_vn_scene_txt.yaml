@@ -19,6 +19,8 @@ Settings:
     - '^\s*$'
     - '^\s*(;|//|#|\*|@)'
     - '^\s*(\[[^\]]*\]\s*)+$'
+  sceneBreakPatterns:
+    - '^\s*\*[^*\s]' # KAG 라벨(*scene_001). 이 줄부터 새 장면으로 보고 앞 장면 문맥을 넘기지 않음
   stripQuotes: true # 화자가 있는 줄의 대사 전체를 감싼 「」『』（）는 번역 대상에서 빼고 그대로 다시 붙임
 
 SettingsSchema:
@@ -35,6 +37,10 @@ SettingsSchema:
   skipPatterns:
     label: 번역 제외 줄 정규식
     description: 일치하는 줄은 모델에 보내지 않고 원문 그대로 출력합니다(빈 줄, 주석, 라벨, 명령만 있는 줄 등).
+    advanced: true
+  sceneBreakPatterns:
+    label: 장면 경계 정규식
+    description: 일치하는 줄에서 새 장면이 시작됩니다. 번역 엔진은 이전 장면의 번역을 문맥으로 쓰지 않고, 다음 장면을 미리 보지 않으며, 배치를 이 줄에서 나눕니다. 번역 대상 줄(예 '^――')도 지정할 수 있습니다. 빈 목록이면 끕니다.
     advanced: true
   stripQuotes:
     label: 대사 괄호 분리

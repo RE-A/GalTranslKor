@@ -31,12 +31,15 @@ def decode(data: bytes, encoding: str = "auto"):
     raise ValueError("cannot detect encoding; set inputEncoding (e.g. cp932)")
 
 
-def parse_lines(text: str, speaker_patterns, skip_patterns, strip_quotes=True) -> list:
+def parse_lines(text: str, speaker_patterns, skip_patterns, strip_quotes=True, break_patterns=()) -> list:
     entries = []
     for index, raw in enumerate(text.splitlines(keepends=True), 1):
         body = raw.rstrip("\r\n")
         frame = {"eol": raw[len(body):]}
         entry = {"index": index}
+        # A scene break line starts a new scene: the engine does not carry context across it.
+        if any(p.search(body) for p in break_patterns):
+            entry["scene_break"] = True
         if any(p.search(body) for p in skip_patterns):
             frame["raw"] = body
             entry["message"] = ""
@@ -90,6 +93,7 @@ class file_plugin(GFilePlugin):
             if not {"name", "text"} <= set(pattern.groupindex):
                 raise ValueError(f"speakerPatterns needs name/text groups: {pattern.pattern}")
         self.skip_patterns = [re.compile(p) for p in settings.get("skipPatterns", []) or []]
+        self.break_patterns = [re.compile(p) for p in settings.get("sceneBreakPatterns", []) or []]
         LOGGER.debug(f"[{self.pname}] encoding {self.input_encoding} -> {self.output_encoding}")
 
     def load_file(self, file_path: str) -> list:
@@ -97,7 +101,7 @@ class file_plugin(GFilePlugin):
             raise TypeError("only .txt scene files are supported")
         with open(file_path, "rb") as f:
             text, codec, has_bom = decode(f.read(), self.input_encoding)
-        entries = parse_lines(text, self.speaker_patterns, self.skip_patterns, self.strip_quotes)
+        entries = parse_lines(text, self.speaker_patterns, self.skip_patterns, self.strip_quotes, self.break_patterns)
         if entries:
             entries[0][FRAME_KEY]["source_codec"] = codec
             entries[0][FRAME_KEY]["source_bom"] = has_bom

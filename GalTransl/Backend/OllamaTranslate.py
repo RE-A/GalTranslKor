@@ -201,6 +201,8 @@ class OllamaTranslate(BaseTranslate):
             return []
         rows = []
         for row in trans_list[start:]:
+            if getattr(row, "scene_break", False):
+                break  # do not look ahead into the next scene
             if row.post_src:
                 rows.append({"speaker": row.get_speaker_name(), "source": row.post_src})
                 if len(rows) == self.following_lines:
@@ -208,7 +210,9 @@ class OllamaTranslate(BaseTranslate):
         return rows
 
     def _prepare(self, trans_list, position, candidates, gpt_dic):
-        previous = trans_list[:position]
+        scene_start = next((i for i in range(position, -1, -1)
+                            if getattr(trans_list[i], "scene_break", False)), 0)
+        previous = trans_list[scene_start:position]
         context = [{"speaker": r.get_speaker_name(), "source": r.post_src,
                     "translation": r.proofread_zh or r.pre_dst}
                    for r in previous
@@ -369,7 +373,7 @@ class OllamaTranslate(BaseTranslate):
             # Stop at a cache hit so intervening cached dialogue becomes context.
             candidates = []
             for row in trans_list[position:position + limit]:
-                if id(row) not in pending:
+                if id(row) not in pending or (candidates and getattr(row, "scene_break", False)):
                     break
                 candidates.append(row)
             selected, messages = self._prepare(trans_list, position, candidates, gpt_dic)

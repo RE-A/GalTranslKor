@@ -109,6 +109,10 @@ powershell -ExecutionPolicy Bypass -File scripts\start_translation.ps1 -Project 
     한국어 표기가 다르면 `term_conflict`, 등록된 이름이 풀네임 표기와 어긋나면 `name_part_mismatch` 경고를 냅니다
     (띄어쓰기 차이는 허용). GenDic 생성 사전에만 있는 항목은 "확인 필요 용어" 표로 따로 보여 줍니다. 파일은 수정하지 않습니다.
 - 실패 줄 기록: `ollama_ko_logs\failures-<실행시각>.jsonl` (파일, 줄 번호, 화자, 원문, 실패 이유)
+- 검토 기록(`reviewWarnings`/`reviewSampleEvery` 사용 시): `ollama_ko_logs\review-<실행시각>.jsonl`
+  (원문, 초벌, 수정안, 이유, 채택 여부). 채택된 수정은 캐시의 `proofread_dst`에 저장되고 초벌 `pre_dst`는 그대로 남습니다.
+  변수·제어문자·줄바꿈을 깨뜨린 수정안은 거절되고, 검토 요청이 실패해도 초벌 번역을 유지합니다.
+  검토는 새로 번역한 줄에만 적용됩니다. 같은 모델의 자기 검토가 실제로 도움이 되는지는 평가 세트로 비교하세요.
 - 실행 통계: `ollama_ko_logs\stats-<실행시각>.json` (요청·재시도·실패 수, 입력/출력 토큰, 모델 처리 시간, 줄/분)
 - GalTransl 실행 로그: 프로젝트 폴더의 `GalTransl.log` (`saveLog: true`)
 
@@ -157,6 +161,9 @@ powershell -ExecutionPolicy Bypass -File scripts\start_translation.ps1 -Project 
 | `onFailure` | `mark` | `mark`: 실패 줄 기록 후 계속, `stop`: 즉시 중단 |
 | `minLengthRatio` | 0.2 | 원문 대비 너무 짧은 번역을 누락으로 판단 (0이면 끔) |
 | `allowJapanese` | `[]` | 번역문에 일본어로 남겨도 되는 표기 |
+| `reviewWarnings` | `false` | `true`면 경고(숫자 누락, 원문에 없는 한자, 길이 이상)가 난 줄만 원문과 대조해 한 번 더 검토. 추가 호출이 생김 |
+| `reviewSampleEvery` | `0` | N이면 경고 없는 줄도 N번째 줄마다 표본 검토 (0이면 끔) |
+| `reviewMaxLines` | `200` | 실행 한 번에 검토할 최대 줄 수 |
 | `common.gpt.numPerRequestTranslate` | 5 | 한 요청의 번역 대상 줄 수 (배치) |
 | `common.gpt.contextNum` | 8 | 이전 문맥 줄 수 (원문+확정 번역) |
 | `common.gpt.translation_guideline` | `JapaneseToKorean.md` | 번역 지침 파일 |

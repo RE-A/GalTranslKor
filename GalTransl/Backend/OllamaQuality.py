@@ -20,6 +20,8 @@ HAN = re.compile(r"[㐀-䶿一-鿿豈-﫿]")
 JAPANESE = re.compile(r"[ぁ-ヺ一-鿿]")
 LETTER = re.compile(r"[\w]", re.UNICODE)
 FAILED_PREFIX = "(Failed)"
+_DIGITS = str.maketrans("０１２３４５６７８９．，", "0123456789.,")
+_NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
 
 # (pattern in translation, pattern that legitimately explains it in the source)
 _REFUSALS = [
@@ -87,9 +89,17 @@ def fatal_problems(source: str, text, *, allow=(), speakers=(), min_ratio=0.2) -
     return problems
 
 
+def _numbers(text: str) -> Counter:
+    # Digits inside variables/control codes are covered by the marker check.
+    return Counter(n.replace(",", "") for n in _NUMBER.findall(MARKERS.sub(" ", text.translate(_DIGITS))))
+
+
 def warning_problems(source: str, text: str, *, allow=()) -> list[str]:
     """Suspicious but possibly legitimate results, for human review only."""
     warnings = []
+    missing = _numbers(source) - _numbers(text)
+    if missing:
+        warnings.append("missing numbers: " + " ".join(missing.elements()))
     plain_text = _strip_allowed(MARKERS.sub("", text), allow)
     new_han = [c for c in HAN.findall(plain_text) if c not in source]
     if new_han:

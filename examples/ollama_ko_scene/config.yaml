@@ -20,6 +20,9 @@ backendSpecific:
     minLengthRatio: 0.2  # 원문 대비 이 비율보다 짧은 번역은 누락으로 보고 재시도 (0이면 끔)
     allowJapanese: []  # 번역문에 일본어로 남겨도 되는 표기. 예: ["ぷにぷに"]
     think: false  # native 모드에서 생각(thinking) 출력 끄기. 지원하지 않는 서버면 null
+    reviewWarnings: false  # true면 경고가 난 줄만 원문과 대조해 다시 검토(추가 호출). 결과는 proofread_dst
+    reviewSampleEvery: 0  # N이면 정상 줄도 N번째마다 표본 검토 (0이면 끔)
+    reviewMaxLines: 200  # 실행당 검토 줄 수 상한
 
 common:
   language: ja2ko

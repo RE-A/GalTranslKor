@@ -18,10 +18,10 @@ import httpx
 from GalTransl import LOGGER
 from GalTransl.Backend.BaseTranslate import BaseTranslate
 from GalTransl.Backend.OllamaPrompts import (
-    RESPONSE_SCHEMA, build_system_prompt, load_characters, load_korean_guideline,
-    select_characters,
+    RESPONSE_SCHEMA, REVIEW_SCHEMA, build_review_prompt, build_system_prompt, load_characters,
+    load_korean_guideline, select_characters,
 )
-from GalTransl.Backend.OllamaQuality import FAILED_PREFIX, validate_translation
+from GalTransl.Backend.OllamaQuality import FAILED_PREFIX, validate_translation, warning_problems
 from GalTransl.Cache import save_transCache_to_json
 
 LOG_FOLDER = "ollama_ko_logs"
@@ -109,9 +109,16 @@ class OllamaTranslate(BaseTranslate):
         if not isinstance(character_file, str):
             raise ValueError("Ollama.characterFile must be a file name")
         self.characters = load_characters(Path(project_dir, character_file)) if character_file else []
+        guideline = load_korean_guideline(config.getKey("gpt.translation_guideline"), project_dir)
         self.system_prompt = build_system_prompt(
-            load_korean_guideline(config.getKey("gpt.translation_guideline"), project_dir),
-            speech_to=any("speech_to" in c["profile"] for c in self.characters))
+            guideline, speech_to=any("speech_to" in c["profile"] for c in self.characters))
+        # Optional second pass; results go to proofread_dst, so the draft and cache identity stay.
+        self.review_warnings = cfg.get("reviewWarnings", False)
+        if not isinstance(self.review_warnings, bool):
+            raise ValueError("Ollama.reviewWarnings must be true or false")
+        self.review_every = _number(cfg, "reviewSampleEvery", 0, 0, 1000000, integer=True)
+        self.review_max = _number(cfg, "reviewMaxLines", 200, 0, 10000000, integer=True)
+        self.review_prompt = build_review_prompt(guideline)
         self._warn_chinese_dictionaries(config)
         glossary = getattr(config, "gpt_dic", None)
         entries = [{"source": d.search_word, "target": d.replace_word, "note": d.note}
@@ -131,7 +138,8 @@ class OllamaTranslate(BaseTranslate):
         self.started = time.monotonic()
         self.stats = {"requests": 0, "retries": 0, "batch_shrinks": 0, "lines_translated": 0,
                       "lines_failed": 0, "prompt_tokens": 0, "output_tokens": 0,
-                      "model_seconds": 0.0, "errors": {}}
+                      "model_seconds": 0.0, "errors": {}, "review_lines": 0, "review_requests": 0,
+                      "review_changed": 0, "review_rejected": 0, "review_failed": 0}
         # Local Ollama should not be routed through an unrelated system proxy.
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api == "openai" else None
         self.client = httpx.AsyncClient(timeout=self.timeout, trust_env=False, headers=headers)
@@ -270,10 +278,10 @@ class OllamaTranslate(BaseTranslate):
         if self.api == "native" and isinstance(prompt, int) and prompt >= self.num_ctx:
             raise ValueError(f"context window overflow: prompt used {prompt} of numCtx={self.num_ctx} tokens")
 
-    async def _translate(self, batch, messages, gpt_dic=None):
+    def _payload(self, messages, schema):
         payload = {"model": self.model, "messages": messages, "stream": False}
         if self.api == "native":
-            payload.update(format=RESPONSE_SCHEMA, options={
+            payload.update(format=schema, options={
                 "temperature": self.temperature, "num_ctx": self.num_ctx,
                 "num_predict": self.num_predict,
             })
@@ -282,6 +290,25 @@ class OllamaTranslate(BaseTranslate):
         else:
             payload.update(temperature=self.temperature, max_tokens=self.num_predict,
                            response_format={"type": "json_object"})
+        return payload
+
+    def _response_content(self, data):
+        if not isinstance(data, dict):
+            raise ValueError("model response must be an object")
+        self._record_usage(data)
+        if self.api == "native":
+            if data.get("done") is not True or data.get("done_reason") == "length":
+                raise ValueError("incomplete model response")
+            return data["message"]["content"]
+        choice = data["choices"][0]
+        if not isinstance(choice, dict):
+            raise ValueError("model choice must be an object")
+        if choice.get("finish_reason") != "stop":
+            raise ValueError("incomplete model response")
+        return choice["message"]["content"]
+
+    async def _translate(self, batch, messages, gpt_dic=None):
+        payload = self._payload(messages, RESPONSE_SCHEMA)
         for attempt in range(1, self.attempts + 1):
             self._check_stop_requested()
             content_error = False
@@ -289,21 +316,7 @@ class OllamaTranslate(BaseTranslate):
                 self.stats["requests"] += 1
                 response = await self._post(payload)
                 response.raise_for_status()
-                data = response.json()
-                if not isinstance(data, dict):
-                    raise ValueError("model response must be an object")
-                self._record_usage(data)
-                if self.api == "native":
-                    if data.get("done") is not True or data.get("done_reason") == "length":
-                        raise ValueError("incomplete model response")
-                    content = data["message"]["content"]
-                else:
-                    choice = data["choices"][0]
-                    if not isinstance(choice, dict):
-                        raise ValueError("model choice must be an object")
-                    if choice.get("finish_reason") != "stop":
-                        raise ValueError("incomplete model response")
-                    content = choice["message"]["content"]
+                content = self._response_content(response.json())
                 result = json.loads(content)["translations"]
                 if not isinstance(result, list) or len(result) != len(batch):
                     raise ValueError("translation count mismatch")
@@ -337,6 +350,85 @@ class OllamaTranslate(BaseTranslate):
             LOGGER.warning("Ollama-ko retry %s/%s: %s", attempt, self.attempts, reason)
             await self._interruptible_sleep(min(30, self.retry_wait * 2 ** (attempt - 1)))
         raise AssertionError("unreachable")
+
+    @staticmethod
+    def _neighbour(row, step):
+        """Nearest translatable line in the same scene (prev_tran/next_tran links)."""
+        current = row
+        while True:
+            if step < 0 and getattr(current, "scene_break", False):
+                return None
+            current = current.prev_tran if step < 0 else current.next_tran
+            if current is None or (step > 0 and getattr(current, "scene_break", False)):
+                return None
+            if current.post_src:
+                return current
+
+    async def _review(self, filename, rows, gpt_dic=None):
+        """Second pass for lines with warnings (and an optional sample); never loses the draft."""
+        targets = []
+        for row in rows:
+            if self.stats["review_lines"] >= self.review_max:
+                break
+            warnings = warning_problems(row.post_src, row.pre_dst, allow=self.allow) if self.review_warnings else []
+            if warnings or (self.review_every and row.index % self.review_every == 0):
+                targets.append((row, warnings))
+                self.stats["review_lines"] += 1
+        if not targets:
+            return
+        items = []
+        for number, (row, warnings) in enumerate(targets, 1):
+            item = {"id": number, "speaker": row.get_speaker_name(), "source": row.post_src,
+                    "draft": row.pre_dst, "warnings": warnings}
+            before, after = self._neighbour(row, -1), self._neighbour(row, 1)
+            if before is not None:
+                item["before"] = {"source": before.post_src, "translation": before.proofread_zh or before.pre_dst}
+            if after is not None:
+                item["after"] = {"source": after.post_src}
+            items.append(item)
+        texts = [r.post_src for r, _ in targets]
+        body = {"items": items,
+                "characters": select_characters(self.characters, [r.get_speaker_name() for r, _ in targets], texts),
+                "glossary": gpt_dic.gen_prompt([r for r, _ in targets], type="gpt") if gpt_dic is not None else ""}
+        messages = [{"role": "system", "content": self.review_prompt},
+                    {"role": "user", "content": json.dumps(body, ensure_ascii=False)}]
+        self.stats["review_requests"] += 1
+        try:
+            response = await self._post(self._payload(messages, REVIEW_SCHEMA))
+            response.raise_for_status()
+            reviews = json.loads(self._response_content(response.json()))["reviews"]
+            if not isinstance(reviews, list) or len(reviews) != len(targets) or any(
+                    not isinstance(r, dict) or r.get("id") != n for n, r in enumerate(reviews, 1)):
+                raise ValueError("review count/ID mismatch")
+        except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as exc:
+            self.stats["review_failed"] += 1
+            LOGGER.warning("Ollama-ko: %s review skipped, drafts kept: %s", filename, exc)
+            return
+        records = []
+        for (row, warnings), item in zip(targets, reviews):
+            text = item.get("text")
+            if item.get("changed") is not True or not isinstance(text, str) or text == row.pre_dst:
+                continue
+            record = {"file": filename, "index": row.index, "source": row.post_src, "draft": row.pre_dst,
+                      "text": text, "reason": str(item.get("reason", "")), "warnings": warnings}
+            try:
+                self._check(row, text, gpt_dic)
+            except ValueError as exc:
+                self.stats["review_rejected"] += 1
+                record.update(accepted=False, rejected_because=str(exc))
+            else:
+                row.proofread_zh = row.post_dst = text
+                row.proofread_by = self.cache_identity + ":review"
+                self.stats["review_changed"] += 1
+                record["accepted"] = True
+            records.append(record)
+        if records:
+            try:
+                self.log_dir.mkdir(parents=True, exist_ok=True)
+                with open(self.log_dir / f"review-{self.run_id}.jsonl", "a", encoding="utf-8") as f:
+                    f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in records)
+            except OSError as exc:
+                LOGGER.error("Ollama-ko: failed to write review log: %s", exc)
 
     def _mark_failed(self, filename, row, reason):
         failed = FAILED_PREFIX + row.post_src
@@ -399,6 +491,8 @@ class OllamaTranslate(BaseTranslate):
             for row, text in zip(selected, texts):
                 row.pre_dst = row.post_dst = text
                 row.trans_by = self.cache_identity
+            if self.review_warnings or self.review_every:
+                await self._review(filename, selected, gpt_dic)
             await save_transCache_to_json(selected, cache_file_path, project_dir=self.pj_config.getProjectDir())
             for row in selected:
                 self._record_runtime_success(filename, row)

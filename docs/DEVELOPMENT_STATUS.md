@@ -1,6 +1,6 @@
 # 개발 상태 및 다음 작업
 
-최종 갱신: 2026-10-21 (Asia/Seoul)
+최종 갱신: 2026-10-22 (Asia/Seoul)
 
 ## 저장소와 환경
 
@@ -111,6 +111,17 @@ main의 Codex 구현을 유지하고 Claude 쪽은 revert함.
 
 검증(⑤~⑦, 병합 후): 전체 Python 1561 passed, 7 skipped. 프런트엔드 test 150 pass, build OK, i18n:check 0 errors.
 실제 모델로 한국어 GenDic/에이전트 출력 품질은 미검증(Cloud, Mock 범위).
+
+## Q7 일부: 한국어 숫자 누락 경고·사전 검사 띄어쓰기 (2026-10-21, Claude Cloud, `d32ec91`)
+
+`development/TODO.md` Q7(한국어 오류 경고 정교화) 중 규칙으로 가능한 부분만 구현. 이전 세션이 상태 문서를 갱신하지 않아
+2026-10-22 진행 상황 점검 때 커밋 내용을 근거로 기록함.
+
+- `problem_common`에 `数字不符`(숫자 불일치) 문제 추가: 대상 언어가 ko일 때 원문의 아라비아 숫자(전각 포함)가 번역문에 없으면 표시.
+  변수·제어 표기 안의 숫자는 제외(`缺控制符`가 담당). 데스크톱 표시 이름 `숫자 불일치` 추가.
+- `CGptDict.check_dic_use(..., ignore_spaces=True)`: 한국어 대상이면 사전 적용 검사(`字典使用`)에서 띄어쓰기 차이를 무시.
+- 테스트 `tests/test_problem_common_korean_q7.py`, `tests/test_problem_plugins.py` 기대값, `desktop/tests/problem-labels.test.mjs`.
+- Q7의 나머지(용어 표기 변화·존대 불일치·부정/열거 누락 후보, 실제 출력 기반 오탐/미탐 측정)는 미착수. 실제 모델 검증 없음.
 
 ## 중국어 잔여분 정리 (2026-10-21, Claude Cloud)
 
@@ -231,6 +242,10 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
 
 ## 작업 이력
 
+- 2026-10-22 / Claude Cloud / 브랜치 `claude/dazzling-ride-20dfb4`(= Fork `main` `d32ec91`에서 시작): 사용자 요청으로 진행 상황 점검.
+  세션에 `.venv`가 없어 Python 3.11.17로 새로 만들고 `requirements.txt`+pytest 설치. 전체 Python **1567 passed, 7 skipped(기존과 동일),
+  371 subtests passed**. 프런트엔드 테스트는 `node_modules` 부재로 미실행. 누락돼 있던 Q7(`d32ec91`) 기록만 추가(문서 변경뿐).
+- 2026-10-21 / Claude Cloud: Q7 일부(한국어 숫자 누락 경고, 사전 검사 띄어쓰기 허용) `d32ec91`을 Fork `main`에 반영(상태 문서 미갱신).
 - 2026-10-21 / Claude Cloud: 한국어 대상 보정 ⑤~⑦(에이전트 한국어 지침, 문제 이름 한국어 표시, 중국어 전용 모델 경고). ④는 Codex 커밋 f91c602와 중복되어 Claude 쪽을 revert하고 main을 병합한 뒤 Fork `main`에 반영.
 - 2026-10-21 / Codex Cloud / Fork `main`, 기준 `f91c602`: 사용자 요청으로 소스 작업 없이
   `development/TODO.md`에 한국어 품질 개선 후보 10개, 우선순위·기대 효과·비용·완료 기준을 정리했다.

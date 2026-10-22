@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from GalTransl import LOGGER, NEED_OpenAITokenPool
 from GalTransl.i18n import get_text, GT_LANG
 from GalTransl.Cache import get_transCache_from_json
+from GalTransl.KoreanText import fix_josa
 from GalTransl.ConfigHelper import initDictList, CProjectConfig
 from GalTransl.Dictionary import CGptDict, CNormalDic
 from GalTransl.Problem import find_problems
@@ -281,6 +282,11 @@ def preprocess_trans_list(trans_list, projectConfig, pre_dic, tPlugins=None):
 
 def postprocess_trans_list(trans_list, projectConfig, post_dic, tPlugins=None):
     """翻译后处理：插件before_dst → 恢复对话符号 → 后处理字典替换译文 → 插件after_dst"""
+    korean_words = []
+    if str(getattr(projectConfig, "target_lang", "")).lower() in ("ko", "korean"):
+        korean_words = [d.replace_word for d in getattr(post_dic, "dic_list", [])]
+        korean_words += [w for d in getattr(getattr(projectConfig, "gpt_dic", None), "_dic_list", [])
+                         for w in d.replace_word.split("/")]
     for tran in trans_list:
         if tPlugins:
             for plugin in tPlugins:
@@ -291,6 +297,9 @@ def postprocess_trans_list(trans_list, projectConfig, post_dic, tPlugins=None):
 
         tran.recover_dialogue_symbol()
         tran.post_dst = post_dic.do_replace(tran.post_dst, tran)
+        if korean_words:
+            # Substituted names/terms keep the particle the model wrote for the old word.
+            tran.post_dst = fix_josa(tran.post_dst, korean_words)
 
         if tPlugins:
             for plugin in tPlugins:

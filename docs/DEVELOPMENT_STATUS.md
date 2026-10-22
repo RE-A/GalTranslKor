@@ -215,6 +215,11 @@ Q1 평가 기준 → Q2 상대별 말투·호칭/Q3 용어 확정 → 오류 유
   원문·초벌·경고·앞뒤 줄을 별도 검토 프롬프트로 보내고, 채택된 수정은 `proofread_dst`에 저장(초벌 `pre_dst`와 캐시 식별자 유지).
   치명 검사를 통과하지 못한 수정은 거절, 검토 요청 실패 시 초벌 유지, `review-<실행시각>.jsonl`에 기록. 기본 꺼짐.
   같은 시점에 `OllamaQuality.warning_problems`에 숫자 누락 경고 추가(품질 리포트에도 표시). 캐시 적중 줄은 재검토하지 않음.
+- 한국어 품질 보조(사용자 요청, 2026-10-22): `GalTransl/KoreanSpeech.py`가 Kiwi(`kiwipiepy`, requirements 추가, 없으면 건너뜀)로
+  대사의 존댓말/반말을 판정해 `politeness_mismatch`(원문 です・ます→번역 반말), `politeness_inconsistent`(같은 장면·화자·원문 말투에서 혼자 다름),
+  `politeness_speech_to`(speech_to 규칙 위반) 경고를 품질 리포트와 `reviewWarnings` 재검토에 연결. 평가 세트 허용 예시 56줄에서 오탐 0,
+  원문 존댓말→반말 금지 예시 2건 검출(친구에게 존댓말 2건은 speech_to 없이는 미검출). `GalTransl/KoreanText.fix_josa`로 한국어 대상
+  후처리에서 postDict 치환어·GPT 사전 표기 뒤 조사(은/는, 이/가, 을/를, 과/와, 아/야, (으)로 등)를 받침에 맞게 교정.
 - 실제 VN 테스트 데이터(사용자 요청, 2026-10-22): 재배포·수정이 명시 허용된 일본어 원작 VN 시나리오를 웹에서 찾지 못함.
   후보였던 Ren'Py "The Question" 일본어판(MIT 적용 여부가 파일 단위로 불명확, 영어 원작 번역), WebGAL 데모(MPL-2.0 저장소, 시나리오
   라이선스 불명확), TyranoScript 샘플(재배포 자제 문구)은 커밋하지 않음. 저작권 만료 희곡(아오조라 문고) 발췌가 대안 후보.
@@ -253,6 +258,9 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-22 / Claude Cloud: Kiwi 존댓말·반말 검사와 조사 교정 추가(테스트 test_korean_speech, test_korean_josa).
+  전체 Python 1613 passed, 7 skipped. Mock·합성 문장 검증만, 실제 모델 출력에서의 오탐률은 미측정.
 
 - 2026-10-22 / Claude Cloud: TODO Q5(장면 경계 문맥) `11e6c98`, Q6(선택적 재검토) `9b339a5` 구현과 Fork `main` 반영.
   신규 테스트 test_ollama_ko_scene_break, test_ollama_ko_review(Mock). 전체 Python 1588 passed, 7 skipped.

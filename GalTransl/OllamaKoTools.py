@@ -15,6 +15,7 @@ import yaml
 
 from GalTransl.Backend.OllamaPrompts import DEFAULT_GUIDELINE, load_characters
 from GalTransl.Backend.OllamaQuality import fatal_problems, warning_problems
+from GalTransl.KoreanSpeech import speech_level_warnings
 from GalTransl.RuntimePaths import get_plugins_dir, get_resource_root, get_translation_guidelines_dir
 
 TEMPLATE = "examples/ollama_ko_scene"
@@ -185,9 +186,12 @@ def build_report(project: Path, config_name: str = "config.yaml") -> dict:
     min_ratio = ollama.get("minLengthRatio", 0.2)
     character_file = ollama.get("characterFile", "characters.yaml")
     korean_names = {}
-    for character in load_characters(project / character_file) if character_file else []:
+    characters = load_characters(project / character_file) if character_file else []
+    for character in characters:
         for name in character["names"]:
             korean_names[name] = character["profile"]["ko"]
+    profiles = [c["profile"] for c in characters]
+    alias_map = {c["profile"]["ja"]: c["names"] for c in characters}
     plugin_name = (cfg.get("plugin") or {}).get("filePlugin", "")
     input_dir, output_dir, cache_dir = project / "gt_input", project / "gt_output", project / "transl_cache"
     issues, files, summary = [], [], {"lines": 0, "translated": 0}
@@ -205,8 +209,12 @@ def build_report(project: Path, config_name: str = "config.yaml") -> dict:
         files.append(rel)
         cache = _read_cache(cache_dir, rel)
         previous = None
+        speech_lines = []
         for entry in entries:
             source = entry.get("message", "")
+            if entry.get("scene_break"):
+                speech_lines.append({"index": entry["index"], "speaker": "", "source": "",
+                                     "translation": "", "scene_break": True})
             if not source.strip():
                 continue
             summary["lines"] += 1
@@ -229,9 +237,14 @@ def build_report(project: Path, config_name: str = "config.yaml") -> dict:
                 summary["translated"] += 1
                 for code in warning_problems(row.get("post_src", source), text, allow=allow):
                     _issue(issues, "warning", rel, index, code, "", source, text)
+                speech_lines.append({"index": index, "speaker": speaker, "source": source, "translation": text})
             if previous and text and previous[1] == text and previous[0] != source:
                 _issue(issues, "warning", rel, index, "duplicate_translation", "same as previous line", source, text)
             previous = (source, text)
+        by_index = {line["index"]: line for line in speech_lines if line["source"]}
+        for index, codes in sorted(speech_level_warnings(speech_lines, profiles, alias_map).items()):
+            for code in codes:
+                _issue(issues, "warning", rel, index, code, "", by_index[index]["source"], by_index[index]["translation"])
         _check_output(issues, rel, entries, output_dir / rel, scene)
     term_issues, terminology = check_terminology(project, cfg)
     issues += term_issues

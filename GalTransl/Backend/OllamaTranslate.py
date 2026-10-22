@@ -22,6 +22,7 @@ from GalTransl.Backend.OllamaPrompts import (
     load_korean_guideline, select_characters,
 )
 from GalTransl.Backend.OllamaQuality import FAILED_PREFIX, validate_translation, warning_problems
+from GalTransl.KoreanSpeech import speech_level_warnings
 from GalTransl.Cache import save_transCache_to_json
 
 LOG_FOLDER = "ollama_ko_logs"
@@ -364,13 +365,31 @@ class OllamaTranslate(BaseTranslate):
             if current.post_src:
                 return current
 
-    async def _review(self, filename, rows, gpt_dic=None):
+    def _speech_warnings(self, trans_list, position, rows):
+        """존댓말/반말 warnings for `rows`, judged against the scene so far (needs kiwipiepy)."""
+        if trans_list is None:
+            return {}
+        scene_start = next((i for i in range(position, -1, -1)
+                            if getattr(trans_list[i], "scene_break", False)), 0)
+        lines = []
+        for row in trans_list[scene_start:position + len(rows)]:
+            text = row.proofread_zh or row.pre_dst
+            if row.post_src and text and not text.startswith(FAILED_PREFIX):
+                lines.append({"index": row.index, "speaker": row.get_speaker_name(),
+                              "source": row.post_src, "translation": text})
+        profiles = [c["profile"] for c in self.characters]
+        names = {c["profile"]["ja"]: c["names"] for c in self.characters}
+        return speech_level_warnings(lines, profiles, names)
+
+    async def _review(self, filename, rows, gpt_dic=None, trans_list=None, position=0):
         """Second pass for lines with warnings (and an optional sample); never loses the draft."""
         targets = []
+        speech = self._speech_warnings(trans_list, position, rows) if self.review_warnings else {}
         for row in rows:
             if self.stats["review_lines"] >= self.review_max:
                 break
             warnings = warning_problems(row.post_src, row.pre_dst, allow=self.allow) if self.review_warnings else []
+            warnings += speech.get(row.index, [])
             if warnings or (self.review_every and row.index % self.review_every == 0):
                 targets.append((row, warnings))
                 self.stats["review_lines"] += 1
@@ -492,7 +511,7 @@ class OllamaTranslate(BaseTranslate):
                 row.pre_dst = row.post_dst = text
                 row.trans_by = self.cache_identity
             if self.review_warnings or self.review_every:
-                await self._review(filename, selected, gpt_dic)
+                await self._review(filename, selected, gpt_dic, trans_list, position)
             await save_transCache_to_json(selected, cache_file_path, project_dir=self.pj_config.getProjectDir())
             for row in selected:
                 self._record_runtime_success(filename, row)

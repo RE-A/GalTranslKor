@@ -21,6 +21,8 @@ pyreqwest
 
 # Tokenizer
 budoux
+# Korean morphological analyzer for 존댓말/반말 checks (optional at runtime; checks are skipped without it)
+kiwipiepy
 # Optional tokenizers
 # jieba
 # pkuseg

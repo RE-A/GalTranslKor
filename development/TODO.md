@@ -30,6 +30,7 @@
 - 2026-10-21 Claude Cloud: Q7(숫자 누락 경고, 사전 검사 띄어쓰기 허용), Q3(용어 표기 대조 리포트),
   Q1(합성 평가 세트·블라인드 채점 도구), Q2(`speech_to`)의 Cloud 범위 구현. 품질 효과는 미측정이며
   아래 체크박스의 완료 기준(로컬 측정)은 아직 충족하지 않았다. 상세: [개발 상태](../docs/DEVELOPMENT_STATUS.md).
+- 2026-10-22 Claude Cloud: Q5(`sceneBreakPatterns` 장면 경계 문맥), Q6(`reviewWarnings` 선택적 재검토) Cloud 범위 구현. 효과 미측정.
 
 ## 우선순위
 

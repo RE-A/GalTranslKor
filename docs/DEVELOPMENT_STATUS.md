@@ -208,6 +208,16 @@ Q1 평가 기준 → Q2 상대별 말투·호칭/Q3 용어 확정 → 오류 유
 - Q2 `3357e79`: `characters.yaml`의 선택 항목 `speech_to`(상대별 말투·호칭). 요청에 등장한 상대의 규칙만 전송하고,
   `speech_to`를 쓰는 프로젝트에서만 시스템 프롬프트에 설명을 추가(미사용 프로젝트의 캐시 식별자는 그대로).
   효과는 Q1 세트로 로컬 비교 필요.
+- Q5 `11e6c98`: 장면 TXT 플러그인 `sceneBreakPatterns`(기본 KAG 라벨 `*label`)에 맞는 줄을 `scene_break`로 표시하고,
+  Loader가 `CSentense.scene_break`로 전달. Ollama 엔진은 경계 이후 이전 장면 번역을 문맥에서 빼고, 경계 앞 배치는 다음 장면을
+  미리 보지 않으며, 번역 대상 경계 줄(예 `^――`)에서 배치를 나눔. 질문·응답 묶기는 기존 이전/이후 문맥으로 충분하다고 보고 미구현.
+- Q6 `9b339a5`: `reviewWarnings`(경고 줄만) / `reviewSampleEvery`(N번째 정상 줄 표본) / `reviewMaxLines` 선택적 재검토.
+  원문·초벌·경고·앞뒤 줄을 별도 검토 프롬프트로 보내고, 채택된 수정은 `proofread_dst`에 저장(초벌 `pre_dst`와 캐시 식별자 유지).
+  치명 검사를 통과하지 못한 수정은 거절, 검토 요청 실패 시 초벌 유지, `review-<실행시각>.jsonl`에 기록. 기본 꺼짐.
+  같은 시점에 `OllamaQuality.warning_problems`에 숫자 누락 경고 추가(품질 리포트에도 표시). 캐시 적중 줄은 재검토하지 않음.
+- 실제 VN 테스트 데이터(사용자 요청, 2026-10-22): 재배포·수정이 명시 허용된 일본어 원작 VN 시나리오를 웹에서 찾지 못함.
+  후보였던 Ren'Py "The Question" 일본어판(MIT 적용 여부가 파일 단위로 불명확, 영어 원작 번역), WebGAL 데모(MPL-2.0 저장소, 시나리오
+  라이선스 불명확), TyranoScript 샘플(재배포 자제 문구)은 커밋하지 않음. 저작권 만료 희곡(아오조라 문고) 발췌가 대안 후보.
 
 Cloud 구현·Mock 검증·커밋/Push·Fork 내부 PR 생성과 사용자 요청에 따른 병합을 완료했다.
 향후 PR도 사용자 요청 없이 병합하지 않는다. 이 문서의 테스트 결과는 Cloud에서 직접 실행한 결과로,
@@ -243,6 +253,11 @@ Cloud에서 추가로 할 수 있는 일: 리뷰 반영, 여러 줄에 걸친 �
    같은 개발 브랜치에 커밋/Push한다. Fork 내부 PR을 유지하고 자동 병합하지 않는다.
 
 ## 작업 이력
+
+- 2026-10-22 / Claude Cloud: TODO Q5(장면 경계 문맥) `11e6c98`, Q6(선택적 재검토) `9b339a5` 구현과 Fork `main` 반영.
+  신규 테스트 test_ollama_ko_scene_break, test_ollama_ko_review(Mock). 전체 Python 1588 passed, 7 skipped.
+  자유 라이선스 일본어 VN 시나리오 조사: 조건을 확실히 만족하는 소스 없음, 데이터 추가 없음. 실제 모델 품질 효과는 미측정.
+  같은 날(2026-10-21) Q3·Q1·Q2 커밋은 GitHub 인증 복구 후 Push 완료(`d32ec91..8b0c6cd`).
 
 - 2026-10-21 / Claude Cloud / 브랜치 `claude/repo-commit-access-check-p1n66r`: TODO Q7·Q3·Q1·Q2 Cloud 범위 구현
   (커밋 d32ec91, b21a6af, 277e3dd, 3357e79). 신규 테스트: test_problem_common_korean_q7, test_ollama_ko_terminology,
